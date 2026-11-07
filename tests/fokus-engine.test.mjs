@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const htmlPath = path.resolve(__dirname, '../Fokus.html');
+const htmlPath = fs.existsSync(path.resolve(__dirname, '../release/Fokus.html'))
+  ? path.resolve(__dirname, '../release/Fokus.html')
+  : path.resolve(__dirname, '../Fokus.html');
 
 describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () => {
 

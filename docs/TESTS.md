@@ -78,10 +78,10 @@ Pakiet testów podzielony jest na dwa pliki:
 
 ## 3. Testowanie Wizualne w Headless Chrome
 
-Aby upewnić się, że plik `Fokus.html` ładuje się i renderuje w przeglądarce Chrome bez błędów konsoli JavaScript, można wykonać polecenie:
+Aby upewnić się, że plik produkcyjny `release/Fokus.html` ładuje się i renderuje w przeglądarce Chrome bez błędów konsoli JavaScript, można wykonać polecenie:
 
 ```bash
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --dump-dom --disable-gpu "file://$(pwd)/Fokus.html" > /dev/null
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --dump-dom --disable-gpu "file://$(pwd)/release/Fokus.html" > /dev/null
 ```
 
 Polecenie kończy się kodem `0`, potwierdzając bezbłędne sparsowanie i wykonanie skryptu inicjalizującego `renderApp()`.

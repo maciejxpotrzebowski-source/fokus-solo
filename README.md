@@ -1,125 +1,68 @@
-# FOKUS SOLO (Soft Bento Edition) — Założenia Projektu, Instrukcja Obsługi i Przewodnik Rozwoju w Antigravity
+# FOKUS SOLO (Soft Bento Edition) — Wersja 4.2
 
-**Wersja architektury:** 4.0 (Single-Player Local-First · Soft Bento Apple UI)  
-**Środowisko uruchomieniowe:** Google Chrome / Microsoft Edge (Zero-Admin IT)  
-**Magazyn danych:** Lokalny `LocalStorage` + bezpośredni zapis pliku `fokus-db.json` w folderze Microsoft OneDrive (`File System Access API`)
+[![Testy Jednostkowe](https://img.shields.io/badge/Testy-32%2F32%20Pass-emerald)](./docs/TESTS.md)
+[![Wersja](https://img.shields.io/badge/Wersja-4.2--bento--solo-blue)](./release/INSTRUKCJA_WDROZENIA.md)
+[![Architektura](https://img.shields.io/badge/Architektura-Local--First%20%C2%B7%20Zero--Admin%20IT-purple)](./docs/SPECYFIKACJA_TECHNICZNA.md)
 
----
-
-## 1. Wizja i Założenia Główne Projektu
-
-**FOKUS SOLO** to osobisty, bezserwerowy system zarządzania zadaniami, czasem skupienia, historią zmian priorytetów („Dupochron”) oraz analityką pracy (BI). Został zaprojektowany specjalnie dla realiów pracy analityka/specjalisty w środowisku korporacyjnym, w którym nakładają się na siebie cztery strumienie pracy:
-1. **Zadania cykliczne (SOP)** – comiesięczne i cotygodniowe raporty, kontrole baz danych ERP, zamknięcia okresu.
-2. **Zadania bieżące (Ad-hoc / RFQ)** – analizy ofert, wyceny, zapytania od kupców i innych działów.
-3. **Projekty strategiczne (Deep Work)** – długofalowe modele kosztowe, optymalizacje, wdrożenia narzędzi i regulacji (np. PPWR, EUDR).
-4. **Pożary operacyjne (ASAP)** – nagłe wrzutki zarządcze i pilne awarie procesowe.
-
-### Dlaczego aplikacja działa w ten sposób? (4 Filary Architektoniczne)
-* **100% Zero-Admin IT i Bezpieczeństwo Korporacyjne:** Aplikacja nie wymaga uprawnień administratora Windows, nie instaluje plików `.exe` i nie wysyła żadnych poufnych danych firmy do zewnętrznych chmur. Działa w autoryzowanej przeglądarce Chrome, a baza danych leży w jednym pliku `fokus-db.json` na służbowym dysku OneDrive.
-* **Radykalny minimalizm wizualny (Soft Bento Apple UI):** Brak przytłaczających tabel, bocznych pasków nawigacyjnych i krzykliwych odznak. Ekran podzielony jest na zaokrąglone, jasne lub ciemne kafelki Bento z dużą ilością wolnej przestrzeni.
-* **Czystość danych dzięki Słownikom z Ukrytymi Aliasami:** Wprowadzając zadania w pośpiechu, możesz wpisać ksywkę, inicjały lub stanowisko (np. `gp`, `szef`, `prezes`), a system automatycznie przypisze kanoniczny rekord osoby (`Grzegorz`). Dzięki temu wykresy i raporty kwartalne nigdy nie mają zduplikowanych nazwisk.
-* **Wbudowany „Dupochron” (Audit Log):** Każda zmiana terminu, pilności lub wstrzymanie zadania (`Czekam na...`) pozwala jednym kliknięciem zapisać, **na czyją prośbę** i **z jakiego powodu** nastąpiło przesunięcie.
+Minimalistyczny, analityczny system zarządzania zadaniami, czasem skupienia, historią zmian priorytetów („Dupochron”) oraz zasobami kalendarza w stylistyce Apple Soft Bento.
 
 ---
 
-## 2. Anatomia Zadania i Logika Systemowa
+## 📁 Uporządkowana Struktura Projektu
 
-### 2.1. Kontrakt Wejściowy (Model 5 Pytań)
-Każde zadanie w systemie odpowiada na 5 pytań:
-1. **CO?** – Zwięzły tytuł określający rezultat końcowy oraz **Kategoria** ze słownika (np. `#ERP / Dane BC`, `#Zakupy / RFQ`).
-2. **DLA KOGO?** – Zleceniodawca wybierany ze **Słownika Osób** (z wyszukiwaniem po ukrytych aliasach i opcją dodania nowej osoby w locie).
-3. **JAK PILNE?** – Połączenie ręcznego tagu tekstowego (`ASAP`, `Wysoka`, `Standard`, `Last`) z opcjonalną datą **Deadline (`dueDate`)**.
-4. **JAK WAŻNE?** – Waga biznesowa (`Krytyczne`, `Ważne`, `Standardowe`, `Niskie`).
-5. **KROKI I KONTEKST** – Interaktywna checklista kroków milowych (z gotowymi szablonami SOP) oraz **jedno wspólne pole tekstowe** na opis, ścieżki do plików, linki i bieżące notatki robocze.
+Folder projektu został zorganizowany w przejrzysty, modułowy sposób bez luźnych plików roboczych:
 
-### 2.2. Algorytm Efektywnej Pilności (Reguła `MAX`)
-System eliminuje problem zadań strategicznych, o których przypominamy sobie w dniu terminu. Każdemu poziomowi pilności przypisana jest waga od $1$ do $4$:
-* `LAST` $= 1$, `NORMAL` (Standard) $= 2$, `HIGH` (Wysoka) $= 3$, `ASAP` $= 4$.
-
-Jeżeli zadanie posiada datę `dueDate`, system wylicza liczbę dni pozostałych do terminu ($\Delta d = \text{dueDate} - \text{Dziś}$) i określa pilność wynikającą z kalendarza:
-$$U_{\text{data}}(\Delta d) = \begin{cases} 4 \text{ (ASAP)} & \text{gdy } \Delta d \le 0 \text{ (dziś lub po terminie)} \\ 3 \text{ (HIGH)} & \text{gdy } 1 \le \Delta d \le 3 \text{ dni} \\ 2 \text{ (NORMAL)} & \text{gdy } 4 \le \Delta d \le 10 \text{ dni} \\ 1 \text{ (LAST)} & \text{gdy } \Delta d > 10 \text{ dni} \end{cases}$$
-
-**Efektywna pilność zadania ($U_{\text{eff}}$)** to zawsze wyższa z wartości:
-$$U_{\text{eff}} = \max\left(U_{\text{tag}}, \, U_{\text{data}}(\Delta d)\right)$$
-
-Jeśli $U_{\text{data}} > U_{\text{tag}}$, przy zadaniu pojawia się dyskretna adnotacja `(podbite terminem)` i zadanie automatycznie przechodzi do pilnej kolumny w Macierzy Eisenhowera.
-
----
-
-## 3. Instrukcja Obsługi (Codzienny Workflow Użytkownika)
-
-### Krok 1: Pierwsze uruchomienie i podpięcie folderu OneDrive
-1. Otwórz plik `Fokus_Solo_Chrome.html` w przeglądarce Google Chrome (możesz dodać go do paska zakładek `Ctrl+D`).
-2. Kliknij w prawym górnym rogu przycisk **`OneDrive`** $\rightarrow$ **`📁 Wybierz folder OneDrive (Auto-Zapis Chrome)`**.
-3. Wskaż dowolny folder na swoim dysku OneDrive (np. `OneDrive - Firma/Fokus`). Od tej chwili każda zmiana w aplikacji automatycznie nadpisuje tam plik `fokus-db.json`.
-   *(Uwaga: jeśli polityka IT w danej sieci blokuje bezpośredni dostęp przeglądarki do katalogów, możesz w tym samym okienku używać przycisków `⬇ Pobierz fokus-db.json` oraz `⬆ Wczytaj z pliku JSON`).*
-
-### Krok 2: Poranne planowanie dnia (08:00 – 08:15)
-1. Przejdź do zakładki **`Macierz 2x2`**. Zobaczysz wszystkie swoje zadania automatycznie ułożone w 4 kwadrantach Eisenhowera.
-2. Wybierz maksymalnie **6 zadań** na dzisiaj, klikając przy nich przycisk **`+ Dziś`** (zgodnie z metodą Ivy Lee system pilnuje limitu 6 pozycji).
-3. Wróć do zakładki **`Mój Dzień`**:
-   * W **Kafelku 02 (Kolejka na dziś)** sprawdź **Pasek Budżetu Dnia (ALPEN 5h)**. Suma estymacji wybranych zadań nie powinna przekraczać $5\text{ godzin}$ ($300\text{ minut}$), aby zachować $40\%$ bufora na spotkania, maile i nagłe telefony.
-   * Najważniejsze i najtrudniejsze zadanie analityczne ustaw na pozycji **#1** przyciskiem **`↑ #1`** – staje się ono Twoją **„Dzisiejszą Żabą”** i ładuje się do głównego lewego kafelka.
-   * Rzuć okiem na **Kafelek 03 (Czekam na odpowiedź)** – zobaczysz tam zadania zablokowane przez inne osoby wraz z licznikiem dni (np. `3 dni`). Wyślij im krótkie przypomnienie na Teams.
-
-### Krok 3: Głęboka praca ze stoperem Pomodoro Overtime
-1. W **Kafelku 01 (Teraz robię)** wybierz długość sesji (`15m`, `25m`, `45m`, `60m` lub wpisz własną liczbę minut w polu `min`) i kliknij **`Start`**.
-2. W trakcie pracy odhaczaj kolejne kroki milowe i dopisuj bieżące ustalenia we wspólnym polu **Kontekst i Notatki robocze** (zapisują się automatycznie podczas pisania).
-3. **Co dzieje się po wybiciu `00:00`?** Rozlega się łagodny dźwięk, ale stoper **nie przerywa Twojej pracy**. Zegar zmienia kolor na zielony i zaczyna liczyć czas nadliczbowy w górę (`+00:01`, `+00:02`... tryb **Overtime**). Gdy dokończysz myśl lub formułę w Excelu, kliknij **`Zakończ i zapisz`** – w statystykach zapisze się pełny rzeczywisty czas (np. $25\text{ min} + 8\text{ min} = 33\text{ min}$).
-4. **Zapomniałeś włączyć stoper?** Kliknij przycisk **`+ Z palca`** obok zegara, wpisz liczbę minut oraz datę – sesja zostanie dopisana do raportów i historii zadania.
-
-### Krok 4: Obsługa zmian terminów i blokad („Dupochron”)
-1. **Gdy szef lub zleceniodawca każe przesunąć termin na rzecz innej wrzutki:**
-   * Kliknij datę terminu (`Termin: ... ↺`) w Kafelku 01 lub w Macierzy 2x2.
-   * Otworzy się okienko **Dupochronu**. Wybierz nową datę, w polu osoby wpisz alias (np. `gp` lub `szef`), kliknij pigułkę powodu (np. `Wrzutka wyższego priorytetu`) i dopisz krótkie zdanie komentarza.
-   * Zmiana zapisze się na osi czasu zadania (**zakładka `Historia zmian` wewnątrz Kafelka 01**) oraz w tabeli przesunięć w zakładce **Raporty BI**.
-2. **Gdy utkniesz, bo ktoś nie przysłał danych:**
-   * Kliknij na dole Kafelka 01 przycisk **`⏳ Czekam na kogoś...`**.
-   * Wskaż osobę blokującą ze słownika i wpisz, czego brakuje. Zadanie natychmiast zwolni miejsce na liście „Mój Dzień” i przejdzie do Kafelka 03.
-
-### Krok 5: Analiza wyników i eksport raportów
-1. W zakładce **`Raporty BI`** wybierz interesujący Cię okres (`Dziś`, `Ten Tydzień`, `Ten Miesiąc`, `Ten Kwartał`, `Wszystkie`).
-2. Przeanalizuj wykresy: **Dla kogo pracowałem?** (udział godzinowy poszczególnych osób), **Na co poszedł czas?** (podział na kategorie) oraz **Rejestr Przesunięć Terminów (Dupochron)**.
-3. Kliknij **`⬇ Pobierz CSV (Excel)`**, aby jednym kliknięciem wyeksportować tabelę zadań i czasów z polskimi znakami prosto do Excela.
+```
+Fokus/
+├── release/                        # 🚀 AKTUALNA WERSJA PRODUKCYJNA
+│   ├── Fokus.html                  # Gotowa aplikacja produkcyjna (pojedynczy plik HTML)
+│   └── INSTRUKCJA_WDROZENIA.md     # Pełny opis zmian (Changelog v4.2) oraz instrukcja wdrożenia
+│
+├── docs/                           # 📚 DOKUMENTACJA TECHNICZNA I TESTOWA
+│   ├── SPECYFIKACJA_TECHNICZNA.md  # Pełna specyfikacja modelu danych, widoków i algorytmów
+│   └── TESTS.md                    # Dokumentacja 32 testów jednostkowych i integracyjnych
+│
+├── tests/                          # 🧪 ZAUTOMATYZOWANY PAKIET TESTÓW (npm test)
+│   ├── fokus-engine.test.mjs       # Testy reguły MAX, dni roboczych, ALPEN, Pomodoro i Ivy Lee
+│   └── fokus-migration.test.mjs    # Testy wstecznej kompatybilności i bezpiecznych migracji
+│
+├── AGENTS.md                       # 📜 KONSTYTUCJA PROJEKTU dla asystentów AI w Antigravity
+├── package.json                    # Konfiguracja środowiska testowego Node.js
+└── .gitignore                      # Ochrona przed commitowaniem danych użytkownika (fokus-db.json)
+```
 
 ---
 
-## 4. Jak Rozwijać Projekt w Środowisku Antigravity?
+## ⚡ Szybki Start (Uruchomienie Produkcyjne)
 
-Obecna wersja aplikacji jest zawarta w pojedynczym pliku `Fokus_Solo_Chrome.html`, co jest najwygodniejsze do bezpośredniego uruchamiania na służbowym komputerze. W miarę rozwoju projektu w **Antigravity** możesz pracować na dwa sposoby:
+1. Przejdź do folderu **[`release/`](./release/)**.
+2. Kliknij dwukrotnie w plik **[`release/Fokus.html`](./release/Fokus.html)** (otworzy się w przeglądarce Google Chrome lub Edge).
+3. Dodaj zakładkę do paska (`Ctrl + D` na Windowsie / `Cmd + D` na Macu).
+4. *(Opcjonalnie)* Kliknij w prawym górnym rogu przycisk **OneDrive**, aby podpiąć automatyczny zapis do pliku `fokus-db.json` w chmurze firmowej.
 
-### Wariant A: Rozwój bezpośredni (Single-File Prototype)
-Pracujesz bezpośrednio nad plikiem `Fokus_Solo_Chrome.html` w Antigravity. 
-* **Zaleta:** Zero budowania (`npm run build`), po każdej zmianie po prostu odświeżasz kartę w Chrome (`F5`).
-* **Jak promptować Antigravity:** Zawsze wskazuj w prompcie sekcję komentarza w kodzie (np. `// WIDOK 3: "RAPORTY BI"`) oraz dołączaj plik `08_Konstytucja_Projektu_i_Dobre_Praktyki.md` jako kontekst.
+Szczegółowy opis nowości w wersji 4.2 oraz instrukcję bezpiecznej aktualizacji znajdziesz w pliku:  
+👉 **[`release/INSTRUKCJA_WDROZENIA.md`](./release/INSTRUKCJA_WDROZENIA.md)**
 
-### Wariant B: Profesjonalna modularyzacja z kompilacją do 1 pliku (`Vite + TypeScript + vite-plugin-singlefile`)
-Gdy będziesz chciał rozbić kod na osobne moduły TypeScript w Antigravity, zachowując na końcu **pojedynczy plik wynikowy `.html`** (aby nadal działał na służbowym laptopie bez serwera):
+---
 
-1. **Docelowa struktura katalogów w Antigravity:**
-   ```text
-   fokus-solo/
-   ├── AGENTS.md                          # Skopiowany plik 08_Konstytucja_Projektu_i_Dobre_Praktyki.md
-   ├── index.html                         # Punkt wejścia aplikacji
-   ├── package.json                       # Vite + TypeScript + Tailwind + vite-plugin-singlefile
-   ├── vite.config.ts                     # Konfiguracja bundlowania do 1 pliku HTML
-   └── src/
-       ├── types/
-       │   └── database.ts                # Interfejsy TypeScript (TaskItem, PersonEntry, TimeSessionLog, AuditLogEntry)
-       ├── core/
-       │   ├── urgencyEngine.ts           # Czysta funkcja computeEffectiveUrgency (Reguła MAX)
-       │   ├── recurrenceEngine.ts        # Logika odnawiania zadań cyklicznych SOP
-       │   ├── pomodoroTimer.ts           # Maszyna stanowa stopera Pomodoro + Overtime
-       │   └── auditLogger.ts             # Tworzenie niemutowalnych wpisów Dupochronu
-       ├── storage/
-       │   └── storageAdapter.ts          # Warstwa zapisu (LocalStorage + Chrome File System Access API)
-       ├── components/
-       │   ├── HeaderSegmentedNav.ts      # Górny pasek z Segmented Control
-       │   ├── MyDayBentoView.ts          # Widok 3 kafelków (01 Teraz robię, 02 Kolejka ALPEN, 03 Czekam na)
-       │   ├── MatrixBentoView.ts         # Widok Macierzy Eisenhowera 2x2
-       │   ├── ReportsBiView.ts           # Widok analityki, wykresów i eksportu CSV
-       │   ├── DictionariesView.ts        # Zarządzanie osobami (aliasy) i kategoriami
-       │   └── modals/                    # Modale: Zadanie, Dupochron, Czas z palca, OneDrive
-       └── main.ts                        # Inicjalizacja i obsługa skrótów klawiszowych
-   ```
-2. **Kluczowa zaleta `vite-plugin-singlefile`:** Podczas pracy w Antigravity masz pełne podpowiadanie typów TypeScript, małe i czytelne pliki po 100–150 linii kodu oraz testy jednostkowe dla algorytmu pilności, a po wpisaniu `npm run build` w folderze `dist/index.html` otrzymujesz jeden gotowy plik HTML, który wrzucasz na służbowy OneDrive.
+## 🧠 6 Filarów Metodycznych FOKUS SOLO
+
+1. **Reguła Ivy Lee (Maksymalnie 6 zadań w Mój Dzień):** Ograniczenie liczby zadań do 6 eliminuje zjawisko *Attention Residue* i zmusza do selekcji najważniejszych celów.
+2. **Eat That Frog (Dzisiejsza Żaba):** W Kafelku 01 prezentowane jest w pełnym skupieniu wyłącznie zadanie #1 — najważniejsza i najtrudniejsza analiza dnia.
+3. **Metoda ALPEN 60/40 & Kalendarz Zasobów:** System rezerwuje 300 minut (5 godzin) na zadania, zostawiając 40% dnia na spotkania i nieprzewidziane zakłócenia. Spotkania dodane w zakładce **Kalendarz** automatycznie pomniejszają dostępny budżet skupienia.
+4. **Macierz Eisenhowera & SLA Dni Roboczych:** Wyliczanie pilności uwzględnia wyłącznie dni robocze, weekendy, polskie święta państwowe oraz Twoje urlopy. Zadanie z terminem na poniedziałek awansuje do statusu **ASAP już w piątek rano**!
+5. **Stoper Pomodoro z Trybem Overtime:** Wybicie `00:00` nie przerywa pracy brutalnym dzwonkiem, lecz przełącza licznik w zielony tryb *Flow State*, zliczając łączny rzeczywisty czas pracy.
+6. **Niemodyfikowalny Dupochron (Audit Log):** Pierwotny termin zadania (`originalDueDate`) nigdy nie jest nadpisywany. Każde przesunięcie terminu wymusza wskazanie wnioskodawcy i przyczyny w trwałym dzienniku zdarzeń.
+
+---
+
+## 🧪 Uruchomienie Testów Jednostkowych
+
+W terminalu w głównym folderze projektu wpisz:
+
+```bash
+npm test
+```
+
+Wynik: **32/32 testy zielone (100% pass, czas wykonania ~40 ms)**.
+Dokumentacja testów: [`docs/TESTS.md`](./docs/TESTS.md).
