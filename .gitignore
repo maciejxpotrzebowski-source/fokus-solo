@@ -1,0 +1,18 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# User database and backups (Local-First data)
+fokus-db.json
+fokus-backup-*.json
+*.backup.json
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
