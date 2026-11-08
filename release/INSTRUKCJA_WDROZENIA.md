@@ -1,6 +1,6 @@
-# FOKUS SOLO v4.2 — INSTRUKCJA WDROŻENIA I OPIS ZMIAN (CHANGELOG)
+# FOKUS SOLO v4.3 — INSTRUKCJA WDROŻENIA I OPIS ZMIAN (CHANGELOG)
 
-> **Wersja:** 4.2-bento-solo  
+> **Wersja:** 4.3-bento-widescreen  
 > **Plik Produkcyjny:** [`Fokus.html`](./Fokus.html)  
 > **Środowisko:** Google Chrome (Windows / macOS) · Architektura Local-First (Single-File)
 
@@ -8,37 +8,33 @@
 
 ## 1. Co się zmieniło względem poprzednich wersji? (Pełny Changelog)
 
-Wersja 4.2 wprowadza kluczowe rozszerzenia funkcjonalne i ergonomiczne, eliminując ograniczenia wersji 3.0 oraz wczesnych prototypów, przy zachowaniu 100% zgodności wstecznej z Twoją dotychczasową bazą `fokus-db.json`:
+### 1.1. Wersja 4.3 (Modernizacja UI/UX pod ekrany 16:9)
+* **Wykorzystanie Panoramicznego Ekranu 16:9 (Fluid Widescreen):**
+  Zastąpiono sztywne ograniczenie szerokości `1260px` dynamicznym kontenerem roboczym `max-w-[1800px]`, eliminując puste szare marginesy boczne na monitorach panoramicznych.
+* **Dashboard 100vh bez przewijania strony (No-Scroll Viewport):**
+  Zablokowano wysokość głównego pulpitu roboczego na ekranach $\ge 1024\text{px}$ (`lg:h-screen lg:overflow-hidden`). Cały pulpit analityka mieści się w jednym oknie bez przewijania paska strony.
+* **Niezależny scroll kart Bento (`overflow-y-auto`):**
+  Długie checklisty, notatki robocze oraz kolejki zadań przewijają się niezależnie wewnątrz swoich kafelków z minimalistycznym paskiem w stylu macOS, nie poruszając nagłówka ani pozostałych elementów ekranu.
+* **Centralny, wyróżniony przycisk `+ Nowe zadanie`:**
+  Przeniesiono najważniejszą akcję operacyjną z peryferii prawego rogu do strefy centralnej tuż obok pigułki nawigacyjnej, z wyraźnym kontrastem i skrótem `[ N ]`.
+* **Wyrazisty logotyp Fokus Solo:**
+  Powiększone logo z nowoczesną ikoną i czytelną typografią.
+* **Kompaktowa lista rozwijana Pomodoro (Select):**
+  Zastąpiono 5 oddzielnych przycisków rozpychających panel jedną elegancką listą rozwijaną `[ ⏱ 25 min ▾ ]` z presetami 15, 25, 45, 60, 90 minut oraz czasem własnym.
+* **Czysty minimalizm i usunięcie szumu:**
+  Usunięto laboratoryjne numeratory (`01 ·`, `02 ·`, `03 ·`) oraz dublujące się podpisy (`Metoda Ivy Lee...`, `Zadania zablokowane przez innych`).
+* **Zakotwiczona dolna belka akcji (Sticky Action Bar):**
+  Przyciski `✓ Ukończ zadanie`, `⏳ Czekam na...` oraz `Odłóż` są stale zakotwiczone w stopce karty aktywnego zadania — zawsze pod ręką niezależnie od długości kroków milowych.
+* **Pełne imię i nazwisko osoby blokującej:**
+  W kafelku „Czekam na odpowiedź” wyświetlane jest czytelne, pełne imię i nazwisko (np. *Tomek Kowalski*) zamiast suchych dwuliterowych inicjałów.
 
-### 1.1. Nowa Zakładka: „Kalendarz & Zasoby Czasu”
-* **Blokowy Tygodniowy Kalendarz Bento:** Zamiast przytłaczającej siatki godzinowej, przejrzyste karty dni (Poniedziałek – Piątek) oraz blok weekendowy z sumarycznym bilansem obciążenia.
-* **Wpływ spotkań na budżet ALPEN:** System zakłada maksymalny budżet głębokiego skupienia na poziomie **300 minut (5 godzin)** dziennie. Każde dodane spotkanie automatycznie pomniejsza dostępny bufor skupienia na kafelku 02:
-  $$\text{Dostępne Skupienie} = \max(0, \, 300\text{ min} - \text{minuty spotkań})$$
-* **Obsługa urlopów:** Możliwość dodawania jedno- lub wielodniowych urlopów wypoczynkowych (`🌴 Urlop`), które zerują budżet danego dnia do $0\text{ h}$.
-* **Tygodniowy Tracker Mocy Przerobowych:** Boczna karta zliczająca łączny czas spotkań i czas skupienia w skali całego tygodnia wraz ze wskaźnikiem przeciążenia.
+---
 
-### 1.2. Inteligentny Algorytm Pilności Dni Roboczych (SLA & Reguła MAX)
-* **Eliminacja „Pułapki Poniedziałku”:** Poprzednie wersje liczyły surowe dni kalendarzowe, przez co zadanie na poniedziałek w piątek miało 3 dni zapasu i status `HIGH`. **W wersji 4.2 system liczy wyłącznie DNI ROBOCZE ($D_{\text{biz}}$)**:
-  * Zadanie na poniedziałek już **w piątek rano uzyskuje najwyższy priorytet ASAP** ($D_{\text{biz}} = 1$)!
-* **Wbudowany kalendarz polskich świąt państwowych:** System automatycznie rozpoznaje wszystkie święta stałe (1 i 6 stycznia, 1 i 3 maja, 15 sierpnia, 1 i 11 listopada, 25-26 grudnia) oraz wylicza ruchomą Wielkanoc, Poniedziałek Wielkanocny i Boże Ciało za pomocą astronomicznego algorytmu Gaussa/Meeusa.
-* **Integracja z Twoimi urlopami:** Jeśli zaplanujesz urlop w piątek, piątek zostaje wykluczony z dni roboczych — zadanie na poniedziałek awansuje do **ASAP już w czwartek rano**.
-
-### 1.3. Profesjonalne Nazewnictwo: Zakładka „Eisenhower”
-* Zastąpiono techniczną i szkolną nazwę „Macierz 2x2” profesjonalną nazwą **„Eisenhower”**.
-* Karty zadań w kwadrantach prezentują precyzyjny licznik dni roboczych do terminu: `(1d rob.)`, `(Dziś)`, `(2d po)` lub `(3d rob.)`.
-
-### 1.4. Nowa Zakładka: „Instrukcja” (Baza Wiedzy Bento)
-* Dedykowane kompendium wiedzy operacyjnej i metodycznej dostępne w prawym górnym rogu pod przyciskiem `📖 Instrukcja` (skrót klawiszowy: `7`).
-* Opis **6 Strażników Metodyk** (Ivy Lee, Eat That Frog, ALPEN, Eisenhower, Pomodoro Overtime, Dupochron).
-* Ściąga z **Rytuału Dnia Analityka** (krok po kroku od 08:00 do 15:30).
-* Zestawienie skrótów klawiszowych, wyszukiwarki ukrytych aliasów (`szef`, `gp`, `tk`) oraz instrukcja podpięcia pliku `fokus-db.json` do **Power BI Desktop**.
-
-### 1.5. Nowoczesny i Czysty Układ Nawigacji (No Sidebars)
-* **Główny Segmented Control (5 widoków operacyjnych):**
-  `[ Mój Dzień | Eisenhower | Kalendarz | Czekam na | Raporty ]`
-* **Narzędzia i Pomoc w prawym rogu:**
-  `⚙️ Słowniki` · `📖 Instrukcja` · `OneDrive` · `+ Zadanie (N)` · `🌙 Motyw`
-* **Skróty Klawiszowe:** Klawisze od `1` do `7` błyskawicznie przełączają wszystkie zakładki bez użycia myszy.
+### 1.2. Wersja 4.2 (Kalendarz, Dni Robocze, Eisenhower, Instrukcja)
+* **Nowa Zakładka „Kalendarz & Zasoby Czasu”:** Tygodniowy kalendarz blokowy Bento, odliczanie spotkań od budżetu ALPEN 5h oraz obsługa urlopów.
+* **Inteligentny Algorytm Pilności Dni Roboczych ($D_{\text{biz}}$):** Eliminacja „pułapki poniedziałku” (zadanie na poniedziałek ma status ASAP już w piątek rano), wbudowany kalendarz polskich świąt państwowych i uwzględnianie urlopów.
+* **Profesjonalne Nazewnictwo „Eisenhower”:** Zastąpienie nazwy „Macierz 2x2” standardem Eisenhowera z filtrami zleceniodawcy i kategorii.
+* **Nowa Zakładka „Instrukcja”:** Baza wiedzy Bento z opisem 6 Strażników Metodyk i rytuałem dnia analityka.
 
 ---
 

@@ -78,40 +78,58 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#F5F5F7] text-[#1D1D1F] dark:bg-[#000000] dark:text-[#F5F5F7] selection:bg-blue-500/20">
+<body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-[#F5F5F7] text-[#1D1D1F] dark:bg-[#000000] dark:text-[#F5F5F7] selection:bg-blue-500/20">
 
-  <!-- GÓRNY PASEK NAWIGACJI (APPLE SEGMENTED CONTROL, ZERO SIDEBARÓW, 5 ZAKŁADEK) -->
-  <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#F5F5F7]/85 dark:bg-[#000000]/80 border-b border-black/[0.04] dark:border-[#2C2C2E]/70 transition-colors">
-    <div class="max-w-[1260px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-3">
+  <!-- GÓRNY PASEK NAWIGACJI (APPLE SEGMENTED CONTROL, ZERO SIDEBARÓW, 5 ZAKŁADEK + CENTRALNE ZADANIE) -->
+  <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#F5F5F7]/85 dark:bg-[#000000]/80 border-b border-black/[0.04] dark:border-[#2C2C2E]/70 transition-colors shrink-0">
+    <div class="max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-4">
       
-      <!-- Lewy znacznik marki + status aktywnego stopera w tle -->
-      <div class="flex items-center gap-2.5 min-w-[130px]">
-        <div class="w-2.5 h-2.5 rounded-full bg-[#1D1D1F] dark:bg-white shrink-0"></div>
-        <span class="text-sm font-semibold tracking-tight">Fokus</span>
-        <span id="headerMiniTimer" onclick="switchView('DAY')" class="hidden cursor-pointer items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-black/[0.05] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200"></span>
+      <!-- Lewy powiększony logotyp FOKUS SOLO + status aktywnego stopera -->
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] flex items-center justify-center font-bold text-sm tracking-tight shadow-2xs">
+            F
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm sm:text-base font-bold tracking-tight leading-none text-[#1D1D1F] dark:text-white">Fokus</span>
+            <span class="text-[9px] text-zinc-400 font-semibold tracking-wider uppercase mt-0.5">Solo · Soft Bento</span>
+          </div>
+        </div>
+        <span id="headerMiniTimer" onclick="switchView('DAY')" class="hidden cursor-pointer items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-black/[0.05] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition"></span>
       </div>
 
-      <!-- Centralna pastylka nawigacyjna (Segmented Control - 5 Zakładek Operacyjnych) -->
-      <nav class="flex items-center bg-black/[0.05] dark:bg-[#1C1C1E] p-1 rounded-full border border-transparent dark:border-[#2C2C2E] overflow-x-auto max-w-[620px]">
-        <button onclick="switchView('DAY')" id="navBtn-DAY" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
-          Mój Dzień <span id="navBadge-DAY" class="ml-1 opacity-60 font-mono text-[11px]"></span>
-        </button>
-        <button onclick="switchView('MATRIX')" id="navBtn-MATRIX" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
-          Eisenhower <span id="navBadge-MATRIX" class="ml-1 opacity-60 font-mono text-[11px]"></span>
-        </button>
-        <button onclick="switchView('CALENDAR')" id="navBtn-CALENDAR" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
-          Kalendarz <span id="navBadge-CALENDAR" class="ml-1 opacity-60 font-mono text-[11px]"></span>
-        </button>
-        <button onclick="switchView('WAITING')" id="navBtn-WAITING" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
-          Czekam na <span id="navBadge-WAITING" class="ml-1 opacity-60 font-mono text-[11px]"></span>
-        </button>
-        <button onclick="switchView('REPORTS')" id="navBtn-REPORTS" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
-          Raporty
-        </button>
-      </nav>
+      <!-- Centralna sekcja: Segmented Control + Wyróżniony przycisk + Nowe zadanie -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <nav class="flex items-center bg-black/[0.05] dark:bg-[#1C1C1E] p-1 rounded-full border border-transparent dark:border-[#2C2C2E] overflow-x-auto">
+          <button onclick="switchView('DAY')" id="navBtn-DAY" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Mój Dzień <span id="navBadge-DAY" class="ml-1 opacity-60 font-mono text-[11px]"></span>
+          </button>
+          <button onclick="switchView('MATRIX')" id="navBtn-MATRIX" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Eisenhower <span id="navBadge-MATRIX" class="ml-1 opacity-60 font-mono text-[11px]"></span>
+          </button>
+          <button onclick="switchView('CALENDAR')" id="navBtn-CALENDAR" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Kalendarz <span id="navBadge-CALENDAR" class="ml-1 opacity-60 font-mono text-[11px]"></span>
+          </button>
+          <button onclick="switchView('WAITING')" id="navBtn-WAITING" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Czekam na <span id="navBadge-WAITING" class="ml-1 opacity-60 font-mono text-[11px]"></span>
+          </button>
+          <button onclick="switchView('REPORTS')" id="navBtn-REPORTS" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Raporty
+          </button>
+        </nav>
 
-      <!-- Prawe subtelne akcje: Słowniki, Instrukcja, OneDrive, + Zadanie (N), Motyw -->
-      <div class="flex items-center justify-end gap-1.5 sm:gap-2">
+        <!-- Wyróżniony centralny przycisk dodawania zadania (N) -->
+        <button onclick="openTaskModal()" title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
+          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-2xs flex items-center gap-1.5 whitespace-nowrap shrink-0">
+          <span class="text-sm font-bold leading-none">+</span>
+          <span class="hidden sm:inline">Nowe zadanie</span>
+          <span class="sm:hidden">Zadanie</span>
+          <kbd class="hidden md:inline-block opacity-60 font-mono text-[10px] bg-white/20 dark:bg-black/20 px-1 py-0.5 rounded leading-none">N</kbd>
+        </button>
+      </div>
+
+      <!-- Prawe subtelne akcje narzędziowe: Słowniki, Instrukcja, OneDrive, Motyw (słońce/księżyc) -->
+      <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
         <button onclick="switchView('DICTIONARIES')" id="navBtn-DICTIONARIES" title="Słowniki osób, kategorii i SOP (Skrót: 6)"
           class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
           <span>⚙️</span>
@@ -130,11 +148,6 @@
           <span class="hidden md:inline" id="oneDriveLabel">OneDrive</span>
         </button>
 
-        <button onclick="openTaskModal()" title="Skrót klawiszowy: N"
-          class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition shadow-2xs whitespace-nowrap">
-          + Zadanie <span class="hidden lg:inline opacity-60 font-mono text-[10px] ml-0.5">N</span>
-        </button>
-
         <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw Jasny / Ciemny"
           class="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] flex items-center justify-center text-xs hover:opacity-80 transition shadow-2xs">
           <span id="themeIcon">🌙</span>
@@ -144,8 +157,8 @@
     </div>
   </header>
 
-  <!-- GŁÓWNY KONTENER WIDOKÓW BENTO -->
-  <main id="mainCanvas" class="flex-1 max-w-[1260px] w-full mx-auto px-4 sm:px-8 py-7"></main>
+  <!-- GŁÓWNY KONTENER WIDOKÓW BENTO (16:9 WIDESCREEN DASHBOARD) -->
+  <main id="mainCanvas" class="flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col"></main>
 
   <!-- DYSKRETNE POWIADOMIENIE TOAST (ZAMIAST ALERTÓW) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
@@ -1367,6 +1380,7 @@
       } catch (e) {}
     }
 
+    // Presety Pomodoro: 15, 25, 45, 60, 90 minut
     function setPomodoroPreset(minutes) {
       const m = Math.max(1, parseInt(minutes, 10) || 25);
       timer.plannedMinutes = m;
@@ -1375,6 +1389,19 @@
       timer.overtimeSeconds = 0;
       timer.chimePlayed = false;
       updateTimerUI();
+    }
+
+    function onPomodoroPresetChange(val) {
+      if (val === 'CUSTOM') {
+        const custom = prompt('Wpisz własny czas w minutach (1-240):', timer.plannedMinutes || '30');
+        if (custom) {
+          setPomodoroPreset(custom);
+        } else {
+          renderApp();
+        }
+      } else {
+        setPomodoroPreset(val);
+      }
     }
 
     function togglePomodoro(taskId) {
@@ -1541,6 +1568,16 @@
           headerMini.classList.remove('inline-flex');
         }
       }
+
+      // Synchronizacja listy rozwijanej presetów
+      const selectEl = document.getElementById('pomodoroPresetSelect');
+      if (selectEl && document.activeElement !== selectEl) {
+        if ([15, 25, 45, 60, 90].includes(timer.plannedMinutes)) {
+          selectEl.value = String(timer.plannedMinutes);
+        } else {
+          selectEl.value = 'CUSTOM';
+        }
+      }
     }
 
     // =========================================================================
@@ -1638,26 +1675,30 @@
 
       const canvas = document.getElementById('mainCanvas');
       if (db.activeView === 'DAY') {
+        canvas.className = 'flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col lg:overflow-hidden';
         canvas.innerHTML = renderMyDayBento();
-      } else if (db.activeView === 'MATRIX') {
-        canvas.innerHTML = renderMatrixBento();
-      } else if (db.activeView === 'CALENDAR') {
-        canvas.innerHTML = renderCalendarBento();
-      } else if (db.activeView === 'WAITING') {
-        canvas.innerHTML = renderWaitingBento();
-      } else if (db.activeView === 'REPORTS') {
-        canvas.innerHTML = renderReportsBento();
-      } else if (db.activeView === 'DICTIONARIES') {
-        canvas.innerHTML = renderDictionariesBento();
-      } else if (db.activeView === 'GUIDE') {
-        canvas.innerHTML = renderGuideBento();
+      } else {
+        canvas.className = 'flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col overflow-y-auto';
+        if (db.activeView === 'MATRIX') {
+          canvas.innerHTML = renderMatrixBento();
+        } else if (db.activeView === 'CALENDAR') {
+          canvas.innerHTML = renderCalendarBento();
+        } else if (db.activeView === 'WAITING') {
+          canvas.innerHTML = renderWaitingBento();
+        } else if (db.activeView === 'REPORTS') {
+          canvas.innerHTML = renderReportsBento();
+        } else if (db.activeView === 'DICTIONARIES') {
+          canvas.innerHTML = renderDictionariesBento();
+        } else if (db.activeView === 'GUIDE') {
+          canvas.innerHTML = renderGuideBento();
+        }
       }
 
       updateTimerUI();
     }
 
     // =========================================================================
-    // WIDOK 1: "MÓJ DZIEŃ" (SIATKA SOFT BENTO 3 KAFELKI)
+    // WIDOK 1: "MÓJ DZIEŃ" (SIATKA SOFT BENTO 16:9 NO-SCROLL DASHBOARD)
     // =========================================================================
     function renderMyDayBento() {
       const myDayTasks = getMyDayTasks();
@@ -1672,28 +1713,25 @@
       const alpenBarColor = totalCommitted > 300 ? 'bg-rose-500' : (totalCommitted > 240 ? 'bg-amber-400' : 'bg-[#1D1D1F] dark:bg-white');
 
       return `
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full min-h-0 items-stretch fade-in">
           
-          <!-- KAFELEK 01 (LEWY, 7 KOLUMN / ~60%): TERAZ ROBIĘ (DZISIEJSZA ŻABA) -->
-          <section class="lg:col-span-7 bento-card flex flex-col justify-between min-h-[540px]">
+          <!-- KAFELEK LEWY (~62%): TERAZ ROBIĘ (DZISIEJSZA ŻABA) -->
+          <section class="lg:col-span-7 xl:col-span-8 bento-card flex flex-col justify-between h-full min-h-0 overflow-hidden !p-6 sm:!p-7">
             ${activeTask ? renderCard01ActiveTask(activeTask) : renderCard01EmptyState()}
           </section>
 
-          <!-- PRAWA KOLUMNA (5 KOLUMN / ~40%): KAFELEK 02 (KOLEJKA) + KAFELEK 03 (CZEKAM NA) -->
-          <div class="lg:col-span-5 flex flex-col gap-6">
+          <!-- PRAWA KOLUMNA (~38%): KOLEJKA NA DZIŚ + CZEKAM NA ODPOWIEDŹ -->
+          <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-5 h-full min-h-0 overflow-hidden">
             
-            <!-- KAFELEK 02: KOLEJKA NA DZIŚ (IVY LEE MAX 6) -->
-            <section class="bento-card space-y-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">02 · Kolejka na dziś</span>
-                  <div class="text-xs text-zinc-400 mt-0.5">Metoda Ivy Lee (maksymalnie 6 zadań)</div>
-                </div>
-                <span class="text-xs font-mono text-zinc-500 dark:text-zinc-400">${myDayTasks.length}/6</span>
+            <!-- KAFELEK: KOLEJKA NA DZIŚ (IVY LEE MAX 6) -->
+            <section class="bento-card flex flex-col flex-1 min-h-0 overflow-hidden !p-5 sm:!p-6 space-y-3.5">
+              <div class="flex items-center justify-between shrink-0">
+                <span class="text-xs font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">Kolejka na dziś</span>
+                <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300">${myDayTasks.length}/6</span>
               </div>
 
               <!-- Pasek budżetu energetycznego ALPEN (5h z uwzględnieniem spotkań) -->
-              <div class="space-y-1.5 bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 p-3.5 rounded-2xl">
+              <div class="space-y-1.5 bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 p-3 rounded-2xl shrink-0">
                 <div class="flex items-center justify-between text-xs">
                   <span class="text-zinc-500 dark:text-zinc-400">Budżet dnia (ALPEN 5h)</span>
                   <span class="font-mono font-medium ${totalCommitted > 300 ? 'text-rose-500' : (totalCommitted > 240 ? 'text-amber-500' : '')}">
@@ -1707,8 +1745,8 @@
                 </div>
               </div>
 
-              <!-- Lista zadań w kolejce na dziś -->
-              <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
+              <!-- Lista zadań w kolejce na dziś ze scrollem wewnętrznym -->
+              <div class="flex-1 min-h-0 overflow-y-auto pr-1 divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
                 ${myDayTasks.length === 0 ? `
                   <div class="py-6 text-center text-xs text-zinc-400">
                     Brak zadań na dzisiaj. Wybierz zadania z listy Eisenhowera lub dodaj nowe.
@@ -1719,12 +1757,12 @@
                   const isSelected = activeTask && activeTask.id === t.id;
                   return `
                     <div onclick="selectTaskForCard01('${t.id}')"
-                      class="py-3 px-2.5 -mx-2.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition ${
+                      class="py-2.5 px-2.5 -mx-1 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition ${
                         isSelected ? 'bg-[#F5F5F7] dark:bg-[#2C2C2E]/80' : 'hover:bg-[#F5F5F7]/60 dark:hover:bg-[#2C2C2E]/40'
                       }">
-                      <div class="flex items-center gap-3 min-w-0">
+                      <div class="flex items-center gap-2.5 min-w-0">
                         <span class="w-1.5 h-1.5 rounded-full shrink-0 ${getUrgencyDotClass(eff.level)}"></span>
-                        <span class="text-xs font-mono ${index === 0 ? 'font-semibold text-[#1D1D1F] dark:text-white' : 'text-zinc-400'}">
+                        <span class="text-xs font-mono shrink-0 ${index === 0 ? 'font-semibold text-[#1D1D1F] dark:text-white' : 'text-zinc-400'}">
                           #${index + 1}
                         </span>
                         <div class="min-w-0">
@@ -1740,14 +1778,14 @@
                       <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
                         ${index > 0 ? `
                           <button onclick="promoteToFrog('${t.id}')" title="Ustaw jako #1 Dzisiejszą Żabę"
-                            class="px-2 py-1 rounded-full text-[10px] font-mono text-zinc-400 hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition">
+                            class="px-2 py-0.5 rounded-full text-[10px] font-mono text-zinc-400 hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition">
                             ↑ #1
                           </button>
                         ` : `
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/[0.05] dark:bg-white/[0.08] text-zinc-500 dark:text-zinc-300">Żaba</span>
                         `}
                         <button onclick="toggleTaskMyDay('${t.id}')" title="Odłóż z dzisiejszej listy"
-                          class="w-6 h-6 rounded-full text-zinc-300 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs">
+                          class="w-6 h-6 rounded-full text-zinc-300 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs flex items-center justify-center transition">
                           ×
                         </button>
                       </div>
@@ -1757,13 +1795,10 @@
               </div>
             </section>
 
-            <!-- KAFELEK 03: CZEKAM NA ODPOWIEDŹ (WAITING FOR) -->
-            <section class="bento-card space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">03 · Czekam na odpowiedź</span>
-                  <div class="text-[11px] text-zinc-400 mt-0.5">Zadania zablokowane przez innych</div>
-                </div>
+            <!-- KAFELEK: CZEKAM NA ODPOWIEDŹ -->
+            <section class="bento-card flex flex-col shrink-0 lg:max-h-[42%] overflow-hidden !p-5 sm:!p-6 space-y-3">
+              <div class="flex items-center justify-between shrink-0">
+                <span class="text-xs font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">Czekam na odpowiedź</span>
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-mono text-zinc-400">${waitingTasks.length}</span>
                   <button onclick="switchView('WAITING')" class="text-[11px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">Wszystkie →</button>
@@ -1775,27 +1810,29 @@
                   Zero zablokowanych zadań. Nikt Cię w tej chwili nie wstrzymuje.
                 </div>
               ` : `
-                <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
-                  ${waitingTasks.slice(0, 3).map(w => {
+                <div class="flex-1 min-h-0 overflow-y-auto pr-1 divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
+                  ${waitingTasks.slice(0, 4).map(w => {
                     const blocker = getPerson(w.waitingForPersonId || (w.waitingFor && w.waitingFor.personId) || w.requesterPersonId);
                     const since = w.waitingSince || (w.waitingFor && w.waitingFor.sinceISO);
                     const daysWaiting = since
                       ? Math.max(0, Math.floor((Date.now() - new Date(since).getTime()) / 86400000))
                       : 0;
                     const daysLabel = daysWaiting === 0 ? 'Dziś' : (daysWaiting === 1 ? '1 dzień' : `${daysWaiting} dni`);
+                    const daysColor = daysWaiting >= 3 ? 'text-rose-500' : 'text-amber-500';
                     const reason = w.waitingForReason || (w.waitingFor && w.waitingFor.reason);
                     return `
-                      <div class="py-3 flex items-start justify-between gap-3">
-                        <div class="space-y-1 min-w-0">
+                      <div class="py-2.5 flex items-start justify-between gap-3">
+                        <div class="space-y-0.5 min-w-0">
                           <div class="text-xs font-medium text-zinc-800 dark:text-zinc-100 truncate">${escapeHtml(w.title)}</div>
-                          <div class="text-[11px] text-zinc-400">
-                            Blokuje: <strong class="font-medium text-zinc-600 dark:text-zinc-300">${escapeHtml(blocker.canonicalName)}</strong>
-                            · <span class="text-amber-500 font-mono">${daysLabel}</span>
+                          <div class="text-[11px] text-zinc-400 flex items-center gap-1.5 truncate">
+                            <span>Blokuje: <strong class="font-medium text-zinc-700 dark:text-zinc-200">${escapeHtml(blocker.canonicalName)}</strong></span>
+                            <span>·</span>
+                            <span class="font-mono font-medium ${daysColor}">${daysLabel}</span>
                           </div>
-                          ${reason ? `<div class="text-[11px] text-zinc-400/90 italic truncate">„${escapeHtml(reason)}”</div>` : ''}
+                          ${reason ? `<div class="text-[11px] text-zinc-400 italic truncate">„${escapeHtml(reason)}”</div>` : ''}
                         </div>
                         <button onclick="unblockWaitingTask('${w.id}')"
-                          class="px-3 py-1 rounded-full text-[11px] font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 shrink-0 transition">
+                          class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 shrink-0 transition">
                           Odblokuj
                         </button>
                       </div>
@@ -1813,13 +1850,13 @@
     function renderCard01EmptyState() {
       return `
         <div class="my-auto text-center py-16 space-y-4">
-          <div class="text-xs uppercase tracking-widest text-zinc-400">01 · Teraz robię</div>
+          <div class="text-xs uppercase tracking-widest text-zinc-400">Teraz robię</div>
           <h2 class="text-xl font-semibold">Lista na dzisiaj jest czysta</h2>
           <p class="text-xs text-zinc-400 max-w-sm mx-auto">
             Dodaj nowe zadanie przyciskiem na górze lub przejdź do zakładki Eisenhower i oznacz zadania na dzisiejszy dzień (Ivy Lee max 6).
           </p>
           <div class="pt-2 flex justify-center gap-2">
-            <button onclick="openTaskModal()" class="px-4 py-2 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">+ Nowe zadanie</button>
+            <button onclick="openTaskModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">+ Nowe zadanie</button>
             <button onclick="switchView('MATRIX')" class="px-4 py-2 rounded-full text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]">Otwórz Eisenhowera</button>
           </div>
         </div>
@@ -1839,48 +1876,50 @@
       const taskSessions = db.timeLogs.filter(s => s.taskId === t.id);
       const totalSpentMin = taskSessions.reduce((acc, s) => acc + (s.totalMinutes || s.durationMinutes || 0), 0);
 
+      // Sprawdź czy to #1 na liście (Dzisiejsza Żaba)
+      const myDayTasks = getMyDayTasks();
+      const isFrog = myDayTasks.length > 0 && myDayTasks[0].id === t.id;
+
       return `
-        <div class="space-y-6">
-          <!-- Nagłówek Kafelka 01 + Zegar Pomodoro z Overtime -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-black/[0.05] dark:border-[#2C2C2E]">
+        <!-- GÓRNA SEKCJA: NAGŁÓWEK + STOPER + TYTUŁ + METADANE -->
+        <div class="shrink-0 space-y-4 pb-4 border-b border-black/[0.05] dark:border-[#2C2C2E]">
+          <!-- Pasek statusu i stoper Pomodoro (Presety: 15, 25, 45, 60, 90) -->
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">01 · Teraz robię (Dzisiejsza Żaba)</span>
+                <span class="text-xs font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">Teraz robię</span>
+                ${isFrog ? `<span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">🐸 Dzisiejsza Żaba</span>` : ''}
                 ${t.recurrence && t.recurrence !== 'NONE' ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-500">Cykliczne</span>` : ''}
               </div>
               <div id="bentoTimerStateBadge" class="text-[11px] text-zinc-400 mt-0.5">Gotowy</div>
             </div>
 
-            <!-- Panel Zegara Pomodoro (Presety: 15, 25, 45, 60, 90 + Własny czas) -->
-            <div class="flex flex-wrap items-center gap-2.5 bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 px-3.5 py-2 rounded-2xl">
-              <!-- Pigułki czasu -->
-              <div class="flex items-center gap-1 pr-2 border-r border-black/[0.06] dark:border-white/[0.08]">
+            <!-- Panel Zegara Pomodoro z pojedynczą listą rozwijaną (15, 25, 45, 60, 90 minut) -->
+            <div class="flex items-center gap-2 bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 px-3 py-1.5 rounded-2xl">
+              <!-- Presety Pomodoro: 15, 25, 45, 60, 90 minut -->
+              <select id="pomodoroPresetSelect" onchange="onPomodoroPresetChange(this.value)"
+                class="text-xs font-mono font-medium px-2.5 py-1 rounded-xl bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] focus:outline-none cursor-pointer">
                 ${[15, 25, 45, 60, 90].map(m => `
-                  <button onclick="setPomodoroPreset(${m})"
-                    class="px-2 py-1 rounded-full text-[11px] font-mono transition ${
-                      timer.plannedMinutes === m && !timer.running
-                        ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white font-medium shadow-2xs'
-                        : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
-                    }">${m}m</button>
+                  <option value="${m}" ${timer.plannedMinutes === m ? 'selected' : ''}>⏱ ${m} min</option>
                 `).join('')}
-                <input type="number" min="1" max="240" placeholder="min" title="Wpisz własny czas w minutach"
-                  onchange="setPomodoroPreset(this.value)"
-                  class="w-11 text-center text-[11px] font-mono py-0.5 rounded-full bg-transparent text-zinc-500 focus:outline-none focus:bg-white dark:focus:bg-[#1C1C1E]" />
-              </div>
+                <option value="CUSTOM" ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? 'selected' : ''}>
+                  ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? `⏱ ${timer.plannedMinutes} min (własny)` : 'Inny czas...'}
+                </option>
+              </select>
 
               <!-- Wyświetlacz zegara -->
-              <div id="bentoTimerDisplay" class="font-mono text-2xl sm:text-3xl font-semibold tracking-tight px-1">
+              <div id="bentoTimerDisplay" class="font-mono text-2xl sm:text-3xl font-semibold tracking-tight px-1.5">
                 25:00
               </div>
 
               <!-- Przyciski sterowania stoperem -->
               <div class="flex items-center gap-1.5">
                 <button id="bentoTimerStartBtn" onclick="togglePomodoro('${t.id}')"
-                  class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
+                  class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition">
                   Start
                 </button>
                 <button id="bentoTimerFinishBtn" onclick="finishAndSavePomodoroSession()"
-                  class="hidden px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500 text-white hover:opacity-90 transition">
+                  class="hidden px-3.5 py-1.5 rounded-full text-xs font-medium bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition">
                   Zakończ i zapisz
                 </button>
                 <button onclick="openManualTimeModal('${t.id}')" title="Dopisz czas z palca (gdy zapomniałeś włączyć stoper)"
@@ -1891,15 +1930,13 @@
             </div>
           </div>
 
-          <!-- Tytuł zadania i czysta linia metadanych (zero krzykliwych odznak) -->
-          <div class="space-y-2.5">
-            <div class="flex items-start justify-between gap-4">
-              <h1 class="text-xl sm:text-2xl font-semibold tracking-tight leading-snug">
-                ${escapeHtml(t.title)}
-              </h1>
-            </div>
+          <!-- Tytuł zadania i metadane -->
+          <div class="space-y-2">
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight leading-snug">
+              ${escapeHtml(t.title)}
+            </h1>
 
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
               <span class="inline-flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full ${getUrgencyDotClass(eff.level)}"></span>
                 <span class="font-medium text-zinc-700 dark:text-zinc-200">${URGENCY_LABEL[eff.level]}</span>
@@ -1919,9 +1956,11 @@
               <span class="font-mono text-[11px]">Sesje: ${taskSessions.length} (${formatMinutes(totalSpentMin)} / est. ${formatMinutes(t.estimatedMinutes)})</span>
             </div>
           </div>
+        </div>
 
-          <!-- Przełącznik wewnątrz Kafelka 01: [ Kroki i Notatki ] vs [ Historia zmian (Audit Log) ] -->
-          <div class="flex items-center justify-between pt-1">
+        <!-- ŚRODKOWA SEKCJA: PRZEŁĄCZNIK ZAKŁADEK + PRZEWIJANA TREŚĆ -->
+        <div class="flex-1 min-h-0 flex flex-col py-3 overflow-hidden">
+          <div class="flex items-center justify-between shrink-0 pb-3">
             <div class="inline-flex bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 p-1 rounded-full">
               <button onclick="setCard1Tab('STEPS')"
                 class="px-3.5 py-1 rounded-full text-xs font-medium transition ${
@@ -1944,25 +1983,31 @@
             <span class="text-xs font-mono text-zinc-400">${progressPct}% ukończone</span>
           </div>
 
-          <!-- Zawartość aktywnej zakładki wewnątrz Kafelka 01 -->
-          ${db.card1Tab === 'STEPS' ? renderCard01StepsAndNotes(t, progressPct) : renderCard01AuditHistory(t)}
+          <!-- Przewijane wnętrze kroków / notatek / historii -->
+          <div class="flex-1 min-h-0 overflow-y-auto pr-1">
+            ${db.card1Tab === 'STEPS' ? renderCard01StepsAndNotes(t, progressPct) : renderCard01AuditHistory(t)}
+          </div>
         </div>
 
-        <!-- Dolna belka akcji Kafelka 01 -->
-        <div class="pt-6 mt-6 border-t border-black/[0.05] dark:border-[#2C2C2E] flex flex-wrap items-center justify-between gap-3">
+        <!-- DOLNA ZAKOTWICZONA BELKA AKCJI (STICKY ACTION BAR) -->
+        <div class="shrink-0 pt-4 border-t border-black/[0.05] dark:border-[#2C2C2E] flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <button onclick="openDupochronModal('${t.id}', 'WAITING_FOR')"
               class="px-4 py-2 rounded-full text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition">
               ⏳ Czekam na kogoś...
             </button>
-            <button onclick="openTaskModal('${t.id}')"
+            <button onclick="toggleTaskMyDay('${t.id}')"
               class="px-3.5 py-2 rounded-full text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
+              Odłóż na później
+            </button>
+            <button onclick="openTaskModal('${t.id}')"
+              class="px-3 py-2 rounded-full text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
               Edytuj
             </button>
           </div>
 
           <button onclick="completeTask('${t.id}')"
-            class="px-5 py-2 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition shadow-2xs">
+            class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-2xs">
             ✓ Ukończ zadanie
           </button>
         </div>
@@ -2010,15 +2055,15 @@
             </div>
           </div>
 
-          <!-- Jedno wspólne pole: Kontekst i Notatki robocze -->
+          <!-- Jedno wspólne pole: Notatki robocze i linki -->
           <div class="space-y-1.5 pt-2">
             <div class="flex items-center justify-between">
-              <label class="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">Kontekst i Notatki robocze</label>
+              <label class="text-[11px] font-medium text-zinc-400">Notatki robocze i linki</label>
               <span id="notesSavedIndicator" class="text-[10px] text-zinc-400">Auto-zapis</span>
             </div>
             <textarea rows="3" placeholder="Wklej linki, ścieżki do plików, notatki ze spotkania..."
               oninput="updateTaskNotes('${t.id}', this.value)"
-              class="w-full text-xs leading-relaxed p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 focus:outline-none resize-y">${escapeHtml(t.notesAndContext || t.contextNotes || '')}</textarea>
+              class="w-full text-xs leading-relaxed p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 focus:outline-none focus:ring-1 focus:ring-black/10 dark:focus:ring-white/10 resize-y transition">${escapeHtml(t.notesAndContext || t.contextNotes || '')}</textarea>
           </div>
         </div>
       `;
@@ -2138,9 +2183,9 @@
 
     function renderMatrixQuadrantCard(title, subtitle, items) {
       return `
-        <section class="bento-card flex flex-col justify-between space-y-4 min-h-[260px]">
-          <div class="space-y-4">
-            <div class="flex items-start justify-between">
+        <section class="bento-card flex flex-col justify-between space-y-3 min-h-[260px] lg:h-[calc(43vh-4rem)] overflow-hidden !p-5 sm:!p-6">
+          <div class="flex flex-col h-full min-h-0 space-y-3">
+            <div class="flex items-start justify-between shrink-0">
               <div>
                 <h2 class="text-sm font-semibold">${title}</h2>
                 <p class="text-[11px] text-zinc-400 mt-0.5">${subtitle}</p>
@@ -2149,16 +2194,16 @@
             </div>
 
             ${items.length === 0 ? `
-              <div class="py-10 text-center text-xs text-zinc-400">Brak zadań w tym kwadrancie</div>
+              <div class="my-auto py-8 text-center text-xs text-zinc-400">Brak zadań w tym kwadrancie</div>
             ` : `
-              <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
+              <div class="flex-1 min-h-0 overflow-y-auto pr-1 divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
                 ${items.map(({ t, eff }) => {
                   const person = getPerson(t.requesterPersonId || t.personId);
                   const category = getCategory(t.categoryId);
                   const isDone = t.status === 'DONE';
                   const isWaiting = t.status === 'WAITING_FOR';
                   return `
-                    <div class="py-3 flex items-center justify-between gap-3 group">
+                    <div class="py-2.5 flex items-center justify-between gap-3 group">
                       <div class="flex items-start gap-3 min-w-0">
                         <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${getUrgencyDotClass(eff.level)}"></span>
                         <div class="min-w-0">
