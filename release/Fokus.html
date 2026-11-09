@@ -819,9 +819,11 @@
           saveSuccess = await writeDatabaseToDisk();
         }
 
-        if (!saveSuccess) {
+        if (saveSuccess) {
+          updateDbStatusUI('CONNECTED');
+        } else {
           updateDbStatusUI('NEEDS_PERMISSION');
-          showToast('⚠️ Zadanie w pamięci — połącz plik fokus-db.json na górnym pasku, aby zapisać na dysk!');
+          showToast('⚠️ Kliknij wskaźnik pliku na górnym pasku, aby zezwolić na zapis');
         }
       } catch (e) {
         console.error('Błąd zapisu bazy:', e);
@@ -4361,7 +4363,6 @@
         if (fileHandle) {
           const perm = await fileHandle.requestPermission({ mode: 'readwrite' });
           if (perm === 'granted') {
-            await readDatabaseFromFile();
             const writeOk = await writeDatabaseToFile();
             if (writeOk) {
               updateDbStatusUI('CONNECTED');
@@ -4374,8 +4375,8 @@
         } else if (directoryHandle) {
           const perm = await directoryHandle.requestPermission({ mode: 'readwrite' });
           if (perm === 'granted') {
-            const ok = await loadOrCreateDatabaseOnDisk();
-            if (ok) {
+            const writeOk = await writeDatabaseToDisk();
+            if (writeOk) {
               updateDbStatusUI('CONNECTED');
               closeDbFileModal();
               renderApp();
@@ -4420,30 +4421,24 @@
         await setStoredFileHandle(fileHandle);
         await setStoredDirectoryHandle(null);
 
-        // Natychmiast odczytujemy zawartość pliku (odczyt jest dozwolony po wskazaniu pliku w oknie dialogowym)
+        // 1. Natychmiast odczytujemy zawartość pliku z dysku
         await readDatabaseFromFile();
-        renderApp();
 
-        // Sprawdzamy czy mamy już uprawnienia do zapisu
-        let canWrite = false;
+        // 2. Natychmiast ustanawiamy połączenie i zamykamy modal
+        updateDbStatusUI('CONNECTED');
+        closeDbFileModal();
+        renderApp();
+        showToast('Pomyślnie połączono z plikiem: ' + handle.name);
+
+        // 3. Sprawdzamy / inicjujemy uprawnienia do zapisu
         try {
           const perm = await handle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            canWrite = await writeDatabaseToFile();
+          if (perm !== 'granted') {
+            await handle.requestPermission({ mode: 'readwrite' });
           }
+          await writeDatabaseToFile();
         } catch (e) {
-          console.warn('Weryfikacja zapisu:', e);
-        }
-
-        if (canWrite) {
-          updateDbStatusUI('CONNECTED');
-          closeDbFileModal();
-          showToast('Pomyślnie połączono z plikiem: ' + handle.name);
-        } else {
-          // Chrome zużył transient user activation w showOpenFilePicker — wymagany 1 klik w przycisk zezwolenia
-          updateDbStatusUI('NEEDS_PERMISSION');
-          renderDbModalContent();
-          showToast('Plik wczytany. Kliknij przycisk „Zezwól na edycję pliku”, aby włączyć stały zapis');
+          console.warn('Weryfikacja zapisu (zapisze się przy pierwszej edycji zadania):', e);
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
@@ -4468,12 +4463,20 @@
         await setStoredDirectoryHandle(directoryHandle);
         await setStoredFileHandle(null);
 
-        const ok = await loadOrCreateDatabaseOnDisk();
-        if (ok) {
-          updateDbStatusUI('CONNECTED');
-          closeDbFileModal();
-          renderApp();
-          showToast('Pomyślnie połączono z folderem: ' + handle.name);
+        // 1. Odczytujemy bazę z folderu
+        await loadOrCreateDatabaseOnDisk();
+
+        // 2. Natychmiast ustanawiamy połączenie i zamykamy modal
+        updateDbStatusUI('CONNECTED');
+        closeDbFileModal();
+        renderApp();
+        showToast('Pomyślnie połączono z folderem: ' + handle.name);
+
+        // 3. Sprawdzamy / inicjujemy zapis do folderu
+        try {
+          await writeDatabaseToDisk();
+        } catch (e) {
+          console.warn('Weryfikacja zapisu do folderu (zapisze się przy pierwszej edycji zadania):', e);
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
@@ -4492,7 +4495,14 @@
         if (text && text.trim().length > 0) {
           const parsed = JSON.parse(text);
           if (parsed && typeof parsed === 'object') {
-            db = normalizeDatabase(parsed);
+            const diskTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+            const memoryTasks = (db && Array.isArray(db.tasks)) ? db.tasks : [];
+            if (diskTasks.length > 0 || memoryTasks.length === 0) {
+              db = normalizeDatabase(parsed);
+            } else {
+              parsed.tasks = memoryTasks;
+              db = normalizeDatabase(parsed);
+            }
             loadUiPreferences();
             return true;
           }
@@ -4528,7 +4538,9 @@
         try {
           fh = await directoryHandle.getFileHandle('fokus-db.json', { create: false });
         } catch (nf) {
-          await writeDatabaseToDisk();
+          try {
+            await writeDatabaseToDisk();
+          } catch (e) {}
           return true;
         }
         const file = await fh.getFile();
@@ -4536,12 +4548,18 @@
         if (text && text.trim().length > 0) {
           const parsed = JSON.parse(text);
           if (parsed && typeof parsed === 'object') {
-            db = normalizeDatabase(parsed);
+            const diskTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+            const memoryTasks = (db && Array.isArray(db.tasks)) ? db.tasks : [];
+            if (diskTasks.length > 0 || memoryTasks.length === 0) {
+              db = normalizeDatabase(parsed);
+            } else {
+              parsed.tasks = memoryTasks;
+              db = normalizeDatabase(parsed);
+            }
             loadUiPreferences();
             return true;
           }
         }
-        await writeDatabaseToDisk();
         return true;
       } catch (e) {
         console.error('Błąd odczytu z dysku:', e);
