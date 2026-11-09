@@ -76,6 +76,9 @@
       filter: invert(1);
       opacity: 0.6;
     }
+
+    body.db-locked #mainCanvas { pointer-events: none; opacity: .45; user-select: none; }
+    body.db-locked [data-requires-db] { pointer-events: none; opacity: .4; }
   </style>
 </head>
 <body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-[#F5F5F7] text-[#1D1D1F] dark:bg-[#000000] dark:text-[#F5F5F7] selection:bg-blue-500/20">
@@ -87,12 +90,12 @@
       <!-- Lewy powiększony logotyp FOKUS SOLO + status aktywnego stopera -->
       <div class="flex items-center gap-3 shrink-0">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] flex items-center justify-center font-bold text-sm tracking-tight shadow-2xs">
+          <div class="w-8 h-8 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] flex items-center justify-center font-bold text-sm tracking-tight shadow-sm">
             F
           </div>
           <div class="flex flex-col">
             <span class="text-sm sm:text-base font-bold tracking-tight leading-none text-[#1D1D1F] dark:text-white">Fokus</span>
-            <span class="text-[9px] text-zinc-400 font-semibold tracking-wider uppercase mt-0.5">Solo · Soft Bento</span>
+            <span class="text-[9px] text-zinc-400 font-semibold tracking-wider uppercase mt-0.5">System Skupienia</span>
           </div>
         </div>
         <span id="headerMiniTimer" onclick="switchView('DAY')" class="hidden cursor-pointer items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-black/[0.05] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition"></span>
@@ -118,9 +121,9 @@
           </button>
         </nav>
 
-        <!-- Wyróżniony centralny przycisk dodawania zadania (N) -->
-        <button onclick="openTaskModal()" title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
-          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-2xs flex items-center gap-1.5 whitespace-nowrap shrink-0">
+        <!-- Wyróżniony centralny przycisk dodawania zadania (N) z atrybutem data-requires-db -->
+        <button onclick="openTaskModal()" data-requires-db title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
+          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0">
           <span class="text-sm font-bold leading-none">+</span>
           <span class="hidden sm:inline">Nowe zadanie</span>
           <span class="sm:hidden">Zadanie</span>
@@ -131,25 +134,26 @@
       <!-- Prawe subtelne akcje narzędziowe: Słowniki, Instrukcja, Magazyn pliku bazy, Motyw (słońce/księżyc) -->
       <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
         <button onclick="switchView('DICTIONARIES')" id="navBtn-DICTIONARIES" title="Słowniki osób, kategorii i SOP (Skrót: 6)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
+          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
           <span>⚙️</span>
           <span class="hidden xl:inline">Słowniki</span>
         </button>
 
         <button onclick="switchView('GUIDE')" id="navBtn-GUIDE" title="Przewodnik metodyczny i instrukcja obsługi (Skrót: 7)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
+          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
           <span>📖</span>
           <span class="hidden xl:inline">Instrukcja</span>
         </button>
 
         <button onclick="handleDbStatusClick()" id="dbFileStatusBtn" title="Status pliku fokus-db.json na dysku"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
-          <span id="dbFileDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
+          <span id="dbFileDot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
           <span class="hidden md:inline font-mono text-[11px]" id="dbFileLabel">fokus-db.json</span>
+          <span id="dbSaveInfo" class="hidden lg:inline text-[10px] text-zinc-400"></span>
         </button>
 
         <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw Jasny / Ciemny"
-          class="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] flex items-center justify-center text-xs hover:opacity-80 transition shadow-2xs">
+          class="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] flex items-center justify-center text-xs hover:opacity-80 transition shadow-sm">
           <span id="themeIcon">🌙</span>
         </button>
       </div>
@@ -160,13 +164,19 @@
   <!-- GŁÓWNY KONTENER WIDOKÓW BENTO (16:9 WIDESCREEN DASHBOARD) -->
   <main id="mainCanvas" class="flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col"></main>
 
+  <!-- BANER BLOKADY EDYCJI PRZY BRAKU BAZY (KROK 8B) -->
+  <div id="dbLockBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 items-center gap-3 px-4 py-2.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg">
+    <span>🔒 Tryb tylko do odczytu – brak połączenia z plikiem bazy</span>
+    <button onclick="openDbFileModal()" class="px-3 py-1 rounded-full bg-white/25 hover:bg-white/35 transition font-semibold">Podłącz</button>
+  </div>
+
   <!-- DYSKRETNE POWIADOMIENIE TOAST (ZAMIAST ALERTÓW) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
 
   <!-- ========================================================================= -->
   <!-- MODAL 1: DODAWANIE / EDYCJA ZADANIA (5 PYTAŃ + SŁOWNIK Z ALIASAMI)        -->
   <!-- ========================================================================= -->
-  <div id="taskModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="taskModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-lg w-full space-y-5 fade-in max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <span id="taskModalHeader" class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Nowe zadanie</span>
@@ -177,8 +187,9 @@
 
       <!-- 1. CO? Tytuł zadania -->
       <div class="space-y-1.5">
-        <label class="block text-[11px] text-zinc-400 font-medium">1. Co jest do zrobienia? (Rezultat)</label>
+        <label class="block text-[11px] text-zinc-400 font-medium">1. Co jest do zrobienia? (Rezultat) · <span class="font-normal text-zinc-400">Enter = szybki zapis</span></label>
         <input id="tmTitle" type="text" placeholder="np. Walidacja wag opakowań w Business Central"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();saveTaskFromModal();}"
           class="w-full text-base font-medium px-4 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
       </div>
 
@@ -290,7 +301,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL 2: "DUPOCHRON" (ZMIANA TERMINU / PILNOŚCI / WAŻNOŚCI / CZEKAM NA)  -->
   <!-- ========================================================================= -->
-  <div id="dupochronModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="dupochronModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-md w-full space-y-5 fade-in">
       <div class="flex items-center justify-between">
         <span id="dupochronBadge" class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Korekta terminu · Dupochron</span>
@@ -391,7 +402,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL 3: RĘCZNE DOPISANIE CZASU "Z PALCA"                                 -->
   <!-- ========================================================================= -->
-  <div id="manualTimeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="manualTimeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-sm w-full space-y-4 fade-in">
       <div class="flex items-center justify-between">
         <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Dopisz czas z palca</span>
@@ -431,7 +442,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL 4: ZARZĄDZANIE PLIKIEM FOKUS-DB.JSON + BACKUP                       -->
   <!-- ========================================================================= -->
-  <div id="dbFileModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="dbFileModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-md w-full space-y-5 fade-in">
       <div class="flex items-center justify-between">
         <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Baza danych · fokus-db.json</span>
@@ -470,7 +481,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL 5: SPOTKANIE / URLOP / ZDARZENIE W KALENDARZU                       -->
   <!-- ========================================================================= -->
-  <div id="calendarEventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="calendarEventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-md w-full space-y-5 fade-in max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <span id="calendarModalHeader" class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Nowe zdarzenie w kalendarzu</span>
@@ -658,7 +669,30 @@
     let fileHandle = null;
     let directoryHandle = null;
 
-    // Stan stopera Pomodoro + Overtime
+    // Uniwersalne kontrolki otwierania/zamykania modali (Uproszczenie 2.6)
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    // Bezpieczne generowanie unikalnych ID bez kolizji (Uproszczenie 2.7)
+    function generateId(prefix = 'id') {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return `${prefix}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
+      }
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    // Stan stopera Pomodoro + Overtime (Poprawka 1.2 z ochroną przed dławieniem w tle)
     let timer = {
       running: false,
       taskId: null,
@@ -667,8 +701,55 @@
       isOvertime: false,
       overtimeSeconds: 0,
       intervalId: null,
-      chimePlayed: false
+      chimePlayed: false,
+      sessionStartedAt: null,
+      targetEndTimestamp: null
     };
+
+    const POMODORO_STORAGE_KEY = 'fokus_pomodoro_state';
+
+    function savePomodoroState() {
+      try {
+        const state = {
+          running: timer.running,
+          taskId: timer.taskId,
+          plannedMinutes: timer.plannedMinutes,
+          remainingSeconds: timer.remainingSeconds,
+          isOvertime: timer.isOvertime,
+          overtimeSeconds: timer.overtimeSeconds,
+          chimePlayed: timer.chimePlayed,
+          sessionStartedAt: timer.sessionStartedAt,
+          targetEndTimestamp: timer.targetEndTimestamp,
+          savedAt: Date.now()
+        };
+        localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function loadPomodoroState() {
+      try {
+        const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (!s || !s.taskId) return;
+        timer.taskId = s.taskId;
+        timer.plannedMinutes = s.plannedMinutes || 25;
+        timer.sessionStartedAt = s.sessionStartedAt || null;
+        timer.chimePlayed = !!s.chimePlayed;
+        if (s.running && s.targetEndTimestamp) {
+          timer.targetEndTimestamp = s.targetEndTimestamp;
+          timer.running = true;
+          tickPomodoro();
+          clearInterval(timer.intervalId);
+          timer.intervalId = setInterval(tickPomodoro, 1000);
+        } else {
+          timer.running = false;
+          timer.remainingSeconds = s.remainingSeconds ?? (timer.plannedMinutes * 60);
+          timer.isOvertime = !!s.isOvertime;
+          timer.overtimeSeconds = s.overtimeSeconds || 0;
+        }
+      } catch (e) {}
+    }
 
     // Stan modala Dupochron
     let dupochronContext = {
@@ -693,7 +774,7 @@
 
     function normalizeTask(t) {
       if (!t) return t;
-      if (!t.id) t.id = 'tsk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      if (!t.id) t.id = generateId('tsk');
       if (!t.personId && t.requesterPersonId) t.personId = t.requesterPersonId;
       if (!t.requesterPersonId && t.personId) t.requesterPersonId = t.personId;
       if (t.contextNotes === undefined && t.notesAndContext !== undefined) t.contextNotes = t.notesAndContext;
@@ -701,7 +782,7 @@
       if (!t.checklist && t.milestones) t.checklist = t.milestones;
       if (!t.milestones && t.checklist) t.milestones = t.checklist;
       if (!t.milestones) t.milestones = [];
-      if (!t.checklist) t.checklist = t.milestones;
+      t.checklist = t.milestones; // Zawsze tożsama referencja (Poprawka 1.4)
       if (!t.auditLog) t.auditLog = [];
       if (t.inMyDay !== undefined) t.isMyDay = !!t.inMyDay;
       if (t.isMyDay !== undefined) t.inMyDay = !!t.isMyDay;
@@ -799,36 +880,160 @@
       }
     }
 
-    function loadDatabase() {
-      // Zadania i logi nie są przechowywane w pamięci podręcznej przeglądarki (localStorage).
-      // Źródłem prawdy jest wyłącznie lokalny plik fokus-db.json na dysku.
+    // Wyszukiwarki z zachowaniem kursora i fokusu (Poprawka 1.1)
+    function onMatrixSearchInput(input) {
+      const pos = input.selectionStart;
+      matrixFilter.search = input.value;
+      saveUiPreferences();
+      renderApp();
+      const el = document.getElementById('matrixSearchInput');
+      if (el) {
+        el.focus();
+        try { el.setSelectionRange(pos, pos); } catch (_) {}
+      }
+    }
+
+    function onWaitingSearchInput(input) {
+      const pos = input.selectionStart;
+      waitingFilter.search = input.value;
+      saveUiPreferences();
+      renderApp();
+      const el = document.getElementById('waitingSearchInput');
+      if (el) {
+        el.focus();
+        try { el.setSelectionRange(pos, pos); } catch (_) {}
+      }
+    }
+
+    // =========================================================================
+    // STAN BAZY DANYCH I ZAPIS KOLEJKOWANY (DEBOUNCE + QUEUE)
+    // =========================================================================
+    // 'DISCONNECTED' | 'NEEDS_PERMISSION' | 'CONNECTED' | 'ERROR'
+    let dbConnectionState = 'DISCONNECTED';
+    let lastSavedAt = null;
+    let lastLoadedFileModified = null;
+
+    function isDbWritable() {
+      return dbConnectionState === 'CONNECTED';
+    }
+
+    function requireDb() {
+      if (isDbWritable()) return true;
+      showToast('🔒 Najpierw podłącz plik bazy danych');
+      openDbFileModal();
+      return false;
+    }
+
+    function freshDb() {
       return normalizeDatabase(JSON.parse(JSON.stringify(DEFAULT_DB)));
     }
 
-    async function saveDatabase() {
+    function loadDatabase() {
+      // Zadania i logi nie są przechowywane w pamięci podręcznej przeglądarki (localStorage).
+      // Źródłem prawdy jest wyłącznie lokalny plik fokus-db.json na dysku.
+      return freshDb();
+    }
+
+    let saveTimer = null;
+    let saveChain = Promise.resolve();
+
+    function saveDatabase() {
+      if (!isDbWritable()) {
+        console.warn('Zapis pominięty – baza nie jest podłączona');
+        return false;
+      }
+      setSaveIndicator('Zapisywanie…');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(queueFlush, 400); // wiele zmian w krótkim czasie = 1 zapis
+      return true;
+    }
+
+    // Zapisy wykonują się zawsze po kolei, nigdy równolegle
+    function queueFlush() {
+      saveTimer = null;
+      saveChain = saveChain.then(async () => {
+        if (!isDbWritable()) return;
+        const ok = await writeDbNow();
+        setSaveIndicator(ok && lastSavedAt
+          ? 'Zapisano ' + lastSavedAt.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+          : 'Błąd zapisu');
+      });
+      return saveChain;
+    }
+
+    async function writeDbNow() {
+      db.peopleDictionary = db.people;
+      db.categoryDictionary = db.categories;
+      db.timeSessions = db.timeLogs;
+
+      const json = JSON.stringify(db, null, 2);
       try {
-        db.peopleDictionary = db.people;
-        db.categoryDictionary = db.categories;
-        db.timeSessions = db.timeLogs;
-        saveUiPreferences();
+        let target = fileHandle;
+        if (!target && directoryHandle) {
+          target = await directoryHandle.getFileHandle('fokus-db.json', { create: true });
+        }
+        if (!target) return false;
 
-        let saveSuccess = false;
-        if (fileHandle) {
-          saveSuccess = await writeDatabaseToFile();
-        } else if (directoryHandle) {
-          saveSuccess = await writeDatabaseToDisk();
+        // Ochrona przed nadpisaniem pliku zmienionego z zewnątrz (np. OneDrive na innym komputerze)
+        try {
+          const currentFile = await target.getFile();
+          if (lastLoadedFileModified && currentFile.lastModified > lastLoadedFileModified + 1000) {
+            const overwrite = confirm('⚠️ Plik fokus-db.json na dysku zmienił się od ostatniego wczytania (np. przez synchronizację OneDrive). Czy na pewno chcesz nadpisać wersją z tej karty?');
+            if (!overwrite) {
+              await loadFromCurrentHandle();
+              renderApp();
+              return false;
+            }
+          }
+        } catch (e) {}
+
+        const w = await target.createWritable();
+        try {
+          await w.write(json);
+          await w.close();
+        } catch (e) {
+          try { await w.abort(); } catch (_) {}
+          throw e;
         }
 
-        if (saveSuccess) {
-          updateDbStatusUI('CONNECTED');
-        } else {
-          updateDbStatusUI('NEEDS_PERMISSION');
-          showToast('⚠️ Kliknij wskaźnik pliku na górnym pasku, aby zezwolić na zapis');
-        }
+        try {
+          const savedFile = await target.getFile();
+          lastLoadedFileModified = savedFile.lastModified;
+        } catch (e) {}
+
+        if (directoryHandle) await ensureDailyBackup();
+        lastSavedAt = new Date();
+        updateDbStatusUI('CONNECTED');
+        return true;
       } catch (e) {
-        console.error('Błąd zapisu bazy:', e);
+        console.error('Zapis bazy nieudany:', e);
+        // Tylko błędy uprawnień oznaczają utratę połączenia
+        if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
+          updateDbStatusUI('NEEDS_PERMISSION');
+          openDbFileModal();
+        } else {
+          showToast('⚠️ Błąd zapisu (' + e.name + ') – ponowię przy następnej zmianie');
+        }
+        return false;
       }
     }
+
+    function setSaveIndicator(text) {
+      const el = document.getElementById('dbSaveInfo');
+      if (el) el.textContent = text ? ` · ${text}` : '';
+    }
+
+    // Nie trać ostatniej zmiany przy przełączeniu karty lub zamknięciu
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && saveTimer) {
+        clearTimeout(saveTimer);
+        queueFlush();
+      }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+      if (saveTimer) { e.preventDefault(); e.returnValue = ''; }
+    });
 
     // =========================================================================
     // KALENDARZ ŚWIĄT I DNI ROBOCZYCH (POLSKIE ŚWIĘTA + METODA GAUSSA/MEEUSA)
@@ -1137,6 +1342,9 @@
       timer.isOvertime = false;
       timer.overtimeSeconds = 0;
       timer.chimePlayed = false;
+      timer.sessionStartedAt = null;
+      timer.targetEndTimestamp = null;
+      savePomodoroState();
       updateTimerUI();
     }
 
@@ -1153,7 +1361,38 @@
       }
     }
 
+    function tickPomodoro() {
+      const now = Date.now();
+      if (!timer.targetEndTimestamp) {
+        timer.targetEndTimestamp = now + (timer.remainingSeconds * 1000);
+      }
+      if (now < timer.targetEndTimestamp) {
+        timer.remainingSeconds = Math.max(0, Math.round((timer.targetEndTimestamp - now) / 1000));
+        timer.isOvertime = false;
+        timer.overtimeSeconds = 0;
+      } else {
+        timer.remainingSeconds = 0;
+        timer.isOvertime = true;
+        timer.overtimeSeconds = Math.round((now - timer.targetEndTimestamp) / 1000);
+        if (!timer.chimePlayed) {
+          timer.chimePlayed = true;
+          playGentleChime();
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+              new Notification('Fokus Pomodoro', {
+                body: 'Sesja Pomodoro ukończona! Stoper liczy czas dalej w trybie Overtime (+00:01...).'
+              });
+            } catch (e) {}
+          }
+          showToast('Sesja Pomodoro ukończona — licznik działa dalej w trybie Overtime');
+        }
+      }
+      savePomodoroState();
+      updateTimerUI();
+    }
+
     function togglePomodoro(taskId) {
+      if (!requireDb()) return;
       const activeTask = getActiveMyDayTask();
       const targetId = taskId || (activeTask ? activeTask.id : null);
       if (!targetId) return;
@@ -1162,16 +1401,36 @@
         // Pauza
         clearInterval(timer.intervalId);
         timer.running = false;
+        savePomodoroState();
         updateTimerUI();
         return;
       }
 
-      if (timer.taskId !== targetId) {
+      if (timer.taskId && timer.taskId !== targetId) {
+        const hasWork = timer.running || timer.remainingSeconds < timer.plannedMinutes * 60 || timer.isOvertime;
+        if (hasWork) {
+          const saveOld = confirm('Trwa inna sesja Pomodoro. Czy chcesz zakończyć i zapisać dotychczasowy czas przed przełączeniem zadania?');
+          if (saveOld) {
+            finishAndSavePomodoroSession();
+          }
+        }
         timer.taskId = targetId;
         timer.remainingSeconds = timer.plannedMinutes * 60;
         timer.isOvertime = false;
         timer.overtimeSeconds = 0;
         timer.chimePlayed = false;
+        timer.sessionStartedAt = null;
+        timer.targetEndTimestamp = null;
+      }
+
+      timer.taskId = targetId;
+      if (!timer.sessionStartedAt) {
+        timer.sessionStartedAt = new Date().toISOString();
+      }
+      if (!timer.isOvertime) {
+        timer.targetEndTimestamp = Date.now() + (timer.remainingSeconds * 1000);
+      } else {
+        timer.targetEndTimestamp = Date.now() - (timer.overtimeSeconds * 1000);
       }
 
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -1180,35 +1439,13 @@
 
       timer.running = true;
       clearInterval(timer.intervalId);
-      timer.intervalId = setInterval(() => {
-        if (!timer.isOvertime) {
-          if (timer.remainingSeconds > 0) {
-            timer.remainingSeconds--;
-          } else {
-            timer.isOvertime = true;
-            timer.overtimeSeconds = 1;
-            if (!timer.chimePlayed) {
-              timer.chimePlayed = true;
-              playGentleChime();
-              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                try {
-                  new Notification('Fokus Pomodoro', {
-                    body: 'Sesja Pomodoro ukończona! Stoper liczy czas dalej w trybie Overtime (+00:01...).'
-                  });
-                } catch (e) {}
-              }
-              showToast('Sesja Pomodoro ukończona — licznik działa dalej w trybie Overtime');
-            }
-          }
-        } else {
-          timer.overtimeSeconds++;
-        }
-        updateTimerUI();
-      }, 1000);
+      timer.intervalId = setInterval(tickPomodoro, 1000);
+      savePomodoroState();
       updateTimerUI();
     }
 
     function finishAndSavePomodoroSession() {
+      if (!requireDb()) return;
       if (!timer.taskId) return;
       clearInterval(timer.intervalId);
       timer.running = false;
@@ -1217,14 +1454,15 @@
       const elapsedPlannedMin = Math.max(1, Math.round(elapsedPlannedSec / 60));
       const overtimeMin = Math.round(timer.overtimeSeconds / 60);
       const totalMin = timer.isOvertime ? (timer.plannedMinutes + overtimeMin) : elapsedPlannedMin;
+      const startedAtIso = timer.sessionStartedAt || new Date().toISOString();
 
       const logEntry = {
-        id: 'ses_' + Date.now(),
+        id: generateId('ses'),
         taskId: timer.taskId,
         date: getTodayISO(),
         dateISO: getTodayISO(),
-        startedAt: new Date().toISOString(),
-        startedAtISO: new Date().toISOString(),
+        startedAt: startedAtIso,
+        startedAtISO: startedAtIso,
         plannedMinutes: timer.plannedMinutes,
         targetMinutes: timer.plannedMinutes,
         overtimeMinutes: overtimeMin,
@@ -1239,7 +1477,7 @@
       const t = db.tasks.find(x => x.id === timer.taskId);
       if (t) {
         t.auditLog.unshift({
-          id: 'log_' + Date.now(),
+          id: generateId('log'),
           timestamp: new Date().toISOString(),
           changeType: 'STATUS_CHANGED',
           reasonComment: `Zapisano sesję skupienia: ${totalMin} min${overtimeMin > 0 ? ` (w tym +${overtimeMin}m Overtime)` : ''}`
@@ -1251,6 +1489,9 @@
       timer.isOvertime = false;
       timer.overtimeSeconds = 0;
       timer.chimePlayed = false;
+      timer.sessionStartedAt = null;
+      timer.targetEndTimestamp = null;
+      try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
 
       saveDatabase();
       showToast(`Zapisano sesję (${totalMin} min) w historii i raportach`);
@@ -1347,12 +1588,12 @@
     function toggleTheme() {
       db.theme = db.theme === 'DARK' ? 'LIGHT' : 'DARK';
       applyTheme();
-      saveDatabase();
+      saveUiPreferences();
     }
 
     function switchView(view) {
       db.activeView = view;
-      saveDatabase();
+      saveUiPreferences();
       renderApp();
     }
 
@@ -1382,7 +1623,7 @@
         const btn = document.getElementById('navBtn-' + v);
         if (!btn) return;
         if (db.activeView === v) {
-          btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-2xs transition-all whitespace-nowrap';
+          btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-sm transition-all whitespace-nowrap';
         } else {
           btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all whitespace-nowrap';
         }
@@ -1394,9 +1635,9 @@
         const btn = document.getElementById('navBtn-' + v);
         if (!btn) return;
         if (db.activeView === v) {
-          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-2xs transition flex items-center gap-1.5';
+          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm transition flex items-center gap-1.5';
         } else {
-          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs';
+          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm';
         }
       });
 
@@ -1714,7 +1955,7 @@
               <button onclick="setCard1Tab('STEPS')"
                 class="px-3.5 py-1 rounded-full text-xs font-medium transition ${
                   db.card1Tab === 'STEPS'
-                    ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-2xs'
+                    ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-sm'
                     : 'text-zinc-500 dark:text-zinc-400'
                 }">
                 Kroki i Notatki (${doneSteps}/${totalSteps})
@@ -1722,7 +1963,7 @@
               <button onclick="setCard1Tab('HISTORY')"
                 class="px-3.5 py-1 rounded-full text-xs font-medium transition ${
                   db.card1Tab === 'HISTORY'
-                    ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-2xs'
+                    ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-sm'
                     : 'text-zinc-500 dark:text-zinc-400'
                 }">
                 Historia zmian (${t.auditLog ? t.auditLog.length : 0})
@@ -1756,7 +1997,7 @@
           </div>
 
           <button onclick="completeTask('${t.id}')"
-            class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-2xs">
+            class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm">
             ✓ Ukończ zadanie
           </button>
         </div>
@@ -1893,9 +2134,9 @@
           <!-- Górny pasek filtrów Bento -->
           <div class="bento-card !p-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2.5">
-              <input type="text" placeholder="Szukaj zadania lub aliasu osoby (np. gp)..."
+              <input id="matrixSearchInput" type="text" placeholder="Szukaj zadania lub aliasu osoby (np. gp)..."
                 value="${escapeHtml(matrixFilter.search)}"
-                oninput="matrixFilter.search = this.value; renderApp();"
+                oninput="onMatrixSearchInput(this)"
                 class="text-xs px-3.5 py-2 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] focus:outline-none w-60" />
 
               <select onchange="matrixFilter.personId = this.value; renderApp();"
@@ -1919,25 +2160,28 @@
             </label>
           </div>
 
-          <!-- Siatka 2x2 Bento -->
+          <!-- Siatka 2x2 Bento z subtelnymi akcentami kolorystycznymi kwadrantów (Uwaga 3.4) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            ${renderMatrixQuadrantCard('I · Zrób dziś (Pilne i Ważne)', 'Pożary i zadania o najwyższym priorytecie', q1)}
-            ${renderMatrixQuadrantCard('II · Zaplanuj (Ważne, Niepilne)', 'Praca strategiczna — chroń przed przeterminowaniem', q2)}
-            ${renderMatrixQuadrantCard('III · Operacyjne (Pilne, Mniej ważne)', 'Bieżące wrzutki i szybkie zapytania', q3)}
-            ${renderMatrixQuadrantCard('IV · Parking / Last (Niepilne, Mniej ważne)', 'Zadania na wolniejszy czas', q4)}
+            ${renderMatrixQuadrantCard('I · Zrób dziś (Pilne i Ważne)', 'Pożary i zadania o najwyższym priorytecie', q1, 'border-rose-500/20 dark:border-rose-500/20', 'bg-rose-500')}
+            ${renderMatrixQuadrantCard('II · Zaplanuj (Ważne, Niepilne)', 'Praca strategiczna — chroń przed przeterminowaniem', q2, 'border-blue-500/20 dark:border-blue-500/20', 'bg-blue-500')}
+            ${renderMatrixQuadrantCard('III · Operacyjne (Pilne, Mniej ważne)', 'Bieżące wrzutki i szybkie zapytania', q3, 'border-amber-500/20 dark:border-amber-500/20', 'bg-amber-500')}
+            ${renderMatrixQuadrantCard('IV · Parking / Last (Niepilne, Mniej ważne)', 'Zadania na wolniejszy czas', q4, 'border-zinc-500/20 dark:border-zinc-500/20', 'bg-zinc-400')}
           </div>
         </div>
       `;
     }
 
-    function renderMatrixQuadrantCard(title, subtitle, items) {
+    function renderMatrixQuadrantCard(title, subtitle, items, accentBorder = '', accentDot = 'bg-zinc-400') {
       return `
-        <section class="bento-card flex flex-col justify-between space-y-3 min-h-[260px] lg:h-[calc(43vh-4rem)] overflow-hidden !p-5 sm:!p-6">
+        <section class="bento-card flex flex-col justify-between space-y-3 min-h-[280px] max-h-[460px] overflow-hidden !p-5 sm:!p-6 border ${accentBorder || 'border-transparent'}">
           <div class="flex flex-col h-full min-h-0 space-y-3">
             <div class="flex items-start justify-between shrink-0">
-              <div>
-                <h2 class="text-sm font-semibold">${title}</h2>
-                <p class="text-[11px] text-zinc-400 mt-0.5">${subtitle}</p>
+              <div class="flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full shrink-0 ${accentDot}"></span>
+                <div>
+                  <h2 class="text-sm font-semibold">${title}</h2>
+                  <p class="text-[11px] text-zinc-400 mt-0.5">${subtitle}</p>
+                </div>
               </div>
               <span class="text-xs font-mono text-zinc-400">${items.length}</span>
             </div>
@@ -2087,9 +2331,9 @@
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
-                <input type="text" placeholder="Szukaj zadania lub blokującego..."
+                <input id="waitingSearchInput" type="text" placeholder="Szukaj zadania lub blokującego..."
                   value="${escapeHtml(waitingFilter.search)}"
-                  oninput="waitingFilter.search = this.value; renderApp();"
+                  oninput="onWaitingSearchInput(this)"
                   class="text-xs px-3.5 py-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] focus:outline-none w-48 sm:w-60" />
 
                 <select onchange="waitingFilter.personId = this.value; renderApp();"
@@ -2152,7 +2396,7 @@
                             💬 Wyślij ping
                           </button>
                           <button onclick="unblockWaitingTask('${w.id}', true)" title="Odblokuj zadanie i przenieś do pracy"
-                            class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition shadow-2xs">
+                            class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition shadow-sm">
                             ✓ Odblokuj
                           </button>
                         </div>
@@ -2174,11 +2418,12 @@
     }
 
     function pingWaitingTask(taskId) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       const blocker = getPerson(t.waitingForPersonId || (t.waitingFor && t.waitingFor.personId) || t.requesterPersonId);
       t.auditLog.unshift({
-        id: 'log_' + Date.now(),
+        id: generateId('log'),
         timestamp: new Date().toISOString(),
         changeType: 'MANUAL_NOTE',
         reasonComment: `Wysłano przypomnienie / ping do: ${blocker.canonicalName}`
@@ -2262,15 +2507,15 @@
             <div class="inline-flex bg-black/[0.05] dark:bg-[#1C1C1E] p-1 rounded-full">
               ${[
                 { id: 'TODAY', label: 'Dziś' },
-                { id: 'WEEK', label: 'Ten Tydzień' },
-                { id: 'MONTH', label: 'Ten Miesiąc' },
-                { id: 'QUARTER', label: 'Ten Kwartał' },
-                { id: 'ALL', label: 'Wszystkie' }
+                { id: 'WEEK', label: 'Ostatnie 7 dni' },
+                { id: 'MONTH', label: 'Ostatnie 30 dni' },
+                { id: 'QUARTER', label: 'Ostatnie 90 dni' },
+                { id: 'ALL', label: 'Cała historia' }
               ].map(p => `
-                <button onclick="db.reportPeriod='${p.id}'; saveDatabase(); renderApp();"
+                <button onclick="db.reportPeriod='${p.id}'; saveUiPreferences(); renderApp();"
                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition ${
                     db.reportPeriod === p.id
-                      ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-2xs'
+                      ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-sm'
                       : 'text-zinc-500 dark:text-zinc-400'
                   }">
                   ${p.label}
@@ -2280,11 +2525,11 @@
 
             <div class="flex items-center gap-2">
               <button onclick="exportReportCsv()"
-                class="px-4 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 shadow-2xs hover:opacity-80 transition">
+                class="px-4 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 shadow-sm hover:opacity-80 transition">
                 ⬇ Pobierz CSV (Excel)
               </button>
               <button onclick="exportDatabaseJson()"
-                class="px-4 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 shadow-2xs hover:opacity-80 transition">
+                class="px-4 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 shadow-sm hover:opacity-80 transition">
                 ⬇ Eksportuj fokus-db.json
               </button>
             </div>
@@ -2698,7 +2943,7 @@
             </div>
 
             <button onclick="openCalendarEventModal(null, '${todayISO}')"
-              class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition flex items-center gap-1.5 shadow-2xs">
+              class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
               + Dodaj spotkanie / urlop
             </button>
           </div>
@@ -2953,7 +3198,7 @@
               <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-sm">🐸</div>
               <h3 class="text-sm font-semibold">Eat That Frog (Żaba Dnia)</h3>
               <p class="text-xs text-zinc-400 leading-relaxed">
-                Zadanie #1 to Twoja dzisiejsza Żaba — najważniejsze, strategiczne zadanie analityczne, które najchętniej byś odłożył. Kafelek 01 prezentuje w pełnym rozwinięciu <strong>wyłącznie jedno zadanie na raz</strong>, chroniąc stan skupienia.
+                Zadanie #1 to Twoja dzisiejsza Żaba — najważniejsze, strategiczne zadanie analityczne, które najchętniej byś odłożył. Sekcja „Teraz robię” prezentuje w pełnym rozwinięciu <strong>wyłącznie jedno zadanie na raz</strong>, chroniąc stan skupienia.
               </p>
             </div>
 
@@ -3016,7 +3261,7 @@
               <div class="p-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 space-y-2">
                 <span class="font-mono text-zinc-400 font-semibold">08:30</span>
                 <div class="font-semibold text-zinc-800 dark:text-zinc-200">3. Zjedz Żabę</div>
-                <p class="text-zinc-400 leading-relaxed text-[11px]">Włącz Pomodoro w Kafelku 01 i realizuj płaską checklistę kroków milowych.</p>
+                <p class="text-zinc-400 leading-relaxed text-[11px]">Włącz Pomodoro w sekcji „Teraz robię” i realizuj płaską checklistę kroków milowych.</p>
               </div>
               <div class="p-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 space-y-2">
                 <span class="font-mono text-zinc-400 font-semibold">W trakcie</span>
@@ -3079,7 +3324,7 @@
             <h3 class="text-base font-semibold">100% Prywatności: Local-First i Power BI</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed text-zinc-400">
               <p>
-                Aplikacja działa w $100\%$ w Twojej przeglądarce Chrome. Żadne dane, zadania ani notatki biznesowe nie opuszczają Twojego komputera. Zapis odbywa się bezpośrednio do lokalnego pliku <code>fokus-db.json</code> w folderze aplikacji za pośrednictwem bezpiecznego API File System Access.
+                Aplikacja działa w 100% w Twojej przeglądarce Chrome. Żadne dane, zadania ani notatki biznesowe nie opuszczają Twojego komputera. Zapis odbywa się bezpośrednio do lokalnego pliku <code>fokus-db.json</code> w folderze aplikacji za pośrednictwem bezpiecznego API File System Access.
               </p>
               <p>
                 Plik <code>fokus-db.json</code> zawiera płaskie tablice <code>tasks[]</code> oraz <code>timeLogs[]</code>. Możesz podpiąć ten plik bezpośrednio do <strong>Power BI Desktop</strong> (<em>Pobierz dane → JSON</em>) lub Excela (<em>Power Query</em>) w celu łączenia wyników produktywności z danymi z systemu ERP (Business Central / SAP).
@@ -3094,8 +3339,10 @@
     // =========================================================================
     // OBSŁUGA MODALA KALENDARZA (DODAWANIE / EDYCJA SPOTKANIA I URLOPU)
     // =========================================================================
+    // MODAL WYDARZEŃ KALENDARZA (SPOTKANIA I URLOPY POMNIEJSZAJĄCE BUDŻET ALPEN)
+    // =========================================================================
     function openCalendarEventModal(eventId = null, defaultDateISO = null) {
-      const modal = document.getElementById('calendarEventModal');
+      if (!requireDb()) return;
       const header = document.getElementById('calendarModalHeader');
       const delBtn = document.getElementById('cemDeleteBtn');
 
@@ -3126,17 +3373,12 @@
         delBtn.classList.add('hidden');
       }
 
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      openModal('calendarEventModal');
       setTimeout(() => document.getElementById('cemTitle').focus(), 50);
     }
 
     function closeCalendarEventModal() {
-      const modal = document.getElementById('calendarEventModal');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
+      closeModal('calendarEventModal');
     }
 
     function setCalendarModalType(type) {
@@ -3173,6 +3415,7 @@
     }
 
     function saveCalendarEventModal() {
+      if (!requireDb()) return;
       const id = document.getElementById('cemEventId').value.trim();
       const type = document.getElementById('cemType').value || 'MEETING';
       const title = document.getElementById('cemTitle').value.trim();
@@ -3207,7 +3450,7 @@
         }
       } else {
         const newEvent = {
-          id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          id: generateId('evt'),
           type,
           title,
           dateISO,
@@ -3227,6 +3470,7 @@
     }
 
     function deleteCalendarEvent(eventId) {
+      if (!requireDb()) return;
       if (!confirm('Czy na pewno chcesz usunąć to zdarzenie z kalendarza?')) return;
       db.calendarEvents = (db.calendarEvents || []).filter(e => e.id !== eventId);
       saveDatabase();
@@ -3235,6 +3479,7 @@
     }
 
     function deleteCalendarEventFromModal() {
+      if (!requireDb()) return;
       const id = document.getElementById('cemEventId').value.trim();
       if (id) {
         deleteCalendarEvent(id);
@@ -3270,7 +3515,7 @@
 
       if (query && !db.people.some(p => p.canonicalName.toLowerCase() === query)) {
         html += `
-          <div onclick="createPersonInline('${prefix}', '${escapeHtml(inputEl.value.trim())}')"
+          <div onclick="createPersonInline('${prefix}', this.getAttribute('data-name'))" data-name="${escapeHtml(inputEl.value.trim())}"
             class="px-3 py-2 mt-1 rounded-xl text-xs bg-[#F5F5F7] dark:bg-[#2C2C2E] font-medium cursor-pointer hover:opacity-80">
             + Dodaj „${escapeHtml(inputEl.value.trim())}” do słownika osób
           </div>
@@ -3289,9 +3534,10 @@
     }
 
     function createPersonInline(prefix, newName) {
+      if (!requireDb()) return;
       if (!newName) return;
       const newPerson = {
-        id: 'per_' + Date.now(),
+        id: generateId('per'),
         canonicalName: newName,
         roleOrDept: '',
         aliases: [newName.toLowerCase()],
@@ -3319,17 +3565,18 @@
     // =========================================================================
     function selectTaskForCard01(taskId) {
       db.selectedTaskId = taskId;
-      saveDatabase();
+      saveUiPreferences();
       renderApp();
     }
 
     function setCard1Tab(tab) {
       db.card1Tab = tab;
-      saveDatabase();
+      saveUiPreferences();
       renderApp();
     }
 
     function promoteToFrog(taskId) {
+      if (!requireDb()) return;
       const myDay = getMyDayTasks();
       let order = 2;
       myDay.forEach(t => {
@@ -3343,6 +3590,7 @@
     }
 
     function toggleTaskMyDay(taskId) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       const currentlyInMyDay = t.inMyDay || t.isMyDay;
@@ -3366,14 +3614,17 @@
     }
 
     function toggleMilestone(taskId, milestoneId) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       const list = t.milestones || t.checklist || [];
       const m = list.find(x => x.id === milestoneId);
       if (!m) return;
       m.isDone = !m.isDone;
+      t.milestones = list;
+      t.checklist = list;
       t.auditLog.unshift({
-        id: 'log_' + Date.now(),
+        id: generateId('log'),
         timestamp: new Date().toISOString(),
         changeType: 'MILESTONE_DONE',
         reasonComment: `${m.isDone ? 'Ukończono krok' : 'Cofnięto krok'}: ${m.title}`
@@ -3383,12 +3634,13 @@
     }
 
     function addMilestone(taskId, title) {
+      if (!requireDb()) return;
       const clean = (title || '').trim();
       if (!clean) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       if (!t.milestones) t.milestones = [];
-      const item = { id: 'm_' + Date.now(), title: clean, isDone: false };
+      const item = { id: generateId('m'), title: clean, isDone: false };
       t.milestones.push(item);
       t.checklist = t.milestones;
       saveDatabase();
@@ -3396,6 +3648,7 @@
     }
 
     function deleteMilestone(taskId, milestoneId) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       t.milestones = (t.milestones || []).filter(m => m.id !== milestoneId);
@@ -3405,6 +3658,7 @@
     }
 
     function updateTaskNotes(taskId, text) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       t.notesAndContext = text;
@@ -3415,12 +3669,13 @@
     }
 
     function addManualAuditNote(taskId, noteText) {
+      if (!requireDb()) return;
       const clean = (noteText || '').trim();
       if (!clean) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       t.auditLog.unshift({
-        id: 'log_' + Date.now(),
+        id: generateId('log'),
         timestamp: new Date().toISOString(),
         changeType: 'MANUAL_NOTE',
         reasonComment: clean
@@ -3430,6 +3685,7 @@
     }
 
     function completeTask(taskId) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       t.status = 'DONE';
@@ -3438,7 +3694,7 @@
       t.completedAt = new Date().toISOString();
       t.completedAtISO = t.completedAt;
       t.auditLog.unshift({
-        id: 'log_' + Date.now(),
+        id: generateId('log'),
         timestamp: new Date().toISOString(),
         changeType: 'STATUS_CHANGED',
         fieldChanged: 'Status',
@@ -3452,7 +3708,7 @@
         const nextDue = computeNextRecurrenceDate(t.dueDate || getTodayISO(), t.recurrence);
         const cloned = {
           ...JSON.parse(JSON.stringify(t)),
-          id: 'tsk_' + Date.now(),
+          id: generateId('tsk'),
           status: 'TODO',
           inMyDay: false,
           isMyDay: false,
@@ -3465,7 +3721,7 @@
           milestones: (t.milestones || []).map(m => ({ ...m, isDone: false })),
           checklist: (t.milestones || []).map(m => ({ ...m, isDone: false })),
           auditLog: [{
-            id: 'log_' + Date.now(),
+            id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'CREATED',
             reasonComment: `Automatycznie odnowiono zadanie cykliczne (${t.recurrence}) na termin ${nextDue}`
@@ -3497,6 +3753,7 @@
     }
 
     function unblockWaitingTask(taskId, tryAddToMyDay = true) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       const blocker = getPerson(t.waitingForPersonId || (t.waitingFor && t.waitingFor.personId) || t.requesterPersonId);
@@ -3511,7 +3768,7 @@
         t.myDayOrder = null;
       }
       t.auditLog.unshift({
-        id: 'log_' + Date.now(),
+        id: generateId('log'),
         timestamp: new Date().toISOString(),
         changeType: 'STATUS_CHANGED',
         fieldChanged: 'Status',
@@ -3532,6 +3789,7 @@
     // MODAL "DUPOCHRON" (ZMIANA TERMINU / PILNOŚCI / WAŻNOŚCI / WAITING FOR)
     // =========================================================================
     function openDupochronModal(taskId, mode = 'DEADLINE') {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       dupochronContext.taskId = taskId;
@@ -3565,9 +3823,7 @@
         selectDpReason('HIGHER_PRIORITY_INJECTION', '');
       }
 
-      const modal = document.getElementById('dupochronModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      openModal('dupochronModal');
     }
 
     function selectDpReason(cat, defaultText) {
@@ -3586,12 +3842,11 @@
     }
 
     function closeDupochronModal() {
-      const modal = document.getElementById('dupochronModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      closeModal('dupochronModal');
     }
 
     function confirmDupochronModal(skipReason) {
+      if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === dupochronContext.taskId);
       if (!t) return;
 
@@ -3613,7 +3868,7 @@
         };
 
         t.auditLog.unshift({
-          id: 'log_' + Date.now(),
+          id: generateId('log'),
           timestamp: new Date().toISOString(),
           changeType: 'STATUS_CHANGED',
           fieldChanged: 'Status',
@@ -3640,7 +3895,7 @@
         if (newDate && newDate !== t.dueDate) {
           t.dueDate = newDate;
           t.auditLog.unshift({
-            id: 'log_' + Date.now(),
+            id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'DUE_DATE_CHANGED',
             fieldChanged: 'Termin',
@@ -3655,7 +3910,7 @@
         if (newUrg !== oldUrg) {
           t.urgencyTag = newUrg;
           t.auditLog.unshift({
-            id: 'log_' + (Date.now() + 1),
+            id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'URGENCY_CHANGED',
             fieldChanged: 'Pilność',
@@ -3670,7 +3925,7 @@
         if (newImp && newImp !== oldImp) {
           t.importance = newImp;
           t.auditLog.unshift({
-            id: 'log_' + (Date.now() + 2),
+            id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'IMPORTANCE_CHANGED',
             fieldChanged: 'Ważność',
@@ -3694,6 +3949,7 @@
     // MODAL DODAWANIA / EDYCJI ZADANIA
     // =========================================================================
     function openTaskModal(taskId = null) {
+      if (!requireDb()) return;
       const catSelect = document.getElementById('tmCategoryId');
       catSelect.innerHTML = db.categories.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
 
@@ -3747,16 +4003,12 @@
         delBtn.classList.add('hidden');
       }
 
-      const modal = document.getElementById('taskModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      openModal('taskModal');
       setTimeout(() => document.getElementById('tmTitle').focus(), 50);
     }
 
     function closeTaskModal() {
-      const modal = document.getElementById('taskModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      closeModal('taskModal');
     }
 
     function applySopPreset(type) {
@@ -3783,6 +4035,7 @@
     }
 
     function saveTaskFromModal() {
+      if (!requireDb()) return;
       const id = document.getElementById('tmTaskId').value;
       const title = document.getElementById('tmTitle').value.trim();
       if (!title) {
@@ -3837,13 +4090,13 @@
           // Zachowaj status istniejących kroków o tym samym tytule
           t.milestones = lines.map((line, idx) => {
             const existing = (t.milestones || []).find(m => m.title === line);
-            return existing || { id: 'm_' + Date.now() + '_' + idx, title: line, isDone: false };
+            return existing || { id: generateId('m'), title: line, isDone: false };
           });
           t.checklist = t.milestones;
 
           if (oldDue !== dueDate) {
             t.auditLog.unshift({
-              id: 'log_' + Date.now(),
+              id: generateId('log'),
               timestamp: new Date().toISOString(),
               changeType: 'DUE_DATE_CHANGED',
               fieldChanged: 'Termin',
@@ -3856,7 +4109,7 @@
 
           if (oldUrg !== urgencyTag) {
             t.auditLog.unshift({
-              id: 'log_' + (Date.now() + 1),
+              id: generateId('log'),
               timestamp: new Date().toISOString(),
               changeType: 'URGENCY_CHANGED',
               fieldChanged: 'Pilność',
@@ -3869,7 +4122,7 @@
 
           if (oldImp !== importance) {
             t.auditLog.unshift({
-              id: 'log_' + (Date.now() + 2),
+              id: generateId('log'),
               timestamp: new Date().toISOString(),
               changeType: 'IMPORTANCE_CHANGED',
               fieldChanged: 'Ważność',
@@ -3883,7 +4136,7 @@
         showToast('Zaktualizowano zadanie');
       } else {
         const newTask = {
-          id: 'tsk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          id: generateId('tsk'),
           title,
           requesterPersonId: personId,
           personId,
@@ -3900,17 +4153,18 @@
           myDayOrder: inMyDay ? getMyDayTasks().length + 1 : null,
           notesAndContext,
           contextNotes: notesAndContext,
-          milestones: lines.map((line, idx) => ({ id: 'm_' + Date.now() + '_' + idx, title: line, isDone: false })),
-          checklist: lines.map((line, idx) => ({ id: 'm_' + Date.now() + '_' + idx, title: line, isDone: false })),
+          milestones: lines.map((line) => ({ id: generateId('m'), title: line, isDone: false })),
+          checklist: null, // zostanie powiązane poniżej
           createdAt: new Date().toISOString(),
           createdAtISO: new Date().toISOString(),
           auditLog: [{
-            id: 'log_' + Date.now(),
+            id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'CREATED',
             reasonComment: `Utworzono zadanie${dueDate ? ' (termin: ' + dueDate + ')' : ''}`
           }]
         };
+        newTask.checklist = newTask.milestones;
         db.tasks.unshift(newTask);
         if (inMyDay) db.selectedTaskId = newTask.id;
         showToast('Dodano nowe zadanie');
@@ -3922,8 +4176,10 @@
     }
 
     function deleteTaskFromModal() {
+      if (!requireDb()) return;
       const id = document.getElementById('tmTaskId').value;
       if (!id) return;
+      if (!confirm('Czy na pewno chcesz usunąć to zadanie? (Tej operacji nie można cofnąć)')) return;
       db.tasks = db.tasks.filter(t => t.id !== id);
       closeTaskModal();
       saveDatabase();
@@ -3937,31 +4193,29 @@
     let manualTimeTaskId = null;
 
     function openManualTimeModal(taskId) {
+      if (!requireDb()) return;
       manualTimeTaskId = taskId;
       const t = db.tasks.find(x => x.id === taskId);
       document.getElementById('mtTaskTitle').textContent = t ? t.title : '';
       document.getElementById('mtMinutes').value = 30;
       document.getElementById('mtDate').value = getTodayISO();
       document.getElementById('mtNote').value = '';
-      const m = document.getElementById('manualTimeModal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
+      openModal('manualTimeModal');
     }
 
     function closeManualTimeModal() {
-      const m = document.getElementById('manualTimeModal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
+      closeModal('manualTimeModal');
     }
 
     function saveManualTimeModal() {
+      if (!requireDb()) return;
       if (!manualTimeTaskId) return;
       const mins = Math.max(1, parseInt(document.getElementById('mtMinutes').value, 10) || 30);
       const dateStr = document.getElementById('mtDate').value || getTodayISO();
       const note = document.getElementById('mtNote').value.trim() || 'Wpis ręczny (z palca)';
 
       db.timeLogs.unshift({
-        id: 'ses_' + Date.now(),
+        id: generateId('ses'),
         taskId: manualTimeTaskId,
         date: dateStr,
         dateISO: dateStr,
@@ -3979,7 +4233,7 @@
       const t = db.tasks.find(x => x.id === manualTimeTaskId);
       if (t) {
         t.auditLog.unshift({
-          id: 'log_' + Date.now(),
+          id: generateId('log'),
           timestamp: new Date().toISOString(),
           changeType: 'MANUAL_NOTE',
           reasonComment: `Dopisano ręcznie czas: ${mins} min (${dateStr}) — ${note}`
@@ -3996,6 +4250,7 @@
     // ZARZĄDZANIE SŁOWNIKAMI (OSOBY, KATEGORIE, SZABLONY SOP)
     // =========================================================================
     function addPersonFromDictionary() {
+      if (!requireDb()) return;
       const name = document.getElementById('newPersonName').value.trim();
       const role = document.getElementById('newPersonRole').value.trim();
       const aliasesRaw = document.getElementById('newPersonAliases').value;
@@ -4005,7 +4260,7 @@
       }
       const aliases = aliasesRaw.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
       db.people.push({
-        id: 'per_' + Date.now(),
+        id: generateId('per'),
         canonicalName: name,
         roleOrDept: role,
         aliases,
@@ -4017,6 +4272,7 @@
     }
 
     function updatePersonName(personId, name) {
+      if (!requireDb()) return;
       const p = db.people.find(x => x.id === personId);
       if (!p || !name.trim()) return;
       p.canonicalName = name.trim();
@@ -4025,6 +4281,7 @@
     }
 
     function updatePersonRole(personId, role) {
+      if (!requireDb()) return;
       const p = db.people.find(x => x.id === personId);
       if (!p) return;
       p.roleOrDept = role.trim();
@@ -4033,6 +4290,7 @@
     }
 
     function updatePersonAliases(personId, aliasesStr) {
+      if (!requireDb()) return;
       const p = db.people.find(x => x.id === personId);
       if (!p) return;
       p.aliases = aliasesStr.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
@@ -4041,26 +4299,35 @@
     }
 
     function deletePerson(personId) {
+      if (!requireDb()) return;
       if (db.people.length <= 1) {
         showToast('Wymagana jest co najmniej jedna osoba w słowniku');
         return;
       }
+      const hasTasks = db.tasks.some(t => (t.requesterPersonId === personId || t.personId === personId || (t.waitingFor && t.waitingFor.personId === personId) || t.waitingForPersonId === personId));
+      if (hasTasks) {
+        showToast('Nie można usunąć osoby, do której są przypisane zadania');
+        return;
+      }
+      if (!confirm('Czy na pewno chcesz usunąć tę osobę ze słownika?')) return;
       db.people = db.people.filter(p => p.id !== personId);
       saveDatabase();
       renderApp();
     }
 
     function addCategoryFromDictionary() {
+      if (!requireDb()) return;
       const name = document.getElementById('newCatName').value.trim();
       const colorHex = document.getElementById('newCatColor').value || '#3B82F6';
       if (!name) return;
-      db.categories.push({ id: 'cat_' + Date.now(), name, colorHex });
+      db.categories.push({ id: generateId('cat'), name, colorHex });
       saveDatabase();
       showToast(`Dodano kategorię #${name}`);
       renderApp();
     }
 
     function updateCategoryName(catId, name) {
+      if (!requireDb()) return;
       const c = db.categories.find(x => x.id === catId);
       if (!c || !name.trim()) return;
       c.name = name.trim();
@@ -4069,6 +4336,7 @@
     }
 
     function updateCategoryColor(catId, colorHex) {
+      if (!requireDb()) return;
       const c = db.categories.find(x => x.id === catId);
       if (!c) return;
       c.colorHex = colorHex;
@@ -4078,16 +4346,24 @@
     }
 
     function deleteCategory(catId) {
+      if (!requireDb()) return;
       if (db.categories.length <= 1) {
         showToast('Wymagana jest co najmniej jedna kategoria');
         return;
       }
+      const hasTasks = db.tasks.some(t => t.categoryId === catId);
+      if (hasTasks) {
+        showToast('Nie można usunąć kategorii, do której są przypisane zadania');
+        return;
+      }
+      if (!confirm('Czy na pewno chcesz usunąć tę kategorię?')) return;
       db.categories = db.categories.filter(c => c.id !== catId);
       saveDatabase();
       renderApp();
     }
 
     function addSopTemplateFromDictionary() {
+      if (!requireDb()) return;
       const name = document.getElementById('newSopName').value.trim();
       const stepsText = document.getElementById('newSopSteps').value;
       if (!name) {
@@ -4097,7 +4373,7 @@
       const steps = stepsText.split('\n').map(s => s.trim()).filter(Boolean);
       if (!db.sopTemplates) db.sopTemplates = [];
       db.sopTemplates.push({
-        id: 'sop_' + Date.now(),
+        id: generateId('sop'),
         name,
         steps
       });
@@ -4107,16 +4383,17 @@
     }
 
     function deleteSopTemplate(sopId) {
+      if (!requireDb()) return;
       if (!db.sopTemplates) return;
+      if (!confirm('Czy na pewno chcesz usunąć ten szablon SOP?')) return;
       db.sopTemplates = db.sopTemplates.filter(s => s.id !== sopId);
       saveDatabase();
       renderApp();
     }
 
     // =========================================================================
-    // LOKALNA PERSYSTENCJA PLIKOWA (fokus-db.json w tym samym folderze)
+    // LOKALNA PERSYSTENCJA PLIKOWA (fokus-db.json)
     // =========================================================================
-    let dbConnectionState = 'NEEDS_PERMISSION'; // 'CONNECTED' | 'NEEDS_PERMISSION'
     const IDB_NAME = 'fokus_solo_storage_v4';
     const IDB_STORE = 'handles';
 
@@ -4164,7 +4441,7 @@
           try {
             const tx = idb.transaction(IDB_STORE, 'readwrite');
             const store = tx.objectStore(IDB_STORE);
-            const req = store.put(handle, 'file_handle');
+            const req = handle ? store.put(handle, 'file_handle') : store.delete('file_handle');
             req.onsuccess = () => resolve(true);
             req.onerror = () => resolve(false);
           } catch (e) {
@@ -4202,7 +4479,7 @@
           try {
             const tx = idb.transaction(IDB_STORE, 'readwrite');
             const store = tx.objectStore(IDB_STORE);
-            const req = store.put(handle, 'db_dir_handle');
+            const req = handle ? store.put(handle, 'db_dir_handle') : store.delete('db_dir_handle');
             req.onsuccess = () => resolve(true);
             req.onerror = () => resolve(false);
           } catch (e) {
@@ -4214,374 +4491,205 @@
       }
     }
 
-    async function initDatabasePersistence() {
+    function parseDbText(text) {
+      if (!text || !text.trim()) return { empty: true };
+      let parsed;
+      try { parsed = JSON.parse(text); }
+      catch (e) { return { error: 'Plik nie jest poprawnym JSON-em' }; }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.tasks)) {
+        return { error: 'To nie jest baza Fokus (brak tablicy "tasks")' };
+      }
+      return { data: normalizeDatabase(parsed) };
+    }
+
+    async function loadFromCurrentHandle() {
       try {
-        localStorage.removeItem('FOKUS_SOLO_BENTO_DB_V1');
-        localStorage.removeItem('fokus_solo_db_v4');
-        localStorage.removeItem('fokus_solo_db_v3');
-      } catch (e) {}
-
-      loadUiPreferences();
-
-      // 1. Sprawdź zapisany uchwyt pliku w IndexedDB
-      const storedFile = await getStoredFileHandle();
-      if (storedFile) {
-        fileHandle = storedFile;
-        try {
-          await readDatabaseFromFile();
-          const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            updateDbStatusUI('CONNECTED');
-            renderApp();
-            return;
-          }
-        } catch (e) {
-          console.warn('Weryfikacja uprawnień pliku:', e);
-        }
-      }
-
-      // 2. Sprawdź zapisany uchwyt folderu (fallback)
-      const storedDir = await getStoredDirectoryHandle();
-      if (storedDir) {
-        directoryHandle = storedDir;
-        try {
-          const perm = await directoryHandle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            const ok = await loadOrCreateDatabaseOnDisk();
-            if (ok) {
-              updateDbStatusUI('CONNECTED');
-              renderApp();
-              return;
+        let fh = fileHandle;
+        if (!fh && directoryHandle) {
+          try {
+            fh = await directoryHandle.getFileHandle('fokus-db.json');
+          } catch (e) {
+            if (e.name === 'NotFoundError') {
+              db = freshDb();
+              return true;
             }
+            throw e;
           }
-        } catch (e) {
-          console.warn('Weryfikacja uprawnień folderu:', e);
         }
+        if (!fh) return false;
+        const file = await fh.getFile();
+        lastLoadedFileModified = file.lastModified;
+        const text = await file.text();
+        const res = parseDbText(text);
+        if (res.error) {
+          showToast('❌ ' + res.error);
+          return false;
+        }
+        db = res.empty ? freshDb() : res.data;
+        loadUiPreferences();
+        return true;
+      } catch (e) {
+        console.error('Odczyt bazy nieudany:', e);
+        showToast('Nie można odczytać pliku (' + e.name + ')');
+        return false;
       }
+    }
 
-      // 3. Oczekiwanie na jednorazową zgodę użytkownika na edycję pliku
-      updateDbStatusUI('NEEDS_PERMISSION');
+    async function ensureWritePermission(handle) {
+      if (!handle) return false;
+      const opts = { mode: 'readwrite' };
+      try {
+        if ((await handle.queryPermission(opts)) === 'granted') return true;
+        return (await handle.requestPermission(opts)) === 'granted';
+      } catch (e) {
+        console.warn('Zgoda na zapis wymaga kliknięcia:', e);
+        return false;
+      }
+    }
+
+    async function attachHandle({ file = null, dir = null }) {
+      fileHandle = file;
+      directoryHandle = dir;
+
+      // 1. Odczyt i walidacja. Przy błędzie NIE podłączamy.
+      if (!(await loadFromCurrentHandle())) {
+        fileHandle = null;
+        directoryHandle = null;
+        updateDbStatusUI('DISCONNECTED');
+        return;
+      }
+      await setStoredFileHandle(file);
+      await setStoredDirectoryHandle(dir);
       renderApp();
 
-      // Jeśli nie ma zapamiętanego uchwytu (pierwsze uruchomienie), pokaż okienko informacyjne
-      if (!storedFile && !storedDir) {
-        setTimeout(() => {
-          if (dbConnectionState !== 'CONNECTED' && !fileHandle) {
-            openDbFileModal();
-          }
-        }, 300);
+      // 2. Uprawnienie do zapisu
+      if (!(await ensureWritePermission(file || dir))) {
+        updateDbStatusUI('NEEDS_PERMISSION');
+        openDbFileModal();
+        return;
       }
-    }
 
-    function renderDbModalContent() {
-      const container = document.getElementById('dbModalDynamicContainer');
-      if (!container) return;
-
-      const isConnected = dbConnectionState === 'CONNECTED';
-      const hasHolder = Boolean(fileHandle || directoryHandle);
-      const fileName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
-
-      if (isConnected) {
-        container.innerHTML = `
-          <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Połączono z lokalną bazą danych</span>
-            </div>
-            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">${escapeHtml(fileName)}</code> jest aktywny na Twoim dysku. Każda zmiana, nowe zadanie i sesja Pomodoro zapisują się automatycznie bezpośrednio w tym pliku.
-            </p>
-          </div>
-          <div class="pt-1 flex gap-2">
-            <button onclick="selectDbFile()" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200">
-              📂 Zmień plik...
-            </button>
-            <button onclick="selectDbDirectory()" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200">
-              📁 Zmień folder...
-            </button>
-          </div>
-        `;
-      } else if (hasHolder) {
-        container.innerHTML = `
-          <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">Wymagana zgoda na edycję pliku</span>
-            </div>
-            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">${escapeHtml(fileName)}</code> jest wczytany, ale Chrome wymaga potwierdzenia uprawnień do zapisu na dysku.
-            </p>
-          </div>
-
-          <button onclick="renewDbPermission()" class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition shadow-sm flex items-center justify-center gap-2">
-            <span>🔓</span>
-            <span>Zezwól na edycję pliku (kliknij tutaj)</span>
-          </button>
-
-          <div class="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
-            <button onclick="selectDbFile()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
-              Wskaż plik ponownie...
-            </button>
-            <button onclick="selectDbDirectory()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
-              Wskaż folder aplikacji...
-            </button>
-          </div>
-        `;
+      // 3. Zapis testowy. Dopiero sukces = CONNECTED.
+      if (await writeDbNow()) {
+        updateDbStatusUI('CONNECTED');
+        closeDbFileModal();
+        showToast('Połączono z ' + (file ? file.name : dir.name + '/fokus-db.json'));
       } else {
-        container.innerHTML = `
-          <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2.5">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">Podłączenie pliku bazy danych</span>
-            </div>
-            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Fokus jest aplikacją Local-First — nie wysyła danych do chmury. Wszystko zapisywane jest w pliku <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">fokus-db.json</code> na Twoim dysku.
-            </p>
-            <div class="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-[11px] text-zinc-600 dark:text-zinc-300 space-y-1">
-              <div>📍 <b>Nazwa pliku:</b> <code class="font-mono font-bold text-zinc-800 dark:text-zinc-100">fokus-db.json</code></div>
-              <div>📁 <b>Lokalizacja:</b> w tym samym folderze, co plik <code class="font-mono">Fokus.html</code></div>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <button onclick="selectDbFile()" class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition shadow-sm flex items-center justify-center gap-2">
-              <span>📂</span>
-              <span>Wskaż plik fokus-db.json i połącz</span>
-            </button>
-
-            <button onclick="selectDbDirectory()" class="w-full py-2.5 px-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200 flex items-center justify-center gap-2">
-              <span>📁</span>
-              <span>Lub wskaż cały folder roboczy (zapis 1-kliknięciem)</span>
-            </button>
-          </div>
-        `;
+        updateDbStatusUI('ERROR');
       }
-    }
-
-    async function renewDbPermission() {
-      try {
-        if (fileHandle) {
-          const perm = await fileHandle.requestPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            const writeOk = await writeDatabaseToFile();
-            if (writeOk) {
-              updateDbStatusUI('CONNECTED');
-              closeDbFileModal();
-              renderApp();
-              showToast('Połączono i zapisano do pliku: ' + (fileHandle.name || 'fokus-db.json'));
-              return;
-            }
-          }
-        } else if (directoryHandle) {
-          const perm = await directoryHandle.requestPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            const writeOk = await writeDatabaseToDisk();
-            if (writeOk) {
-              updateDbStatusUI('CONNECTED');
-              closeDbFileModal();
-              renderApp();
-              showToast('Wznowiono połączenie z folderem bazy danych');
-              return;
-            }
-          }
-        }
-        showToast('Wymagana zgoda na zapis do pliku');
-        renderDbModalContent();
-      } catch (err) {
-        console.error('Błąd wznawiania uprawnień:', err);
-        showToast('Nie udało się uzyskać uprawnień do pliku: ' + (err.message || 'odmowa'));
-        renderDbModalContent();
-      }
+      renderApp();
     }
 
     async function selectDbFile() {
       if (!window.showOpenFilePicker) {
-        if (window.showDirectoryPicker) {
-          return selectDbDirectory();
-        } else {
-          showToast('Twoja przeglądarka nie wspiera File System API — użyj Pobierz / Wczytaj JSON');
-        }
+        showToast('Ta przeglądarka nie obsługuje wyboru pliku – użyj Chrome lub Edge');
         return;
       }
-
       try {
         const [handle] = await window.showOpenFilePicker({
+          id: 'fokus-db',
           multiple: false,
-          suggestedName: 'fokus-db.json',
-          types: [{
-            description: 'Baza danych Fokus (fokus-db.json)',
-            accept: { 'application/json': ['.json'] }
-          }]
+          types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
         });
-
-        if (!handle) return;
-
-        fileHandle = handle;
-        directoryHandle = null;
-        await setStoredFileHandle(fileHandle);
-        await setStoredDirectoryHandle(null);
-
-        // 1. Natychmiast odczytujemy zawartość pliku z dysku
-        await readDatabaseFromFile();
-
-        // 2. Natychmiast ustanawiamy połączenie i zamykamy modal
-        updateDbStatusUI('CONNECTED');
-        closeDbFileModal();
-        renderApp();
-        showToast('Pomyślnie połączono z plikiem: ' + handle.name);
-
-        // 3. Sprawdzamy / inicjujemy uprawnienia do zapisu
-        try {
-          const perm = await handle.queryPermission({ mode: 'readwrite' });
-          if (perm !== 'granted') {
-            await handle.requestPermission({ mode: 'readwrite' });
-          }
-          await writeDatabaseToFile();
-        } catch (e) {
-          console.warn('Weryfikacja zapisu (zapisze się przy pierwszej edycji zadania):', e);
-        }
+        await attachHandle({ file: handle });
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Błąd wyboru pliku:', err);
-          showToast('Błąd połączenia: ' + (err.message || 'odmowa dostępu'));
-          renderDbModalContent();
-        }
+        if (err.name !== 'AbortError') showToast('Nie wybrano pliku: ' + err.message);
       }
     }
 
     async function selectDbDirectory() {
       if (!window.showDirectoryPicker) {
-        showToast('Twoja przeglądarka nie obsługuje wyboru folderu');
+        showToast('Ta przeglądarka nie obsługuje wyboru folderu');
         return;
       }
       try {
-        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-        if (!handle) return;
+        const handle = await window.showDirectoryPicker({ id: 'fokus-db', mode: 'readwrite' });
+        await attachHandle({ dir: handle });
+      } catch (err) {
+        if (err.name !== 'AbortError') showToast('Błąd wyboru folderu: ' + err.message);
+      }
+    }
 
-        directoryHandle = handle;
-        fileHandle = null;
-        await setStoredDirectoryHandle(directoryHandle);
-        await setStoredFileHandle(null);
-
-        // 1. Odczytujemy bazę z folderu
-        await loadOrCreateDatabaseOnDisk();
-
-        // 2. Natychmiast ustanawiamy połączenie i zamykamy modal
+    async function createNewDbFile() {
+      if (!window.showSaveFilePicker) {
+        showToast('Przeglądarka nie obsługuje tworzenia plików – wskaż folder lub plik');
+        return;
+      }
+      try {
+        const handle = await window.showSaveFilePicker({
+          id: 'fokus-db',
+          suggestedName: 'fokus-db.json',
+          types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
+        });
+        fileHandle = handle;
+        directoryHandle = null;
+        db = freshDb();
+        loadUiPreferences();
+        if (!(await writeDbNow())) {
+          updateDbStatusUI('ERROR');
+          return;
+        }
+        await setStoredFileHandle(handle);
+        await setStoredDirectoryHandle(null);
         updateDbStatusUI('CONNECTED');
         closeDbFileModal();
         renderApp();
-        showToast('Pomyślnie połączono z folderem: ' + handle.name);
-
-        // 3. Sprawdzamy / inicjujemy zapis do folderu
-        try {
-          await writeDatabaseToDisk();
-        } catch (e) {
-          console.warn('Weryfikacja zapisu do folderu (zapisze się przy pierwszej edycji zadania):', e);
-        }
+        showToast('Utworzono nową bazę: ' + handle.name);
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Błąd wyboru folderu:', err);
-          showToast('Błąd połączenia z folderem: ' + (err.message || 'odmowa dostępu'));
-          renderDbModalContent();
-        }
+        if (err.name !== 'AbortError') showToast('Nie utworzono pliku: ' + err.message);
       }
     }
 
-    async function readDatabaseFromFile() {
-      if (!fileHandle) return false;
+    async function renewDbPermission() {
+      const h = fileHandle || directoryHandle;
+      if (!h) { openDbFileModal(); return; }
       try {
-        const file = await fileHandle.getFile();
-        const text = await file.text();
-        if (text && text.trim().length > 0) {
-          const parsed = JSON.parse(text);
-          if (parsed && typeof parsed === 'object') {
-            const diskTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-            const memoryTasks = (db && Array.isArray(db.tasks)) ? db.tasks : [];
-            if (diskTasks.length > 0 || memoryTasks.length === 0) {
-              db = normalizeDatabase(parsed);
-            } else {
-              parsed.tasks = memoryTasks;
-              db = normalizeDatabase(parsed);
-            }
-            loadUiPreferences();
-            return true;
-          }
-        } else {
-          await writeDatabaseToFile();
-          return true;
+        if ((await h.requestPermission({ mode: 'readwrite' })) !== 'granted') {
+          showToast('Nie udzielono zgody na zapis');
+          return;
         }
-      } catch (e) {
-        console.error('Błąd odczytu pliku fokus-db.json:', e);
-        return false;
-      }
-    }
-
-    async function writeDatabaseToFile() {
-      if (!fileHandle) return false;
-      try {
-        const writable = await fileHandle.createWritable();
-        await writable.write(JSON.stringify(db, null, 2));
-        await writable.close();
+        if (!(await loadFromCurrentHandle())) {
+          updateDbStatusUI('ERROR');
+          return;
+        }
         updateDbStatusUI('CONNECTED');
-        return true;
+        closeDbFileModal();
+        renderApp();
+        showToast('Połączono ponownie z bazą');
       } catch (e) {
-        console.error('Błąd zapisu pliku fokus-db.json:', e);
-        updateDbStatusUI('NEEDS_PERMISSION');
-        return false;
+        console.error('Wznowienie uprawnień nieudane:', e);
+        showToast('Nie udało się uzyskać uprawnień: ' + e.name);
       }
     }
 
-    async function loadOrCreateDatabaseOnDisk() {
-      if (!directoryHandle) return false;
-      try {
-        let fh;
-        try {
-          fh = await directoryHandle.getFileHandle('fokus-db.json', { create: false });
-        } catch (nf) {
-          try {
-            await writeDatabaseToDisk();
-          } catch (e) {}
-          return true;
-        }
-        const file = await fh.getFile();
-        const text = await file.text();
-        if (text && text.trim().length > 0) {
-          const parsed = JSON.parse(text);
-          if (parsed && typeof parsed === 'object') {
-            const diskTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-            const memoryTasks = (db && Array.isArray(db.tasks)) ? db.tasks : [];
-            if (diskTasks.length > 0 || memoryTasks.length === 0) {
-              db = normalizeDatabase(parsed);
-            } else {
-              parsed.tasks = memoryTasks;
-              db = normalizeDatabase(parsed);
-            }
-            loadUiPreferences();
-            return true;
-          }
-        }
-        return true;
-      } catch (e) {
-        console.error('Błąd odczytu z dysku:', e);
-        return false;
-      }
-    }
+    async function initDatabasePersistence() {
+      loadUiPreferences();
+      const file = await getStoredFileHandle();
+      const dir = file ? null : await getStoredDirectoryHandle();
+      const h = file || dir;
 
-    async function writeDatabaseToDisk() {
-      if (!directoryHandle) return false;
-      try {
-        const fh = await directoryHandle.getFileHandle('fokus-db.json', { create: true });
-        const writable = await fh.createWritable();
-        await writable.write(JSON.stringify(db, null, 2));
-        await writable.close();
-        await ensureDailyBackup();
+      if (!h) {
+        updateDbStatusUI('DISCONNECTED');
+        renderApp();
+        openDbFileModal();
+        return;
+      }
+
+      fileHandle = file;
+      directoryHandle = dir;
+      let perm = 'prompt';
+      try { perm = await h.queryPermission({ mode: 'readwrite' }); } catch (e) {}
+
+      if (perm === 'granted' && (await loadFromCurrentHandle())) {
         updateDbStatusUI('CONNECTED');
-        return true;
-      } catch (e) {
-        console.error('Błąd zapisu do fokus-db.json:', e);
-        updateDbStatusUI('NEEDS_PERMISSION');
-        return false;
+        renderApp();
+        return;
       }
+
+      // Uprawnienie wygasło: NIC nie nadpisujemy, czekamy na jedno kliknięcie „Zezwól”
+      updateDbStatusUI('NEEDS_PERMISSION');
+      renderApp();
+      openDbFileModal();
     }
 
     async function ensureDailyBackup() {
@@ -4602,6 +4710,14 @@
 
     function updateDbStatusUI(state) {
       dbConnectionState = state;
+      const locked = state !== 'CONNECTED';
+      document.body.classList.toggle('db-locked', locked);
+      const banner = document.getElementById('dbLockBanner');
+      if (banner) {
+        banner.classList.toggle('hidden', !locked);
+        banner.classList.toggle('flex', locked);
+      }
+
       const dot = document.getElementById('dbFileDot');
       const label = document.getElementById('dbFileLabel');
       const btn = document.getElementById('dbFileStatusBtn');
@@ -4609,68 +4725,132 @@
 
       if (!dot || !label) return;
 
+      const activeName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
+
       if (state === 'CONNECTED') {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        const activeName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
         label.textContent = activeName;
-        if (btn) {
-          btn.title = 'Plik ' + activeName + ' jest połączony i synchronizowany na żywo';
-        }
-        if (modalStatus) modalStatus.textContent = 'Status: Połączono z ' + activeName + ' (zapis aktywny).';
-      } else {
-        const hasHolder = Boolean(fileHandle || directoryHandle);
-        if (hasHolder) {
-          const activeName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
-          dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
-          label.textContent = activeName + ' (wznów)';
-          if (btn) {
-            btn.title = 'Wykryto zapamiętany plik — kliknij, aby wznowić uprawnienia';
-          }
-          if (modalStatus) modalStatus.textContent = 'Status: Wykryto zapamiętany plik (wymaga wznowienia uprawnień).';
+        if (btn) btn.title = `Połączono z ${activeName}. Zapis na bieżąco.`;
+        if (modalStatus) modalStatus.textContent = `Status: Połączono z ${activeName} (zapis aktywny).`;
+        if (lastSavedAt) {
+          setSaveIndicator('Zapisano ' + lastSavedAt.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }));
         } else {
-          dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
-          label.textContent = 'fokus-db.json (połącz)';
-          if (btn) {
-            btn.title = 'Brak połączenia z plikiem bazy — kliknij, aby wskazać fokus-db.json';
-          }
-          if (modalStatus) modalStatus.textContent = 'Status: Nie połączono z plikiem fokus-db.json.';
+          setSaveIndicator('');
         }
+      } else if (state === 'NEEDS_PERMISSION') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+        label.textContent = activeName + ' (wznów)';
+        if (btn) btn.title = 'Wykryto zapamiętany plik — kliknij, aby zezwolić na zapis';
+        if (modalStatus) modalStatus.textContent = 'Status: Wykryto zapamiętany plik (wymaga wznowienia uprawnień).';
+        setSaveIndicator('Wymagana zgoda');
+      } else if (state === 'ERROR') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        label.textContent = activeName + ' (błąd)';
+        if (btn) btn.title = 'Błąd dostępu do pliku bazy — kliknij, aby naprawić';
+        if (modalStatus) modalStatus.textContent = 'Status: Błąd dostępu do pliku bazy.';
+        setSaveIndicator('Błąd zapisu');
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
+        label.textContent = 'fokus-db.json (połącz)';
+        if (btn) btn.title = 'Brak połączenia z plikiem bazy — kliknij, aby wskazać plik lub folder';
+        if (modalStatus) modalStatus.textContent = 'Status: Nie połączono z plikiem bazy.';
+        setSaveIndicator('');
       }
       renderDbModalContent();
+    }
+
+    function renderDbModalContent() {
+      const container = document.getElementById('dbModalDynamicContainer');
+      if (!container) return;
+
+      const isConnected = dbConnectionState === 'CONNECTED';
+      const hasHolder = Boolean(fileHandle || directoryHandle);
+      const fileName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
+
+      if (isConnected) {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Połączono z lokalną bazą danych</span>
+            </div>
+            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              Plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">${escapeHtml(fileName)}</code> jest aktywny na Twoim dysku. Każda zmiana zapisuje się automatycznie bezpośrednio w tym pliku.
+            </p>
+          </div>
+          <div class="pt-1 flex gap-2">
+            <button onclick="selectDbFile()" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200">
+              📂 Zmień plik...
+            </button>
+            <button onclick="selectDbDirectory()" class="flex-1 py-2.5 px-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200">
+              📁 Zmień folder...
+            </button>
+          </div>
+        `;
+      } else if (hasHolder && dbConnectionState === 'NEEDS_PERMISSION') {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">Wymagana zgoda na edycję pliku</span>
+            </div>
+            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              Plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">${escapeHtml(fileName)}</code> jest wczytany, ale przeglądarka wymaga potwierdzenia uprawnień do zapisu na dysku.
+            </p>
+          </div>
+
+          <button onclick="renewDbPermission()" class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition shadow-sm flex items-center justify-center gap-2">
+            <span>🔓</span>
+            <span>Zezwól na edycję pliku (kliknij tutaj)</span>
+          </button>
+
+          <div class="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
+            <button onclick="selectDbFile()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
+              Wskaż plik ponownie...
+            </button>
+            <button onclick="selectDbDirectory()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
+              Wskaż folder roboczy...
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">Podłączenie pliku bazy danych</span>
+            </div>
+            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              Fokus jest aplikacją Local-First — nie wysyła danych do chmury. Wskaż plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">fokus-db.json</code> lub folder roboczy, w którym ma być zapisywany.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <button onclick="selectDbFile()" class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition shadow-sm flex items-center justify-center gap-2">
+              <span>📂</span>
+              <span>Wskaż plik fokus-db.json i połącz</span>
+            </button>
+
+            <button onclick="selectDbDirectory()" class="w-full py-2.5 px-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition text-xs font-medium text-zinc-700 dark:text-zinc-200 flex items-center justify-center gap-2">
+              <span>📁</span>
+              <span>Wskaż cały folder roboczy (zapis 1-kliknięciem)</span>
+            </button>
+
+            <button onclick="createNewDbFile()" class="w-full py-2 text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline underline-offset-2 text-center block">
+              Nie mam jeszcze pliku – utwórz nową, pustą bazę
+            </button>
+          </div>
+        `;
+      }
     }
 
     function handleDbStatusClick() {
       openDbFileModal();
     }
 
-    async function openDbFileModal() {
-      if (!fileHandle) {
-        const stored = await getStoredFileHandle();
-        if (stored) fileHandle = stored;
-      }
-      if (!directoryHandle) {
-        const storedDir = await getStoredDirectoryHandle();
-        if (storedDir) directoryHandle = storedDir;
-      }
-      if (fileHandle && dbConnectionState !== 'CONNECTED') {
-        try {
-          const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            await readDatabaseFromFile();
-            updateDbStatusUI('CONNECTED');
-          }
-        } catch (e) {}
-      } else if (directoryHandle && dbConnectionState !== 'CONNECTED') {
-        try {
-          const perm = await directoryHandle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            await loadOrCreateDatabaseOnDisk();
-            updateDbStatusUI('CONNECTED');
-          }
-        } catch (e) {}
-      }
+    function openDbFileModal() {
       renderDbModalContent();
-      const m = document.getElementById('dbFileModal') || document.getElementById('oneDriveModal');
+      const m = document.getElementById('dbFileModal');
       if (m) {
         m.classList.remove('hidden');
         m.classList.add('flex');
@@ -4697,7 +4877,7 @@
     function openOneDriveModal() { openDbFileModal(); }
     function closeOneDriveModal() { closeDbFileModal(); }
     async function connectOneDriveDirectory() { return connectDatabaseDirectory(); }
-    async function writeToOneDriveFolder() { return writeDatabaseToDisk(); }
+    async function writeToOneDriveFolder() { return writeDbNow(); }
 
     function downloadDailyBackup() {
       const today = getTodayISO();
@@ -4723,6 +4903,7 @@
     }
 
     function importDatabaseJson(event) {
+      if (!requireDb()) { event.target.value = ''; return; }
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -4730,15 +4911,22 @@
         try {
           const imported = JSON.parse(e.target.result);
           if (imported && Array.isArray(imported.tasks)) {
+            if (!confirm('Import zastąpi całą zawartość podłączonej bazy. Kontynuować?')) {
+              event.target.value = '';
+              return;
+            }
             db = normalizeDatabase(imported);
-            await saveDatabase();
+            await queueFlush();
             closeDbFileModal();
             renderApp();
             showToast('Wczytano bazę fokus-db.json');
+          } else {
+            showToast('Nieprawidłowy plik bazy (brak tablicy tasks)');
           }
         } catch (err) {
           showToast('Nieprawidłowy plik JSON');
         }
+        event.target.value = '';
       };
       reader.readAsText(file);
     }
@@ -4864,7 +5052,8 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // Skróty klawiszowe (N = Nowe zadanie, 1-7 = Widoki, Esc = Zamknij modal)
@@ -4902,6 +5091,7 @@
 
     // Inicjalizacja aplikacji
     loadUiPreferences();
+    loadPomodoroState();
     renderApp();
     initDatabasePersistence();
   </script>
