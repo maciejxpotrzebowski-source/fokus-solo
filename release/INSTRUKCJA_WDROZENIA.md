@@ -14,12 +14,15 @@
 * Aplikacja uruchamia się z czystą kartką, gotowa do wprowadzenia realnych danych analityka od pierwszego dnia.
 * Słowniki startowe zawierają wzorcowe kategorie (`cat_erp`, `cat_rfq`, `cat_raporty`, `cat_ppwr`, `cat_wlasne`) oraz szablony procedur cyklicznych SOP.
 
-### 1.2. Sztywna nazwa bazy `fokus-db.json` i usunięcie modułu OneDrive
+### 1.2. Sztywna nazwa bazy `fokus-db.json` i inteligentne okno połączenia
 * Usunięto moduł, modal oraz etykiety OneDrive na rzecz bezpośredniej integracji z lokalnym plikiem **`fokus-db.json`** w folderze roboczym aplikacji.
-* W prawym górnym rogu znajduje się czytelna pastylka statusu pliku:
-  * 🟢 **`fokus-db.json: Połączony`** — każda zmiana (zadanie, czas Pomodoro, notatka) natychmiast zapisuje się bezpośrednio w pliku na dysku.
-  * 🟡 **`Odblokuj fokus-db.json`** — folder jest zapamiętany w Chrome, wystarczy jedno kliknięcie, aby odnowić uprawnienie przeglądarki.
-  * ⚪ **`Połącz fokus-db.json`** — pierwsze uruchomienie: wskaż folder z aplikacją.
+* **Okno informacyjne przed otwarciem systemowego managera plików:**
+  * Kliknięcie kontrolki pliku w prawym górnym rogu (lub pierwsze uruchomienie) otwiera minimalistyczne okno informujące dokładnie, jaki plik wskazać (`fokus-db.json` w tym samym folderze).
+  * **Odnawianie uprawnień holdera (1 kliknięcie):** Jeśli plik był już wcześniej wskazany, przeglądarka pamięta uchwyt (holder) w bazie IndexedDB. Zamiast otwierać eksplorator plików, okienko oferuje przycisk **`🔄 Wznów uprawnienie do pliku (1 kliknięcie)`**, co natychmiast przywraca aktywny zapis do pliku.
+* W prawym górnym rogu znajduje się czytelna pastylka statusu:
+  * 🟢 **`fokus-db.json`** (zielona kropka) — baza jest połączona, każda zmiana natychmiast zapisuje się bezpośrednio na dysku.
+  * 🟡 **`fokus-db.json (wznów)`** (pulsująca bursztynowa kropka) — wykryto zapamiętany plik; wystarczy 1 kliknięcie, aby wznowić połączenie.
+  * ⚪ **`fokus-db.json (połącz)`** (szara kropka) — pierwsze połączenie; kliknij, aby otworzyć okno informacyjne i wskazać plik.
 
 ### 1.3. Rozdzielenie danych zadań od pamięci podręcznej przeglądarki (`localStorage`)
 * **Koniec z dublowaniem zadań w przeglądarce:** Wszystkie zadania, checklisty, historia Dupochronu, rejestr osób i sesje czasu są zapisywane **wyłącznie w pliku `fokus-db.json`**.
@@ -56,15 +59,17 @@ Aplikacja jest w 100% samodzielnym plikiem HTML — nie wymaga instalowania śro
    * **Windows:** `Ctrl + D`
    * **macOS:** `Cmd + D`
 
-### Krok 3: Automatyczna synchronizacja z plikiem `fokus-db.json`
-1. Po otwarciu aplikacji kliknij w prawym górnym rogu kontrolkę **`● fokus-db.json`** (lub po prostu dodaj pierwsze zadanie i kliknij „Zapisz zadanie”).
-2. Przeglądarka otworzy systemowe okno z plikiem `fokus-db.json` znajdującym się w tym samym folderze.
-3. Wybierz plik `fokus-db.json` i potwierdź systemowe uprawnienie w Chrome: **„Zezwól na edycję”**.
-4. Wskaźnik w prawym górnym rogu zaświeci się na zielono: **`● fokus-db.json`**.
-5. Od tej pory każde zadanie, krok i sesja Pomodoro zapisują się automatycznie w pliku `fokus-db.json` na dysku.
+### Krok 3: Połączenie z plikiem `fokus-db.json`
+1. Po otwarciu aplikacji kliknij w prawym górnym rogu kontrolkę **`fokus-db.json (połącz)`** (lub pojawi się ona automatycznie).
+2. Wyświetli się czytelne okienko informujące, że aplikacja połączy się z plikiem `fokus-db.json` w tym samym folderze.
+3. Kliknij **`📂 Wskaż plik fokus-db.json i połącz`**.
+4. W oknie systemowym wskaż plik `fokus-db.json` i potwierdź uprawnienie zapisu: **„Zezwól na edycję”**.
+5. Wskaźnik w prawym górnym rogu zaświeci się na zielono: **`● fokus-db.json`**.
+6. Od tej pory każde zadanie, krok i sesja Pomodoro zapisują się automatycznie w pliku `fokus-db.json` na dysku.
 
-> **Wskazówka bezpieczeństwa Chrome:**  
-> Po całkowitym zamknięciu i ponownym uruchomieniu przeglądarki Chrome może ze względów bezpieczeństwa poprosić o kliknięcie przycisku odnowienia uprawnień (*„Odblokuj fokus-db.json”*). Wystarczy jedno kliknięcie, aby kontynuować pracę z plikiem.
+> **Wskazówka: Wznawianie uprawnień po restarcie przeglądarki (1 kliknięcie):**  
+> Po ponownym uruchomieniu przeglądarki Chrome pamięta Twój plik, a kontrolka w prawym górnym rogu pulsuje na bursztynowo jako **`fokus-db.json (wznów)`**.  
+> Wystarczy w nią kliknąć i wybrać **`🔄 Wznów uprawnienie do pliku (1 kliknięcie)`** — Chrome wyświetli natywny monit o dostęp bez konieczności ponownego szukania pliku w folderach!
 
 ---
 
