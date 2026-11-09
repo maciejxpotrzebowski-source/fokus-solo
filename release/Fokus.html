@@ -987,7 +987,15 @@
           }
         } catch (e) {}
 
-        const w = await target.createWritable();
+        let w = null;
+        try {
+          w = await target.createWritable();
+        } catch (firstErr) {
+          // Na Windows plik może być chwilowo zablokowany przez proces synchronizacji OneDrive lub skaner antywirusowy.
+          // Ponowienie po 150ms w większości przypadków rozwiązuje konflikt współbieżnego dostępu.
+          await new Promise(r => setTimeout(r, 150));
+          w = await target.createWritable();
+        }
         try {
           await w.write(json);
           await w.close();
@@ -4548,32 +4556,46 @@
     }
 
     async function attachHandle({ file = null, dir = null }) {
-      fileHandle = file;
-      directoryHandle = dir;
+      const handle = file || dir;
+      if (!handle) return;
 
-      // 1. Odczyt i walidacja. Przy błędzie NIE podłączamy.
-      if (!(await loadFromCurrentHandle())) {
-        fileHandle = null;
-        directoryHandle = null;
-        updateDbStatusUI('DISCONNECTED');
-        return;
-      }
-      await setStoredFileHandle(file);
-      await setStoredDirectoryHandle(dir);
-      renderApp();
-
-      // 2. Uprawnienie do zapisu
-      if (!(await ensureWritePermission(file || dir))) {
+      // 1. Zgoda na zapis NATYCHMIAST po zamknięciu okna systemowego (wciąż aktywny transient user gesture).
+      // Na Windows Chromium rygorystycznie wymaga aktywnego gestu do requestPermission().
+      // Jakiekolwiek operacje asynchroniczne (IndexedDB, getFile, parseDbText, renderApp) przed tym
+      // powodują wygaśnięcie gestu i błąd SecurityError: Must be handling a user gesture to show permission prompt.
+      const hasPermission = await ensureWritePermission(handle);
+      if (!hasPermission) {
+        fileHandle = file;
+        directoryHandle = dir;
+        await setStoredFileHandle(file);
+        await setStoredDirectoryHandle(dir);
         updateDbStatusUI('NEEDS_PERMISSION');
         openDbFileModal();
         return;
       }
 
-      // 3. Zapis testowy. Dopiero sukces = CONNECTED.
+      fileHandle = file;
+      directoryHandle = dir;
+
+      // 2. Odczyt i walidacja danych z pliku. Przy błędzie NIE podłączamy.
+      if (!(await loadFromCurrentHandle())) {
+        fileHandle = null;
+        directoryHandle = null;
+        await setStoredFileHandle(null);
+        await setStoredDirectoryHandle(null);
+        updateDbStatusUI('DISCONNECTED');
+        return;
+      }
+
+      // 3. Trwałe zapamiętanie uchwytu w IndexedDB
+      await setStoredFileHandle(file);
+      await setStoredDirectoryHandle(dir);
+
+      // 4. Zapis testowy. Dopiero sukces = CONNECTED.
       if (await writeDbNow()) {
         updateDbStatusUI('CONNECTED');
         closeDbFileModal();
-        showToast('Połączono z ' + (file ? file.name : dir.name + '/fokus-db.json'));
+        showToast('Połączono z ' + (file ? file.name : (dir.name + '/fokus-db.json')));
       } else {
         updateDbStatusUI('ERROR');
       }
@@ -4586,27 +4608,58 @@
         return;
       }
       try {
-        const [handle] = await window.showOpenFilePicker({
-          id: 'fokus-db',
-          multiple: false,
-          types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
-        });
+        let handle;
+        try {
+          const [h] = await window.showOpenFilePicker({
+            id: 'fokus-db-file',
+            multiple: false,
+            types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
+          });
+          handle = h;
+        } catch (e1) {
+          if (e1.name !== 'AbortError') {
+            const [h] = await window.showOpenFilePicker({
+              multiple: false,
+              types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
+            });
+            handle = h;
+          } else {
+            throw e1;
+          }
+        }
         await attachHandle({ file: handle });
       } catch (err) {
-        if (err.name !== 'AbortError') showToast('Nie wybrano pliku: ' + err.message);
+        if (err.name !== 'AbortError') {
+          console.error('Błąd wyboru pliku:', err);
+          showToast('Nie wybrano pliku: ' + err.message);
+        }
       }
     }
 
     async function selectDbDirectory() {
       if (!window.showDirectoryPicker) {
-        showToast('Ta przeglądarka nie obsługuje wyboru folderu');
+        showToast('Ta przeglądarka nie obsługuje wyboru folderu – użyj Chrome lub Edge');
         return;
       }
       try {
-        const handle = await window.showDirectoryPicker({ id: 'fokus-db', mode: 'readwrite' });
+        let handle;
+        try {
+          handle = await window.showDirectoryPicker({ id: 'fokus-db-dir', mode: 'readwrite' });
+        } catch (e1) {
+          if (e1.name !== 'AbortError') {
+            handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          } else {
+            throw e1;
+          }
+        }
         await attachHandle({ dir: handle });
       } catch (err) {
-        if (err.name !== 'AbortError') showToast('Błąd wyboru folderu: ' + err.message);
+        if (err.name !== 'AbortError') {
+          console.error('Błąd wyboru folderu:', err);
+          showToast('Błąd wyboru folderu: ' + err.message);
+        } else {
+          console.warn('Wybór folderu anulowany lub zablokowany przez system:', err);
+        }
       }
     }
 
@@ -4616,11 +4669,27 @@
         return;
       }
       try {
-        const handle = await window.showSaveFilePicker({
-          id: 'fokus-db',
-          suggestedName: 'fokus-db.json',
-          types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
-        });
+        let handle;
+        try {
+          handle = await window.showSaveFilePicker({
+            id: 'fokus-db-save',
+            suggestedName: 'fokus-db.json',
+            types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
+          });
+        } catch (e1) {
+          if (e1.name !== 'AbortError') {
+            handle = await window.showSaveFilePicker({
+              suggestedName: 'fokus-db.json',
+              types: [{ description: 'Baza Fokus (fokus-db.json)', accept: { 'application/json': ['.json'] } }]
+            });
+          } else {
+            throw e1;
+          }
+        }
+        if (!(await ensureWritePermission(handle))) {
+          showToast('Wymagana zgoda na zapis nowo utworzonego pliku');
+          return;
+        }
         fileHandle = handle;
         directoryHandle = null;
         db = freshDb();
@@ -4652,10 +4721,14 @@
           updateDbStatusUI('ERROR');
           return;
         }
-        updateDbStatusUI('CONNECTED');
-        closeDbFileModal();
+        if (await writeDbNow()) {
+          updateDbStatusUI('CONNECTED');
+          closeDbFileModal();
+          showToast('Połączono ponownie z bazą');
+        } else {
+          updateDbStatusUI('ERROR');
+        }
         renderApp();
-        showToast('Połączono ponownie z bazą');
       } catch (e) {
         console.error('Wznowienie uprawnień nieudane:', e);
         showToast('Nie udało się uzyskać uprawnień: ' + e.name);
@@ -4813,6 +4886,33 @@
             </button>
           </div>
         `;
+      } else if (hasHolder && dbConnectionState === 'ERROR') {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span class="text-xs font-semibold text-rose-600 dark:text-rose-400">Błąd zapisu do pliku bazy</span>
+            </div>
+            <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              Nie udało się zapisać do pliku <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">${escapeHtml(fileName)}</code>.
+              Upewnij się, że plik nie jest zablokowany przez inny proces (np. Excel, synchronizację w toku) lub wskaż plik bezpośrednio.
+            </p>
+          </div>
+
+          <button onclick="renewDbPermission()" class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition shadow-sm flex items-center justify-center gap-2">
+            <span>🔄</span>
+            <span>Spróbuj połączyć ponownie</span>
+          </button>
+
+          <div class="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
+            <button onclick="selectDbFile()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
+              Wskaż plik ponownie...
+            </button>
+            <button onclick="selectDbDirectory()" class="hover:text-zinc-600 dark:hover:text-zinc-200 underline underline-offset-2">
+              Wskaż folder roboczy...
+            </button>
+          </div>
+        `;
       } else {
         container.innerHTML = `
           <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2.5">
@@ -4823,6 +4923,9 @@
             <p class="text-[12px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
               Fokus jest aplikacją Local-First — nie wysyła danych do chmury. Wskaż plik <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] font-semibold">fokus-db.json</code> lub folder roboczy, w którym ma być zapisywany.
             </p>
+            <div class="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+              💡 <strong>Wskazówka (Windows / OneDrive):</strong> Jeśli folder jest w usłudze OneDrive, upewnij się, że ma status <em>„Zawsze przechowuj na tym urządzeniu”</em> lub użyj pierwszego przycisku <strong>Wskaż plik</strong>.
+            </div>
           </div>
 
           <div class="space-y-2">
