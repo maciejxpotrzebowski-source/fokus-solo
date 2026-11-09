@@ -56,13 +56,13 @@ Aplikacja jest w 100% samodzielnym plikiem HTML — nie wymaga instalowania śro
    * **Windows:** `Ctrl + D`
    * **macOS:** `Cmd + D`
 
-### Krok 3: Jednorazowe wskazanie folderu z plikiem `fokus-db.json`
-1. Po otwarciu aplikacji na górze ekranu pojawi się bursztynowy pasek:  
-   *„Wskaż folder z fokus-db.json — Aplikacja zapisuje zadania bezpośrednio w lokalnym pliku fokus-db.json”*.
-2. Kliknij przycisk **`Wskaż folder aplikacji`** (lub kliknij pastylkę w prawym górnym rogu).
-3. W oknie systemowym Chrome wskaż folder, w którym znajduje się `Fokus.html`.
-4. Kliknij **„Wybierz folder”** i potwierdź uprawnienia do edycji plików: **„Wyświetlaj i edytuj pliki”**.
-5. Wskaźnik w prawym górnym rogu natychmiast zaświeci się na zielono: **`● fokus-db.json: Połączony`**.
+### Krok 3: Jednorazowa zgoda na edycję pliku `fokus-db.json`
+1. Po otwarciu aplikacji na górze ekranu pojawi się dyskretny bursztynowy pasek:  
+   *„Wymagana zgoda na edycję pliku fokus-db.json — Plik bazy danych znajduje się w tym samym folderze co aplikacja”*.
+2. Kliknij przycisk **`Zezwól na edycję pliku`** (lub kliknij pastylkę w prawym górnym rogu).
+3. Wybierz plik `fokus-db.json` z bieżącego folderu i potwierdź uprawnienie w Chrome: **„Zezwól na edycję”**.
+4. Wskaźnik w prawym górnym rogu natychmiast zaświeci się na zielono: **`● fokus-db.json`**.
+5. Uchwyt do pliku zostaje bezpiecznie zapamiętany w Chrome — od tej pory każde zadanie i czas Pomodoro zapisują się automatycznie na dysku.
 
 > **Wskazówka bezpieczeństwa Chrome:**  
 > Po całkowitym zamknięciu i ponownym uruchomieniu przeglądarki Chrome może ze względów bezpieczeństwa poprosić o kliknięcie przycisku odnowienia uprawnień (*„Odblokuj fokus-db.json”*). Wystarczy jedno kliknięcie, aby kontynuować pracę z plikiem.
