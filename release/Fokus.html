@@ -823,6 +823,8 @@
           await writeDatabaseToFile();
         } else if (directoryHandle) {
           await writeDatabaseToDisk();
+        } else if (window.showOpenFilePicker && dbConnectionState !== 'CONNECTED') {
+          await requestDbFilePermission();
         }
       } catch (e) {
         console.error('Błąd zapisu bazy:', e);
@@ -1460,24 +1462,8 @@
       const alpenPct = dailyCap.baseBudget > 0 ? Math.min(100, Math.round((totalCommitted / dailyCap.baseBudget) * 100)) : 100;
       const alpenBarColor = totalCommitted > 300 ? 'bg-rose-500' : (totalCommitted > 240 ? 'bg-amber-400' : 'bg-[#1D1D1F] dark:bg-white');
 
-      const connectionBanner = (typeof dbConnectionState !== 'undefined' && dbConnectionState === 'CONNECTED') ? '' : `
-        <div class="col-span-1 lg:col-span-12 p-3 sm:p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shrink-0">
-          <div class="flex items-center gap-2.5 text-xs">
-            <span class="text-base shrink-0">📄</span>
-            <div>
-              <span class="font-semibold">Wymagana zgoda na edycję pliku fokus-db.json</span>
-              <span class="opacity-80 ml-1.5 hidden sm:inline">Plik bazy danych znajduje się w tym samym folderze co aplikacja. Kliknij, aby nadać uprawnienie do zapisu zadań.</span>
-            </div>
-          </div>
-          <button onclick="requestDbFilePermission()" class="px-3.5 py-1.5 rounded-full bg-amber-500 text-white font-medium text-xs hover:opacity-90 active:scale-95 transition shrink-0 whitespace-nowrap shadow-2xs">
-            Zezwól na edycję pliku
-          </button>
-        </div>
-      `;
-
       return `
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full min-h-0 items-stretch fade-in">
-          ${connectionBanner}
           
           <!-- KAFELEK LEWY (~62%): TERAZ ROBIĘ (DZISIEJSZA ŻABA) -->
           <section class="lg:col-span-7 xl:col-span-8 bento-card flex flex-col justify-between h-full min-h-0 overflow-hidden !p-6 sm:!p-7">
@@ -4430,22 +4416,21 @@
 
       if (!dot || !label) return;
 
+      label.textContent = 'fokus-db.json';
       if (state === 'CONNECTED') {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        label.textContent = 'fokus-db.json';
         if (btn) {
-          btn.title = 'Plik fokus-db.json jest połączony. Zmiany zapisują się na dysku.';
-          btn.onclick = () => showToast('Plik fokus-db.json jest połączony i zapisywany na bieżąco');
+          btn.title = 'Plik fokus-db.json jest połączony i zsynchronizowany na dysku';
+          btn.onclick = () => showToast('Plik fokus-db.json jest zsynchronizowany na dysku');
         }
         if (modalStatus) modalStatus.textContent = 'Status: Plik fokus-db.json jest połączony i zapisywany na bieżąco.';
       } else {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
-        label.textContent = 'Zezwól na edycję pliku';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
         if (btn) {
-          btn.title = 'Kliknij, aby zezwolić na edycję pliku fokus-db.json';
+          btn.title = 'Plik fokus-db.json w folderze aplikacji';
           btn.onclick = () => requestDbFilePermission();
         }
-        if (modalStatus) modalStatus.textContent = 'Status: Oczekiwanie na zgodę na edycję pliku fokus-db.json.';
+        if (modalStatus) modalStatus.textContent = 'Status: Plik fokus-db.json w folderze aplikacji.';
       }
     }
 
