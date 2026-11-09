@@ -128,7 +128,7 @@
         </button>
       </div>
 
-      <!-- Prawe subtelne akcje narzędziowe: Słowniki, Instrukcja, OneDrive, Motyw (słońce/księżyc) -->
+      <!-- Prawe subtelne akcje narzędziowe: Słowniki, Instrukcja, Magazyn pliku bazy, Motyw (słońce/księżyc) -->
       <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
         <button onclick="switchView('DICTIONARIES')" id="navBtn-DICTIONARIES" title="Słowniki osób, kategorii i SOP (Skrót: 6)"
           class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
@@ -142,10 +142,10 @@
           <span class="hidden xl:inline">Instrukcja</span>
         </button>
 
-        <button onclick="openOneDriveModal()" id="oneDriveStatusBtn" title="Synchronizacja z folderem OneDrive (fokus-db.json)"
+        <button onclick="handleDbStatusClick()" id="dbFileStatusBtn" title="Status pliku fokus-db.json na dysku"
           class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-2xs">
-          <span id="oneDriveDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          <span class="hidden md:inline" id="oneDriveLabel">OneDrive</span>
+          <span id="dbFileDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span class="hidden md:inline font-mono text-[11px]" id="dbFileLabel">fokus-db.json</span>
         </button>
 
         <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw Jasny / Ciemny"
@@ -429,26 +429,26 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 4: ONEDRIVE / ZAPIS PLIKU FOKUS-DB.JSON + BACKUP                    -->
+  <!-- MODAL 4: LOKALNY MAGAZYN PLIKU FOKUS-DB.JSON + BACKUP DZIENNY            -->
   <!-- ========================================================================= -->
-  <div id="oneDriveModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
+  <div id="dbFileModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-xs p-4">
     <div class="bento-card max-w-md w-full space-y-5 fade-in">
       <div class="flex items-center justify-between">
-        <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Magazyn Local-First · OneDrive</span>
-        <button onclick="closeOneDriveModal()" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
+        <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Baza danych · fokus-db.json</span>
+        <button onclick="closeDbFileModal()" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Zamknij (Esc)</button>
       </div>
 
       <div class="space-y-2">
-        <div class="text-sm font-medium">Synchronizacja z dyskiem lokalnym (Chrome)</div>
+        <div class="text-sm font-medium">Lokalny plik bazy danych na dysku</div>
         <p class="text-xs text-zinc-400 leading-relaxed">
-          Wszystkie zmiany są natychmiast zapisywane w pamięci przeglądarki. Możesz dodatkowo podpiąć swój folder <strong>OneDrive</strong>, aby Chrome automatycznie nadpisywał plik <code class="font-mono">fokus-db.json</code> oraz tworzył dzienne kopie zapasowe w podfolderze <code class="font-mono">backups/</code>.
+          Wszystkie Twoje zadania, słowniki i sesje Pomodoro zapisywane są bezpośrednio w pliku <code class="font-mono font-medium">fokus-db.json</code> w folderze aplikacji. Brak zewnętrznych serwerów i pełna prywatność (Local-First).
         </p>
       </div>
 
       <div class="space-y-2.5 pt-1">
-        <button onclick="connectOneDriveDirectory()"
-          class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] text-xs font-medium flex items-center justify-between hover:opacity-90 transition">
-          <span>📁 Wybierz folder OneDrive (Auto-Zapis Chrome)</span>
+        <button onclick="connectDatabaseDirectory()"
+          class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] text-xs font-semibold flex items-center justify-between hover:opacity-90 active:scale-95 transition">
+          <span>📁 Wskaż / Zmień folder z fokus-db.json</span>
           <span class="font-mono text-[10px] opacity-70">File System API</span>
         </button>
 
@@ -469,8 +469,8 @@
         </button>
       </div>
 
-      <div id="oneDriveModalStatus" class="text-[11px] text-zinc-400 font-mono pt-1 border-t border-black/5 dark:border-white/5">
-        Status: Aktywny auto-zapis w pamięci Chrome (LocalStorage).
+      <div id="dbFileModalStatus" class="text-[11px] text-zinc-400 font-mono pt-1 border-t border-black/5 dark:border-white/5">
+        Status: Oczekiwanie na połączenie z folderem.
       </div>
     </div>
   </div>
@@ -584,7 +584,8 @@
     // =========================================================================
     // ARCHITEKTURA DANYCH I STAN APLIKACJI (FOKUS SOLO CHROME v4.2 BENTO)
     // =========================================================================
-    const STORAGE_KEY = 'FOKUS_SOLO_BENTO_DB_V1';
+    const STORAGE_KEY_PREFS = 'fokus_solo_prefs';
+    const STORAGE_KEY = 'fokus_solo_prefs'; // Alias kompatybilności wstecznej
 
     function getTodayISO() {
       const d = new Date();
@@ -607,23 +608,11 @@
       schemaVersion: '4.2-bento-solo',
       theme: 'LIGHT',
       activeView: 'DAY',          // 'DAY' | 'MATRIX' | 'CALENDAR' | 'WAITING' | 'REPORTS' | 'DICTIONARIES' | 'GUIDE'
-      selectedTaskId: 'tsk_1',
+      selectedTaskId: null,
       card1Tab: 'STEPS',          // 'STEPS' | 'HISTORY'
       reportPeriod: 'MONTH',      // 'TODAY' | 'WEEK' | 'MONTH' | 'QUARTER' | 'ALL'
       lastBackupDate: null,
-      calendarEvents: [
-        {
-          id: 'evt_sample_1',
-          dateISO: getTodayISO(),
-          endDateISO: '',
-          type: 'MEETING',
-          title: 'Status operacyjny Supply Chain',
-          durationMinutes: 45,
-          isAllDay: false,
-          affectsCapacity: true,
-          notes: 'Krótki przegląd zamówień i braków surowcowych'
-        }
-      ],
+      calendarEvents: [],
       people: [
         { id: 'per_grzegorz', canonicalName: 'Grzegorz', roleOrDept: 'Szef / Dyrektor', aliases: ['grzesiek', 'gp', 'szef', 'prezes', 'dyrektor'], active: true },
         { id: 'per_tomek', canonicalName: 'Tomek', roleOrDept: 'Zakupy Opakowań', aliases: ['tk', 'tomasz', 'opakowania'], active: true },
@@ -669,285 +658,8 @@
           ]
         }
       ],
-      tasks: [
-        {
-          id: 'tsk_1',
-          title: 'Walidacja wag opakowań w Business Central pod raport PPWR',
-          categoryId: 'cat_erp',
-          requesterPersonId: 'per_grzegorz',
-          personId: 'per_grzegorz',
-          urgencyTag: 'ASAP',
-          dueDate: addDaysISO(1),
-          originalDueDate: addDaysISO(-1),
-          importance: 'CRITICAL',
-          notesAndContext: 'Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.',
-          contextNotes: 'Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.',
-          milestones: [
-            { id: 'm_1', title: 'Eksport tabeli indeksów i gramatur z Business Central', isDone: true },
-            { id: 'm_2', title: 'Skrypt wykrywający zerowe wagi i błędne jednostki miary', isDone: true },
-            { id: 'm_3', title: 'Przygotowanie pliku korekty masowej dla zespołu zakupów', isDone: false },
-            { id: 'm_4', title: 'Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza', isDone: false }
-          ],
-          checklist: [
-            { id: 'm_1', title: 'Eksport tabeli indeksów i gramatur z Business Central', isDone: true },
-            { id: 'm_2', title: 'Skrypt wykrywający zerowe wagi i błędne jednostki miary', isDone: true },
-            { id: 'm_3', title: 'Przygotowanie pliku korekty masowej dla zespołu zakupów', isDone: false },
-            { id: 'm_4', title: 'Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza', isDone: false }
-          ],
-          status: 'IN_PROGRESS',
-          inMyDay: true,
-          isMyDay: true,
-          myDayOrder: 1,
-          estimatedMinutes: 90,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 4 * 86400000).toISOString(),
-          auditLog: [
-            {
-              id: 'log_1',
-              timestamp: new Date(Date.now() - 3 * 3600000).toISOString(),
-              changeType: 'DUE_DATE_CHANGED',
-              fieldChanged: 'Termin',
-              oldValue: addDaysISO(-1),
-              newValue: addDaysISO(1),
-              initiatedByPersonId: 'per_grzegorz',
-              reasonCategory: 'HIGHER_PRIORITY_INJECTION',
-              reasonComment: 'Polecenie zajęcia się w pierwszej kolejności pilnym zestawieniem EUDR dla zarządu'
-            },
-            {
-              id: 'log_2',
-              timestamp: new Date(Date.now() - 5 * 3600000).toISOString(),
-              changeType: 'MILESTONE_DONE',
-              reasonComment: 'Ukończono krok: Skrypt wykrywający zerowe wagi'
-            },
-            {
-              id: 'log_3',
-              timestamp: new Date(Date.now() - 4 * 86400000).toISOString(),
-              changeType: 'CREATED',
-              reasonComment: 'Utworzono zadanie (pierwotny termin: ' + addDaysISO(-1) + ')'
-            }
-          ]
-        },
-        {
-          id: 'tsk_2',
-          title: 'Porównanie 4 ofert RFQ na taśmy pakowe (matryca TCO)',
-          categoryId: 'cat_rfq',
-          requesterPersonId: 'per_tomek',
-          personId: 'per_tomek',
-          urgencyTag: 'HIGH',
-          dueDate: addDaysISO(2),
-          originalDueDate: addDaysISO(2),
-          importance: 'HIGH',
-          notesAndContext: 'Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.',
-          contextNotes: 'Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.',
-          milestones: [
-            { id: 'm_21', title: 'Sprowadzenie cen do wspólnej jednostki (PLN / m2)', isDone: true },
-            { id: 'm_22', title: 'Model oszczędności rocznych w Excelu', isDone: false },
-            { id: 'm_23', title: 'Rekomendacja na spotkanie z Tomkiem', isDone: false }
-          ],
-          checklist: [
-            { id: 'm_21', title: 'Sprowadzenie cen do wspólnej jednostki (PLN / m2)', isDone: true },
-            { id: 'm_22', title: 'Model oszczędności rocznych w Excelu', isDone: false },
-            { id: 'm_23', title: 'Rekomendacja na spotkanie z Tomkiem', isDone: false }
-          ],
-          status: 'TODO',
-          inMyDay: true,
-          isMyDay: true,
-          myDayOrder: 2,
-          estimatedMinutes: 45,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 2 * 86400000).toISOString(),
-          auditLog: [
-            {
-              id: 'log_20',
-              timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
-              changeType: 'CREATED',
-              reasonComment: 'Utworzono zadanie'
-            }
-          ]
-        },
-        {
-          id: 'tsk_3',
-          title: 'Raport miesięczny Spend Analysis i odchyleń cenowych',
-          categoryId: 'cat_raporty',
-          requesterPersonId: 'per_grzegorz',
-          personId: 'per_grzegorz',
-          urgencyTag: 'NORMAL',
-          dueDate: addDaysISO(5),
-          originalDueDate: addDaysISO(5),
-          importance: 'HIGH',
-          notesAndContext: 'Standardowa procedura zamknięcia miesiąca zakupowego.',
-          contextNotes: 'Standardowa procedura zamknięcia miesiąca zakupowego.',
-          milestones: [
-            { id: 'm_31', title: 'Pobranie zrzutu faktur kosztowych z ERP', isDone: true },
-            { id: 'm_32', title: 'Mapowanie brakujących kategorii zakupowych', isDone: false },
-            { id: 'm_33', title: 'Komentarz do odchyleń MoM / YoY', isDone: false }
-          ],
-          checklist: [
-            { id: 'm_31', title: 'Pobranie zrzutu faktur kosztowych z ERP', isDone: true },
-            { id: 'm_32', title: 'Mapowanie brakujących kategorii zakupowych', isDone: false },
-            { id: 'm_33', title: 'Komentarz do odchyleń MoM / YoY', isDone: false }
-          ],
-          status: 'TODO',
-          inMyDay: true,
-          isMyDay: true,
-          myDayOrder: 3,
-          estimatedMinutes: 60,
-          recurrence: 'MONTHLY',
-          createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 6 * 86400000).toISOString(),
-          auditLog: [
-            {
-              id: 'log_30',
-              timestamp: new Date(Date.now() - 6 * 86400000).toISOString(),
-              changeType: 'CREATED',
-              reasonComment: 'Zadanie cykliczne (Miesięczne SOP)'
-            }
-          ]
-        },
-        {
-          id: 'tsk_4',
-          title: 'Weryfikacja poprawności kodów CN dla importu folii',
-          categoryId: 'cat_ppwr',
-          requesterPersonId: 'per_ola',
-          personId: 'per_ola',
-          urgencyTag: 'HIGH',
-          dueDate: addDaysISO(3),
-          originalDueDate: addDaysISO(3),
-          importance: 'NORMAL',
-          notesAndContext: 'Potrzebne do zgłoszenia celnego.',
-          contextNotes: 'Potrzebne do zgłoszenia celnego.',
-          milestones: [
-            { id: 'm_41', title: 'Sprawdzenie specyfikacji od dostawcy', isDone: false }
-          ],
-          checklist: [
-            { id: 'm_41', title: 'Sprawdzenie specyfikacji od dostawcy', isDone: false }
-          ],
-          status: 'TODO',
-          inMyDay: false,
-          isMyDay: false,
-          myDayOrder: null,
-          estimatedMinutes: 30,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 3 * 86400000).toISOString(),
-          auditLog: []
-        },
-        {
-          id: 'tsk_5',
-          title: 'Uporządkowanie archiwum cenników archiwalnych 2024',
-          categoryId: 'cat_wlasne',
-          requesterPersonId: 'per_wlasne',
-          personId: 'per_wlasne',
-          urgencyTag: 'LAST',
-          dueDate: addDaysISO(18),
-          originalDueDate: addDaysISO(18),
-          importance: 'LOW',
-          notesAndContext: 'Zadanie porządkowe na spokojniejszy piątek.',
-          contextNotes: 'Zadanie porządkowe na spokojniejszy piątek.',
-          milestones: [],
-          checklist: [],
-          status: 'TODO',
-          inMyDay: false,
-          isMyDay: false,
-          myDayOrder: null,
-          estimatedMinutes: 40,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 7 * 86400000).toISOString(),
-          auditLog: []
-        },
-        {
-          id: 'tsk_wait_1',
-          title: 'Aktualizacja cennika palet EPAL na Q1',
-          categoryId: 'cat_rfq',
-          requesterPersonId: 'per_tomek',
-          personId: 'per_tomek',
-          waitingForPersonId: 'per_ola',
-          waitingForReason: 'Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji',
-          waitingSince: new Date(Date.now() - 3 * 86400000).toISOString(),
-          waitingFor: {
-            personId: 'per_ola',
-            reason: 'Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji',
-            sinceISO: new Date(Date.now() - 3 * 86400000).toISOString()
-          },
-          urgencyTag: 'HIGH',
-          dueDate: addDaysISO(4),
-          originalDueDate: addDaysISO(1),
-          importance: 'HIGH',
-          notesAndContext: 'Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.',
-          contextNotes: 'Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.',
-          milestones: [
-            { id: 'mw_1', title: 'Zebranie cenników bazowych od 3 dostawców', isDone: true },
-            { id: 'mw_2', title: 'Podstawienie wolumenów Q1', isDone: false }
-          ],
-          checklist: [
-            { id: 'mw_1', title: 'Zebranie cenników bazowych od 3 dostawców', isDone: true },
-            { id: 'mw_2', title: 'Podstawienie wolumenów Q1', isDone: false }
-          ],
-          status: 'WAITING_FOR',
-          inMyDay: false,
-          isMyDay: false,
-          myDayOrder: null,
-          estimatedMinutes: 35,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 5 * 86400000).toISOString(),
-          auditLog: [
-            {
-              id: 'log_w1',
-              timestamp: new Date(Date.now() - 3 * 86400000).toISOString(),
-              changeType: 'STATUS_CHANGED',
-              fieldChanged: 'Status',
-              oldValue: 'W toku',
-              newValue: 'Czekam na: Ola',
-              initiatedByPersonId: 'per_ola',
-              reasonCategory: 'WAITING_FOR_DATA',
-              reasonComment: 'Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji'
-            }
-          ]
-        },
-        {
-          id: 'tsk_done_1',
-          title: 'Zestawienie wolumenów drewna i papieru pod raport EUDR',
-          categoryId: 'cat_ppwr',
-          requesterPersonId: 'per_grzegorz',
-          personId: 'per_grzegorz',
-          urgencyTag: 'ASAP',
-          dueDate: getTodayISO(),
-          originalDueDate: getTodayISO(),
-          importance: 'CRITICAL',
-          notesAndContext: 'Wysłane na zarząd.',
-          contextNotes: 'Wysłane na zarząd.',
-          milestones: [
-            { id: 'md_1', title: 'Zrzut danych z ERP', isDone: true },
-            { id: 'md_2', title: 'Weryfikacja dostawców spoza UE', isDone: true }
-          ],
-          checklist: [
-            { id: 'md_1', title: 'Zrzut danych z ERP', isDone: true },
-            { id: 'md_2', title: 'Weryfikacja dostawców spoza UE', isDone: true }
-          ],
-          status: 'DONE',
-          inMyDay: false,
-          isMyDay: false,
-          myDayOrder: null,
-          estimatedMinutes: 60,
-          recurrence: 'NONE',
-          createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-          createdAtISO: new Date(Date.now() - 2 * 86400000).toISOString(),
-          completedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-          completedAtISO: new Date(Date.now() - 1 * 86400000).toISOString(),
-          auditLog: []
-        }
-      ],
-      timeLogs: [
-        { id: 'ses_1', taskId: 'tsk_1', date: getTodayISO(), dateISO: getTodayISO(), startedAt: new Date().toISOString(), startedAtISO: new Date().toISOString(), plannedMinutes: 25, targetMinutes: 25, overtimeMinutes: 7, totalMinutes: 32, durationMinutes: 32, entryType: 'POMODORO', note: 'Eksport i czyszczenie tabeli BC' },
-        { id: 'ses_2', taskId: 'tsk_1', date: getTodayISO(), dateISO: getTodayISO(), startedAt: new Date().toISOString(), startedAtISO: new Date().toISOString(), plannedMinutes: 25, targetMinutes: 25, overtimeMinutes: 0, totalMinutes: 25, durationMinutes: 25, entryType: 'POMODORO', note: 'Skrypt walidujący' },
-        { id: 'ses_3', taskId: 'tsk_2', date: getTodayISO(), dateISO: getTodayISO(), startedAt: new Date().toISOString(), startedAtISO: new Date().toISOString(), plannedMinutes: 25, targetMinutes: 25, overtimeMinutes: 5, totalMinutes: 30, durationMinutes: 30, entryType: 'POMODORO', note: 'Porównanie ofert taśm' },
-        { id: 'ses_4', taskId: 'tsk_3', date: addDaysISO(-1), dateISO: addDaysISO(-1), startedAt: new Date(Date.now() - 86400000).toISOString(), startedAtISO: new Date(Date.now() - 86400000).toISOString(), plannedMinutes: 45, targetMinutes: 45, overtimeMinutes: 0, totalMinutes: 45, durationMinutes: 45, entryType: 'MANUAL', note: 'Zrzut faktur z ERP' },
-        { id: 'ses_5', taskId: 'tsk_done_1', date: addDaysISO(-1), dateISO: addDaysISO(-1), startedAt: new Date(Date.now() - 86400000).toISOString(), startedAtISO: new Date(Date.now() - 86400000).toISOString(), plannedMinutes: 60, targetMinutes: 60, overtimeMinutes: 12, totalMinutes: 72, durationMinutes: 72, entryType: 'POMODORO', note: 'Pilny raport EUDR dla Grzegorza' }
-      ]
+      tasks: [],
+      timeLogs: []
     };
 
     let db = loadDatabase();
@@ -1053,16 +765,50 @@
       return data;
     }
 
-    function loadDatabase() {
+    function loadUiPreferences() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY_PREFS);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          return normalizeDatabase(parsed);
+          const prefs = JSON.parse(raw);
+          if (prefs.theme) db.theme = prefs.theme;
+          if (prefs.activeView) db.activeView = prefs.activeView;
+          if (prefs.card1Tab) db.card1Tab = prefs.card1Tab;
+          if (prefs.reportPeriod) db.reportPeriod = prefs.reportPeriod;
+          if (prefs.matrixFilter) matrixFilter = { ...matrixFilter, ...prefs.matrixFilter };
+          if (prefs.waitingFilter) waitingFilter = { ...waitingFilter, ...prefs.waitingFilter };
         }
       } catch (e) {
-        console.error('Błąd odczytu LocalStorage:', e);
+        console.warn('Błąd odczytu preferencji UI z LocalStorage:', e);
       }
+    }
+
+    function saveUiPreferences() {
+      try {
+        const prefs = {
+          theme: db.theme,
+          activeView: db.activeView,
+          card1Tab: db.card1Tab,
+          reportPeriod: db.reportPeriod,
+          matrixFilter: {
+            personId: matrixFilter.personId,
+            categoryId: matrixFilter.categoryId,
+            search: matrixFilter.search,
+            showDone: matrixFilter.showDone
+          },
+          waitingFilter: {
+            personId: waitingFilter.personId,
+            search: waitingFilter.search
+          }
+        };
+        localStorage.setItem(STORAGE_KEY_PREFS, JSON.stringify(prefs));
+      } catch (e) {
+        console.warn('Błąd zapisu preferencji UI do LocalStorage:', e);
+      }
+    }
+
+    function loadDatabase() {
+      // Zadania i logi nie są przechowywane w pamięci podręcznej przeglądarki (localStorage).
+      // Źródłem prawdy jest wyłącznie lokalny plik fokus-db.json na dysku.
       return normalizeDatabase(JSON.parse(JSON.stringify(DEFAULT_DB)));
     }
 
@@ -1071,10 +817,9 @@
         db.peopleDictionary = db.people;
         db.categoryDictionary = db.categories;
         db.timeSessions = db.timeLogs;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        saveUiPreferences();
         if (directoryHandle) {
-          await writeToOneDriveFolder();
-          await ensureDailyBackup();
+          await writeDatabaseToDisk();
         }
       } catch (e) {
         console.error('Błąd zapisu bazy:', e);
@@ -1712,8 +1457,24 @@
       const alpenPct = dailyCap.baseBudget > 0 ? Math.min(100, Math.round((totalCommitted / dailyCap.baseBudget) * 100)) : 100;
       const alpenBarColor = totalCommitted > 300 ? 'bg-rose-500' : (totalCommitted > 240 ? 'bg-amber-400' : 'bg-[#1D1D1F] dark:bg-white');
 
+      const connectionBanner = (typeof dbConnectionState !== 'undefined' && dbConnectionState === 'CONNECTED') ? '' : `
+        <div class="col-span-1 lg:col-span-12 p-3 sm:p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shrink-0">
+          <div class="flex items-center gap-2.5 text-xs">
+            <span class="text-base shrink-0">📁</span>
+            <div>
+              <span class="font-semibold">${typeof dbConnectionState !== 'undefined' && dbConnectionState === 'NEEDS_PERMISSION' ? 'Wymagane potwierdzenie uprawnienia do pliku' : 'Wskaż folder z fokus-db.json'}</span>
+              <span class="opacity-80 ml-1.5 hidden sm:inline">${typeof dbConnectionState !== 'undefined' && dbConnectionState === 'NEEDS_PERMISSION' ? 'Kliknij, aby odblokować bezpośredni zapis zadań na dysku.' : 'Aplikacja zapisuje zadania bezpośrednio w lokalnym pliku fokus-db.json.'}</span>
+            </div>
+          </div>
+          <button onclick="handleDbStatusClick()" class="px-3.5 py-1 rounded-full bg-amber-500 text-white font-medium text-xs hover:opacity-90 active:scale-95 transition shrink-0 whitespace-nowrap shadow-2xs">
+            ${typeof dbConnectionState !== 'undefined' && dbConnectionState === 'NEEDS_PERMISSION' ? 'Odblokuj plik fokus-db.json' : 'Wskaż folder aplikacji'}
+          </button>
+        </div>
+      `;
+
       return `
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full min-h-0 items-stretch fade-in">
+          ${connectionBanner}
           
           <!-- KAFELEK LEWY (~62%): TERAZ ROBIĘ (DZISIEJSZA ŻABA) -->
           <section class="lg:col-span-7 xl:col-span-8 bento-card flex flex-col justify-between h-full min-h-0 overflow-hidden !p-6 sm:!p-7">
@@ -3330,7 +3091,7 @@
             <h3 class="text-base font-semibold">100% Prywatności: Local-First i Power BI</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed text-zinc-400">
               <p>
-                Aplikacja działa w $100\%$ w Twojej przeglądarce Chrome. Żadne dane, zadania ani notatki biznesowe nie opuszczają Twojego komputera. Synchronizacja odbywa się z lokalnym plikiem <code>fokus-db.json</code> w Twoim folderze OneDrive za pośrednictwem bezpiecznego API File System Access.
+                Aplikacja działa w $100\%$ w Twojej przeglądarce Chrome. Żadne dane, zadania ani notatki biznesowe nie opuszczają Twojego komputera. Zapis odbywa się bezpośrednio do lokalnego pliku <code>fokus-db.json</code> w folderze aplikacji za pośrednictwem bezpiecznego API File System Access.
               </p>
               <p>
                 Plik <code>fokus-db.json</code> zawiera płaskie tablice <code>tasks[]</code> oraz <code>timeLogs[]</code>. Możesz podpiąć ten plik bezpośrednio do <strong>Power BI Desktop</strong> (<em>Pobierz dane → JSON</em>) lub Excela (<em>Power Query</em>) w celu łączenia wyników produktywności z danymi z systemu ERP (Business Central / SAP).
@@ -4365,43 +4126,142 @@
     }
 
     // =========================================================================
-    // INTEGRACJA ONEDRIVE / FILE SYSTEM ACCESS API + EKSPORT CSV / JSON
+    // LOKALNA PERSYSTENCJA PLIKOWA (fokus-db.json) + FILE SYSTEM ACCESS API
     // =========================================================================
-    function openOneDriveModal() {
-      const m = document.getElementById('oneDriveModal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
+    let dbConnectionState = 'DISCONNECTED'; // 'DISCONNECTED' | 'NEEDS_PERMISSION' | 'CONNECTED' | 'NO_API' | 'ERROR'
+
+    function getHandleDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error('IndexedDB niedostępne'));
+          return;
+        }
+        const req = indexedDB.open('fokus_solo_storage', 1);
+        req.onupgradeneeded = (e) => {
+          const idb = e.target.result;
+          if (!idb.objectStoreNames.contains('handles')) {
+            idb.createObjectStore('handles');
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
     }
 
-    function closeOneDriveModal() {
-      const m = document.getElementById('oneDriveModal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
+    async function getStoredDirectoryHandle() {
+      try {
+        const idb = await getHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = idb.transaction('handles', 'readonly');
+          const store = tx.objectStore('handles');
+          const req = store.get('db_dir_handle');
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (err) {
+        console.warn('Błąd odczytu uchwytu z IndexedDB:', err);
+        return null;
+      }
     }
 
-    async function connectOneDriveDirectory() {
+    async function setStoredDirectoryHandle(handle) {
+      try {
+        const idb = await getHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = idb.transaction('handles', 'readwrite');
+          const store = tx.objectStore('handles');
+          const req = store.put(handle, 'db_dir_handle');
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (err) {
+        console.warn('Błąd zapisu uchwytu w IndexedDB:', err);
+      }
+    }
+
+    async function initDatabasePersistence() {
+      // Usunięcie starych danych zadań z localStorage (zgodnie z zasadą: zadania wyłącznie w pliku)
+      try {
+        localStorage.removeItem('FOKUS_SOLO_BENTO_DB_V1');
+        localStorage.removeItem('fokus_solo_db_v4');
+        localStorage.removeItem('fokus_solo_db_v3');
+      } catch (e) {}
+
+      loadUiPreferences();
+
       if (!window.showDirectoryPicker) {
-        showToast('Twoja przeglądarka nie wspiera wyboru folderu — użyj przycisku Pobierz JSON');
+        updateDbStatusUI('NO_API');
         return;
       }
-      try {
-        directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-        await writeToOneDriveFolder();
-        await ensureDailyBackup();
-        document.getElementById('oneDriveLabel').textContent = 'OneDrive: Aktywny';
-        document.getElementById('oneDriveModalStatus').textContent = `Połączono z folderem: ${directoryHandle.name} (zapisano fokus-db.json oraz kopię w backups/)`;
-        showToast('Połączono z folderem OneDrive i zapisano bazę');
-      } catch (e) {
-        showToast('Anulowano wybór folderu');
+
+      const storedHandle = await getStoredDirectoryHandle();
+      if (storedHandle) {
+        directoryHandle = storedHandle;
+        try {
+          const perm = await directoryHandle.queryPermission({ mode: 'readwrite' });
+          if (perm === 'granted') {
+            await loadOrCreateDatabaseOnDisk();
+            updateDbStatusUI('CONNECTED');
+            renderApp();
+          } else {
+            updateDbStatusUI('NEEDS_PERMISSION');
+            renderApp();
+          }
+        } catch (e) {
+          console.warn('Weryfikacja uprawnień folderu:', e);
+          updateDbStatusUI('NEEDS_PERMISSION');
+          renderApp();
+        }
+      } else {
+        updateDbStatusUI('DISCONNECTED');
+        renderApp();
       }
     }
 
-    async function writeToOneDriveFolder() {
+    async function loadOrCreateDatabaseOnDisk() {
+      if (!directoryHandle) return false;
+      try {
+        let fileHandle;
+        try {
+          fileHandle = await directoryHandle.getFileHandle('fokus-db.json', { create: false });
+        } catch (notFound) {
+          // Plik jeszcze nie istnieje — tworzymy czysty plik fokus-db.json
+          await writeDatabaseToDisk();
+          return true;
+        }
+
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        if (text && text.trim().length > 0) {
+          const parsed = JSON.parse(text);
+          if (parsed && typeof parsed === 'object') {
+            db = normalizeDatabase(parsed);
+            loadUiPreferences();
+            return true;
+          }
+        }
+        // Plik był pusty
+        await writeDatabaseToDisk();
+        return true;
+      } catch (e) {
+        console.error('Błąd odczytu pliku fokus-db.json:', e);
+        return false;
+      }
+    }
+
+    async function writeDatabaseToDisk() {
       if (!directoryHandle) return;
-      const fileHandle = await directoryHandle.getFileHandle('fokus-db.json', { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(JSON.stringify(db, null, 2));
-      await writable.close();
+      try {
+        const fileHandle = await directoryHandle.getFileHandle('fokus-db.json', { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(db, null, 2));
+        await writable.close();
+        await ensureDailyBackup();
+        updateDbStatusUI('CONNECTED');
+      } catch (e) {
+        console.error('Błąd zapisu do fokus-db.json:', e);
+        updateDbStatusUI('ERROR');
+      }
     }
 
     async function ensureDailyBackup() {
@@ -4415,11 +4275,104 @@
         await writable.write(JSON.stringify(db, null, 2));
         await writable.close();
         db.lastBackupDate = today;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
       } catch (e) {
-        console.warn('Auto-backup w folderze OneDrive pominięty:', e);
+        console.warn('Auto-backup w backups/ pominięty:', e);
       }
     }
+
+    function updateDbStatusUI(state) {
+      dbConnectionState = state;
+      const dot = document.getElementById('dbFileDot');
+      const label = document.getElementById('dbFileLabel');
+      const modalStatus = document.getElementById('dbFileModalStatus');
+      const btn = document.getElementById('dbFileStatusBtn');
+
+      if (!dot || !label) return;
+
+      if (state === 'CONNECTED') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+        label.textContent = 'fokus-db.json: Połączony';
+        if (btn) btn.title = `Połączono z plikiem fokus-db.json (${directoryHandle ? directoryHandle.name : ''})`;
+        if (modalStatus) modalStatus.textContent = `Status: Połączono z folderem „${directoryHandle ? directoryHandle.name : ''}”. Wszystkie zmiany zapisują się w czasie rzeczywistym w fokus-db.json.`;
+      } else if (state === 'NEEDS_PERMISSION') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+        label.textContent = 'Odblokuj fokus-db.json';
+        if (btn) btn.title = 'Wymagane kliknięcie, aby potwierdzić uprawnienie Chrome do zapisu pliku';
+        if (modalStatus) modalStatus.textContent = `Status: Folder „${directoryHandle ? directoryHandle.name : ''}” zapamiętany. Kliknij przycisk poniżej, aby zezwolić przeglądarce na dostęp do pliku.`;
+      } else if (state === 'NO_API') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        label.textContent = 'fokus-db.json: Brak File API';
+        if (modalStatus) modalStatus.textContent = 'Status: Przeglądarka nie obsługuje File System Access API. Używaj przycisków Pobierz/Wczytaj JSON.';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
+        label.textContent = 'Połącz fokus-db.json';
+        if (btn) btn.title = 'Wskaż folder z aplikacją i plikiem fokus-db.json';
+        if (modalStatus) modalStatus.textContent = 'Status: Folder nie jest połączony. Wskaż folder aplikacji, aby aktywować bezpośredni zapis na dysku.';
+      }
+    }
+
+    async function handleDbStatusClick() {
+      if (directoryHandle && dbConnectionState === 'NEEDS_PERMISSION') {
+        try {
+          const perm = await directoryHandle.requestPermission({ mode: 'readwrite' });
+          if (perm === 'granted') {
+            await loadOrCreateDatabaseOnDisk();
+            updateDbStatusUI('CONNECTED');
+            renderApp();
+            showToast('Uprawnienia przyznane — baza fokus-db.json załadowana');
+            return;
+          }
+        } catch (e) {
+          console.warn('Anulowano potwierdzenie uprawnień:', e);
+        }
+      }
+      openDbFileModal();
+    }
+
+    function openDbFileModal() {
+      const m = document.getElementById('dbFileModal') || document.getElementById('oneDriveModal');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    function closeDbFileModal() {
+      const m = document.getElementById('dbFileModal') || document.getElementById('oneDriveModal');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    async function connectDatabaseDirectory() {
+      if (!window.showDirectoryPicker) {
+        showToast('Przeglądarka nie wspiera bezpośredniego wyboru folderu — użyj Pobierz/Wczytaj JSON');
+        return;
+      }
+      try {
+        directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        await setStoredDirectoryHandle(directoryHandle);
+        await loadOrCreateDatabaseOnDisk();
+        updateDbStatusUI('CONNECTED');
+        closeDbFileModal();
+        renderApp();
+        showToast(`Połączono z folderem: ${directoryHandle.name} i aktywowano fokus-db.json`);
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          console.error(e);
+          showToast('Wystąpił błąd podczas wyboru folderu');
+        } else {
+          showToast('Anulowano wybór folderu');
+        }
+      }
+    }
+
+    // Kompatybilność wsteczna aliasów
+    function openOneDriveModal() { openDbFileModal(); }
+    function closeOneDriveModal() { closeDbFileModal(); }
+    async function connectOneDriveDirectory() { return connectDatabaseDirectory(); }
+    async function writeToOneDriveFolder() { return writeDatabaseToDisk(); }
 
     function downloadDailyBackup() {
       const today = getTodayISO();
@@ -4448,15 +4401,15 @@
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const imported = JSON.parse(e.target.result);
           if (imported && Array.isArray(imported.tasks)) {
             db = normalizeDatabase(imported);
-            saveDatabase();
-            closeOneDriveModal();
+            await saveDatabase();
+            closeDbFileModal();
             renderApp();
-            showToast('Wczytano bazę fokus-db.json (zgodność wsteczna zachowana)');
+            showToast('Wczytano bazę fokus-db.json');
           }
         } catch (err) {
           showToast('Nieprawidłowy plik JSON');
@@ -4598,7 +4551,7 @@
         closeTaskModal();
         closeDupochronModal();
         closeManualTimeModal();
-        closeOneDriveModal();
+        closeDbFileModal();
         closeCalendarEventModal();
       } else if (!isTyping) {
         if (e.key === 'n' || e.key === 'N') {
@@ -4623,7 +4576,9 @@
     });
 
     // Inicjalizacja aplikacji
+    loadUiPreferences();
     renderApp();
+    initDatabasePersistence();
   </script>
 </body>
 </html>

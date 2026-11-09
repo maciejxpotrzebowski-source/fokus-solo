@@ -1,83 +1,99 @@
-# FOKUS SOLO v4.3 — INSTRUKCJA WDROŻENIA I OPIS ZMIAN (CHANGELOG)
+# FOKUS SOLO v4.4 — INSTRUKCJA WDROŻENIA I OPIS ZMIAN (CHANGELOG)
 
-> **Wersja:** 4.3-bento-widescreen  
+> **Wersja:** 4.4-local-first-clean  
 > **Plik Produkcyjny:** [`Fokus.html`](./Fokus.html)  
-> **Środowisko:** Google Chrome (Windows / macOS) · Architektura Local-First (Single-File)
+> **Domyślna baza danych:** `fokus-db.json` (w tym samym folderze co aplikacja)  
+> **Środowisko:** Google Chrome (Windows produkcja / macOS dom) · Architektura Local-First (Single-File HTML)
 
 ---
 
-## 1. Co się zmieniło względem poprzednich wersji? (Pełny Changelog)
+## 1. Co się zmieniło w wersji 4.4? (Kluczowe zmiany pod produkcję)
 
-### 1.1. Wersja 4.3 (Modernizacja UI/UX pod ekrany 16:9)
-* **Wykorzystanie Panoramicznego Ekranu 16:9 (Fluid Widescreen):**
-  Zastąpiono sztywne ograniczenie szerokości `1260px` dynamicznym kontenerem roboczym `max-w-[1800px]`, eliminując puste szare marginesy boczne na monitorach panoramicznych.
-* **Dashboard 100vh bez przewijania strony (No-Scroll Viewport):**
-  Zablokowano wysokość głównego pulpitu roboczego na ekranach $\ge 1024\text{px}$ (`lg:h-screen lg:overflow-hidden`). Cały pulpit analityka mieści się w jednym oknie bez przewijania paska strony.
-* **Niezależny scroll kart Bento (`overflow-y-auto`):**
-  Długie checklisty, notatki robocze oraz kolejki zadań przewijają się niezależnie wewnątrz swoich kafelków z minimalistycznym paskiem w stylu macOS, nie poruszając nagłówka ani pozostałych elementów ekranu.
-* **Centralny, wyróżniony przycisk `+ Nowe zadanie`:**
-  Przeniesiono najważniejszą akcję operacyjną z peryferii prawego rogu do strefy centralnej tuż obok pigułki nawigacyjnej, z wyraźnym kontrastem i skrótem `[ N ]`.
-* **Wyrazisty logotyp Fokus Solo:**
-  Powiększone logo z nowoczesną ikoną i czytelną typografią.
-* **Kompaktowa lista rozwijana Pomodoro (Select):**
-  Zastąpiono 5 oddzielnych przycisków rozpychających panel jedną elegancką listą rozwijaną `[ ⏱ 25 min ▾ ]` z presetami 15, 25, 45, 60, 90 minut oraz czasem własnym.
-* **Czysty minimalizm i usunięcie szumu:**
-  Usunięto laboratoryjne numeratory (`01 ·`, `02 ·`, `03 ·`) oraz dublujące się podpisy (`Metoda Ivy Lee...`, `Zadania zablokowane przez innych`).
-* **Zakotwiczona dolna belka akcji (Sticky Action Bar):**
-  Przyciski `✓ Ukończ zadanie`, `⏳ Czekam na...` oraz `Odłóż` są stale zakotwiczone w stopce karty aktywnego zadania — zawsze pod ręką niezależnie od długości kroków milowych.
-* **Pełne imię i nazwisko osoby blokującej:**
-  W kafelku „Czekam na odpowiedź” wyświetlane jest czytelne, pełne imię i nazwisko (np. *Tomek Kowalski*) zamiast suchych dwuliterowych inicjałów.
+### 1.1. Czysty start bez sztucznych zadań testowych (Clean Slate)
+* Całkowicie wyczyszczono z kodu testowe / przykładowe zadania, wpisy kalendarza i logi czasu (`tasks: []`, `timeLogs: []`, `calendarEvents: []`, `selectedTaskId: null`).
+* Aplikacja uruchamia się z czystą kartką, gotowa do wprowadzenia realnych danych analityka od pierwszego dnia.
+* Słowniki startowe zawierają wzorcowe kategorie (`cat_erp`, `cat_rfq`, `cat_raporty`, `cat_ppwr`, `cat_wlasne`) oraz szablony procedur cyklicznych SOP.
 
----
+### 1.2. Sztywna nazwa bazy `fokus-db.json` i usunięcie modułu OneDrive
+* Usunięto moduł, modal oraz etykiety OneDrive na rzecz bezpośredniej integracji z lokalnym plikiem **`fokus-db.json`** w folderze roboczym aplikacji.
+* W prawym górnym rogu znajduje się czytelna pastylka statusu pliku:
+  * 🟢 **`fokus-db.json: Połączony`** — każda zmiana (zadanie, czas Pomodoro, notatka) natychmiast zapisuje się bezpośrednio w pliku na dysku.
+  * 🟡 **`Odblokuj fokus-db.json`** — folder jest zapamiętany w Chrome, wystarczy jedno kliknięcie, aby odnowić uprawnienie przeglądarki.
+  * ⚪ **`Połącz fokus-db.json`** — pierwsze uruchomienie: wskaż folder z aplikacją.
 
-### 1.2. Wersja 4.2 (Kalendarz, Dni Robocze, Eisenhower, Instrukcja)
-* **Nowa Zakładka „Kalendarz & Zasoby Czasu”:** Tygodniowy kalendarz blokowy Bento, odliczanie spotkań od budżetu ALPEN 5h oraz obsługa urlopów.
-* **Inteligentny Algorytm Pilności Dni Roboczych ($D_{\text{biz}}$):** Eliminacja „pułapki poniedziałku” (zadanie na poniedziałek ma status ASAP już w piątek rano), wbudowany kalendarz polskich świąt państwowych i uwzględnianie urlopów.
-* **Profesjonalne Nazewnictwo „Eisenhower”:** Zastąpienie nazwy „Macierz 2x2” standardem Eisenhowera z filtrami zleceniodawcy i kategorii.
-* **Nowa Zakładka „Instrukcja”:** Baza wiedzy Bento z opisem 6 Strażników Metodyk i rytuałem dnia analityka.
+### 1.3. Rozdzielenie danych zadań od pamięci podręcznej przeglądarki (`localStorage`)
+* **Koniec z dublowaniem zadań w przeglądarce:** Wszystkie zadania, checklisty, historia Dupochronu, rejestr osób i sesje czasu są zapisywane **wyłącznie w pliku `fokus-db.json`**.
+* Pamięć podręczna przeglądarki (`localStorage` pod kluczem `fokus_solo_prefs`) przechowuje wyłącznie **indywidualne preferencje UI użytkownika**:
+  * Wybrany motyw (Jasny / Ciemny),
+  * Ostatnio aktywny widok (`Mój Dzień`, `Eisenhower`, `Kalendarz` itd.),
+  * Filtry macierzy (np. ostatnio wybrany zleceniodawca, kategoria),
+  * Zakładka aktywnego zadania (Kroki vs Historia).
 
----
+### 1.4. Trwałe zapamiętywanie folderu w IndexedDB
+* Uchwyt do folderu aplikacji jest bezpiecznie zapamiętywany w lokalnej bazie `IndexedDB` przeglądarki Chrome.
+* Dzięki temu nie musisz wskazywać folderu od nowa za każdym razem — Chrome pamięta ścieżkę do pliku `fokus-db.json`.
 
-## 2. Instrukcja Wdrożenia / Aktualizacji (Krok po Kroku)
-
-Przejście na wersję 4.2 jest w pełni bezpieczne i nie wymaga instalacji żadnych serwerów ani bibliotek. Aplikacja zachowuje 100% zgodności z Twoimi dotychczasowymi danymi.
-
-### Krok 1: Kopia Zapasowa (Zalecane przed każdą aktualizacją)
-1. Otwórz swoją dotychczasową wersję aplikacji w przeglądarce Chrome.
-2. Kliknij w prawym górnym rogu przycisk **OneDrive**.
-3. Kliknij przycisk **„💾 Pobierz kopię dzienną (fokus-backup-YYYY-MM-DD.json)”** lub **„⬇ Pobierz fokus-db.json”**.
-4. Zapisz plik na dysku komputera lub w bezpiecznym folderze.
-
-### Krok 2: Umieszczenie Nowego Pliku na Komputerze Służbowym
-1. Skopiuj plik [`release/Fokus.html`](./Fokus.html) na swój komputer służbowy (np. na Pulpit, do folderu dokumentów lub do folderu synchronizowanego z OneDrive).
-2. Możesz zmienić nazwę pliku na dowolną (np. `Fokus.html` lub `Fokus_Solo.html`).
-
-### Krok 3: Uruchomienie w Przeglądarce Google Chrome
-1. Kliknij dwukrotnie w plik `Fokus.html` (otworzy się w domyślnej przeglądarce Google Chrome).
-2. Dodaj stronę do zakładek za pomocą skrótu **`Ctrl + D`** (Windows) lub **`Cmd + D`** (macOS).
-3. **Automatyczna migracja danych:**
-   * Ponieważ aplikacja korzysta z bezpiecznego magazynu `LocalStorage` pod tym samym adresem, wszystkie Twoje zadania, osoby, szablony SOP oraz historia czasu **zostaną automatycznie wczytane**.
-   * Aplikacja automatycznie uzupełni schemat o nową strukturę `calendarEvents`, nie modyfikując ani nie kasując żadnych Twoich wcześniejszych wpisów.
-
-### Krok 4: Ponowne Podpięcie Folderu OneDrive (Jeśli używasz)
-1. Kliknij przycisk **OneDrive** w prawym górnym rogu paska.
-2. Kliknij **„Podepnij folder roboczy OneDrive”**.
-3. W oknie systemowym wskaż folder, w którym znajduje się Twój plik `fokus-db.json`.
-4. Wyraź zgodę na uprawnienia do zapisu plików (`Zezwól na edycję plików`).
-5. Dioda przy przycisku zmieni kolor na zielony (`OneDrive ●`).
-
-### Krok 5: Czyszczenie Pamięci Podręcznej (Gdyby przeglądarka pamiętała stary wygląd)
-Jeśli podmieniłeś plik o tej samej nazwie w tej samej ścieżce, wymuś odświeżenie bez pamięci podręcznej:
-* **Windows / Linux:** `Ctrl + F5` lub `Ctrl + Shift + R`
-* **macOS:** `Cmd + Shift + R`
+### 1.5. Panoramiczny interfejs 16:9 (No-Scroll Viewport)
+* Szerokość dopasowana do panoramicznych monitorów (`max-w-[1800px]`), brak pustych szarych marginesów.
+* Pulpit roboczy mieści się na jednym ekranie (`100vh`), z niezależnym wewnętrznym scrollem list zadań i notatek.
+* Centralny, wyróżniony przycisk **`+ Nowe zadanie [N]`**.
+* Kompaktowa lista rozwijana presetów stopera Pomodoro (`15m, 25m, 45m, 60m, 90m` + własny).
 
 ---
 
-## 3. Podsumowanie Wymagań Technicznych
+## 2. Instrukcja Wdrożenia Krok po Kroku (Windows i macOS)
 
-| Element | Wymaganie |
-| :--- | :--- |
-| **Przeglądarka** | Google Chrome (wersja 86+ ze wsparciem dla File System Access API) |
-| **Zależności / Serwery** | **Brak** (0 serwerów, 0 npm w runtime, czysty HTML/CSS/JS) |
-| **Zapis Danych** | Warstwa 1: Synchroniczny `LocalStorage` (0 ms opóźnienia) <br> Warstwa 2: Plik `fokus-db.json` w OneDrive przez przeglądarkę |
-| **Kopia Zapasowa** | Automatyczna rotacja dzienna z zachowaniem bezpiecznej nazwy datowanej |
+Aplikacja jest w 100% samodzielnym plikiem HTML — nie wymaga instalowania środowiska Node.js, serwerów ani żadnych skryptów `.bat` / `.command`.
+
+### Krok 1: Przygotowanie folderu aplikacji na dysku
+1. Utwórz na dysku folder roboczy dla aplikacji (np. `C:\Fokus\` na Windows lub `~/Dokumenty/Fokus/` na macOS).
+2. Skopiuj do tego folderu plik [`Fokus.html`](./Fokus.html).
+3. *(Opcjonalnie)* Jeśli posiadasz już swój dotychczasowy plik `fokus-db.json`, wklej go do tego samego folderu obok `Fokus.html`. Jeśli go nie ma, aplikacja utworzy go automatycznie przy pierwszym połączeniu.
+
+### Krok 2: Uruchomienie w Google Chrome
+1. Kliknij dwukrotnie plik `Fokus.html`, aby otworzyć go w przeglądarce Google Chrome.
+2. Dodaj stronę do paska zakładek:
+   * **Windows:** `Ctrl + D`
+   * **macOS:** `Cmd + D`
+
+### Krok 3: Jednorazowe wskazanie folderu z plikiem `fokus-db.json`
+1. Po otwarciu aplikacji na górze ekranu pojawi się bursztynowy pasek:  
+   *„Wskaż folder z fokus-db.json — Aplikacja zapisuje zadania bezpośrednio w lokalnym pliku fokus-db.json”*.
+2. Kliknij przycisk **`Wskaż folder aplikacji`** (lub kliknij pastylkę w prawym górnym rogu).
+3. W oknie systemowym Chrome wskaż folder, w którym znajduje się `Fokus.html`.
+4. Kliknij **„Wybierz folder”** i potwierdź uprawnienia do edycji plików: **„Wyświetlaj i edytuj pliki”**.
+5. Wskaźnik w prawym górnym rogu natychmiast zaświeci się na zielono: **`● fokus-db.json: Połączony`**.
+
+> **Wskazówka bezpieczeństwa Chrome:**  
+> Po całkowitym zamknięciu i ponownym uruchomieniu przeglądarki Chrome może ze względów bezpieczeństwa poprosić o kliknięcie przycisku odnowienia uprawnień (*„Odblokuj fokus-db.json”*). Wystarczy jedno kliknięcie, aby kontynuować pracę z plikiem.
+
+---
+
+## 3. Struktura Plików w Folderze Roboczym
+
+Po połączeniu folderu struktura plików wygląda następująco:
+
+```text
+📁 Fokus/
+├── 📄 Fokus.html                <- Jednoelementowa aplikacja (otwierana w Chrome)
+├── 📄 fokus-db.json             <- Główny plik bazy danych (zadania, słowniki, sesje Pomodoro)
+└── 📁 backups/                  <- Automatyczne codzienne kopie zapasowe
+    ├── 📄 fokus-2026-11-09.json
+    └── 📄 fokus-2026-11-10.json
+```
+
+---
+
+## 4. Skróty Klawiszowe
+
+| Skrót | Akcja |
+| :---: | :--- |
+| **`N`** | Dodaj nowe zadanie (otwiera modal z 5 pytaniami) |
+| **`1`** | Przełącz na widok **Mój Dzień** |
+| **`2`** | Przełącz na widok **Eisenhower** |
+| **`3`** | Przełącz na widok **Kalendarz & Zasoby Czasu** |
+| **`4`** | Przełącz na widok **Czekam na odpowiedź** |
+| **`5`** | Przełącz na widok **Raporty i Eksport CSV** |
+| **`6`** | Przełącz na widok **Słowniki (Osoby, Kategorie, SOP)** |
+| **`7`** | Przełącz na widok **Instrukcja i Baza Wiedzy** |
+| **`Esc`** | Zamknij aktywne okno modala |
