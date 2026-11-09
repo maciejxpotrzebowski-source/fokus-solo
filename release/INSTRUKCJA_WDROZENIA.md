@@ -76,11 +76,19 @@ Po połączeniu folderu struktura plików wygląda następująco:
 ```text
 📁 Fokus/
 ├── 📄 Fokus.html                <- Jednoelementowa aplikacja (otwierana w Chrome)
-├── 📄 fokus-db.json             <- Główny plik bazy danych (zadania, słowniki, sesje Pomodoro)
+├── 📄 fokus-db.json             <- Główna pusta baza produkcyjna (Twoje realne zadania i słowniki)
+├── 📄 fokus-db-demo.json        <- Baza demonstracyjna z przykładowymi danymi (do testów / podglądu)
 └── 📁 backups/                  <- Automatyczne codzienne kopie zapasowe
     ├── 📄 fokus-2026-11-09.json
     └── 📄 fokus-2026-11-10.json
 ```
+
+> **Jak wczytać bazę demonstracyjną?**
+> Jeśli chcesz przetestować aplikację na przykładowych zadaniach analityka (RFQ, PPWR, Power BI, Pomodoro, kalendarz):
+> 1. Otwórz aplikację `Fokus.html`.
+> 2. Kliknij w pastylkę statusu pliku bazy w prawym górnym rogu.
+> 3. Kliknij **„Wczytaj z pliku JSON”** i wskaż plik `fokus-db-demo.json`.
+> *(Możesz też przed uruchomieniem po prostu zmienić nazwę pliku `fokus-db-demo.json` na `fokus-db.json`).*
 
 ---
 

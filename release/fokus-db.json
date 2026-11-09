@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "4.2-bento-solo",
+  "theme": "LIGHT",
+  "activeView": "DAY",
+  "selectedTaskId": null,
+  "card1Tab": "STEPS",
+  "reportPeriod": "MONTH",
+  "lastBackupDate": null,
+  "calendarEvents": [],
+  "people": [
+    {
+      "id": "per_grzegorz",
+      "canonicalName": "Grzegorz",
+      "roleOrDept": "Szef / Dyrektor",
+      "aliases": ["grzesiek", "gp", "szef", "prezes", "dyrektor"],
+      "active": true
+    },
+    {
+      "id": "per_tomek",
+      "canonicalName": "Tomek",
+      "roleOrDept": "Zakupy Opakowań",
+      "aliases": ["tk", "tomasz", "opakowania"],
+      "active": true
+    },
+    {
+      "id": "per_ola",
+      "canonicalName": "Ola",
+      "roleOrDept": "Zakupy Surowców",
+      "aliases": ["ok", "aleksandra", "surowce"],
+      "active": true
+    },
+    {
+      "id": "per_wlasne",
+      "canonicalName": "Praca własna",
+      "roleOrDept": "Rozwój / Systemy",
+      "aliases": ["ja", "wlasne", "analizy", "bi"],
+      "active": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_erp",
+      "name": "ERP / Dane BC",
+      "colorHex": "#3B82F6"
+    },
+    {
+      "id": "cat_rfq",
+      "name": "Zakupy / RFQ",
+      "colorHex": "#F59E0B"
+    },
+    {
+      "id": "cat_raporty",
+      "name": "Raporty / Power BI",
+      "colorHex": "#10B981"
+    },
+    {
+      "id": "cat_ppwr",
+      "name": "Regulacje / PPWR",
+      "colorHex": "#8B5CF6"
+    },
+    {
+      "id": "cat_wlasne",
+      "name": "Praca własna / Organizacja",
+      "colorHex": "#64748B"
+    }
+  ],
+  "sopTemplates": [
+    {
+      "id": "sop_rfq",
+      "name": "Analiza ofert RFQ (TCO)",
+      "steps": [
+        "Weryfikacja kompletności ofert handlowych",
+        "Sprowadzenie cen do wspólnej bazy (Incoterms DDP)",
+        "Budowa matrycy porównawczej TCO w Excelu",
+        "Rekomendacja wyboru dostawcy i omówienie z kupcem"
+      ]
+    },
+    {
+      "id": "sop_raport",
+      "name": "Raport Miesięczny / Zamknięcie",
+      "steps": [
+        "Eksport transakcji z Business Central do CSV",
+        "Oczyszczenie anomalii i pustych rekordów",
+        "Aktualizacja modelu danych w Power BI",
+        "Komentarz do odchyleń m/m i y/y oraz wysyłka"
+      ]
+    },
+    {
+      "id": "sop_ppwr",
+      "name": "Audyt wag i kodów PPWR/EUDR",
+      "steps": [
+        "Pobranie indeksów asortymentowych z ERP",
+        "Weryfikacja kart charakterystyki dostawców",
+        "Walidacja mas jednostkowych netto/brutto",
+        "Wprowadzenie korekt do bazy ERP i notatka audytowa"
+      ]
+    }
+  ],
+  "tasks": [],
+  "timeLogs": []
+}

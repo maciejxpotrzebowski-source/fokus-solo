@@ -3,9 +3,11 @@
 Thumbs.db
 
 # User database and backups (Local-First data)
-fokus-db.json
+/fokus-db.json
 fokus-backup-*.json
 *.backup.json
+!release/fokus-db.json
+!release/fokus-db-demo.json
 
 # Node dependencies
 node_modules/
