@@ -124,9 +124,9 @@
           </button>
         </nav>
 
-        <!-- Wyróżniony centralny przycisk dodawania zadania (N) z atrybutem data-requires-db -->
-        <button onclick="openTaskModal()" data-requires-db title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
-          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0">
+        <!-- Wyróżniony centralny przycisk dodawania zadania (N) -->
+        <button onclick="openTaskModal()" title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
+          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer">
           <span class="text-sm font-bold leading-none">+</span>
           <span class="hidden sm:inline">Nowe zadanie</span>
           <span class="sm:hidden">Zadanie</span>
@@ -285,14 +285,123 @@
         </div>
       </div>
 
-      <!-- 5. Kroki milowe + Dynamiczne Szablony SOP + Wspólne pole Kontekst i Notatki -->
-      <div class="space-y-3 pt-1">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii) lub gotowy szablon SOP</label>
-          <div class="flex flex-wrap gap-1.5" id="tmSopButtonsContainer"></div>
+      <!-- KONTENER ZAAWANSOWANEJ CYKLICZNOŚCI (tmRecurrenceConfig) -->
+      <div id="tmRecurrenceConfig" class="hidden p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 border border-black/5 dark:border-white/5 space-y-3">
+        <div class="text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">
+          🔄 Ustawienia cyklu powtarzania
         </div>
-        <textarea id="tmMilestonesText" rows="3" placeholder="Eksport tabeli z ERP&#10;Walidacja rekordów&#10;Wysłanie podsumowania"
-          class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed"></textarea>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] text-zinc-400 font-medium mb-1">Data pierwszego wykonania</label>
+            <input id="tmRecurrenceFirstDate" type="date" onchange="onRecurrenceFirstDateChange(this.value)"
+              class="w-full text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/10 font-mono focus:outline-none" />
+          </div>
+          <div>
+            <!-- Blok reguł miesięcznych -->
+            <div id="tmRecurrenceMonthlyBlock" class="space-y-1.5">
+              <label class="block text-[11px] text-zinc-400 font-medium mb-1">Zasada powtarzania</label>
+              <select id="tmRecurrenceMonthlyRule" onchange="onRecurrenceRuleChange()"
+                class="w-full text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/10 focus:outline-none">
+                <option value="DAY_OF_MONTH">Wybrany dzień miesiąca (np. 10.)</option>
+                <option value="FIRST_FRIDAY">Pierwszy piątek miesiąca</option>
+                <option value="LAST_FRIDAY">Ostatni piątek miesiąca</option>
+                <option value="FIRST_MONDAY">Pierwszy poniedziałek miesiąca</option>
+                <option value="LAST_WORKDAY">Ostatni dzień roboczy miesiąca</option>
+              </select>
+              <div id="tmRecurrenceDaySelectRow" class="pt-1">
+                <label class="block text-[10px] text-zinc-400 mb-0.5">Dzień miesiąca:</label>
+                <select id="tmRecurrenceDaySelect" onchange="onRecurrenceDaySelectChange(this.value)"
+                  class="w-full text-xs px-3 py-1.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/10 font-mono focus:outline-none">
+                  <option value="1">1. dzień miesiąca</option>
+                  <option value="2">2. dzień miesiąca</option>
+                  <option value="3">3. dzień miesiąca</option>
+                  <option value="4">4. dzień miesiąca</option>
+                  <option value="5">5. dzień miesiąca</option>
+                  <option value="6">6. dzień miesiąca</option>
+                  <option value="7">7. dzień miesiąca</option>
+                  <option value="8">8. dzień miesiąca</option>
+                  <option value="9">9. dzień miesiąca</option>
+                  <option value="10" selected>10. dzień miesiąca</option>
+                  <option value="11">11. dzień miesiąca</option>
+                  <option value="12">12. dzień miesiąca</option>
+                  <option value="13">13. dzień miesiąca</option>
+                  <option value="14">14. dzień miesiąca</option>
+                  <option value="15">15. dzień miesiąca</option>
+                  <option value="16">16. dzień miesiąca</option>
+                  <option value="17">17. dzień miesiąca</option>
+                  <option value="18">18. dzień miesiąca</option>
+                  <option value="19">19. dzień miesiąca</option>
+                  <option value="20">20. dzień miesiąca</option>
+                  <option value="21">21. dzień miesiąca</option>
+                  <option value="22">22. dzień miesiąca</option>
+                  <option value="23">23. dzień miesiąca</option>
+                  <option value="24">24. dzień miesiąca</option>
+                  <option value="25">25. dzień miesiąca</option>
+                  <option value="26">26. dzień miesiąca</option>
+                  <option value="27">27. dzień miesiąca</option>
+                  <option value="28">28. dzień miesiąca</option>
+                  <option value="29">29. dzień miesiąca</option>
+                  <option value="30">30. dzień miesiąca</option>
+                  <option value="31">31. dzień miesiąca</option>
+                </select>
+              </div>
+            </div>
+            <!-- Blok reguł tygodniowych -->
+            <div id="tmRecurrenceWeeklyBlock" class="hidden space-y-1.5">
+              <label class="block text-[11px] text-zinc-400 font-medium mb-1">Dzień tygodnia</label>
+              <select id="tmRecurrenceWeekdaySelect" onchange="onRecurrenceWeekdayChange(this.value)"
+                class="w-full text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/10 focus:outline-none">
+                <option value="1">Każdy poniedziałek</option>
+                <option value="2" selected>Każdy wtorek</option>
+                <option value="3">Każda środa</option>
+                <option value="4">Każdy czwartek</option>
+                <option value="5">Każdy piątek</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="tmRecurrenceHint" class="text-[11px] text-blue-600 dark:text-blue-400 font-medium"></div>
+      </div>
+
+      <!-- SEKCJA: CZEKAM NA KOGOŚ (OPCJONALNIE PRZY TWORZENIU ZADANIA) -->
+      <div class="space-y-2 pt-1 border-t border-black/5 dark:border-white/5">
+        <label class="flex items-center gap-2.5 text-xs font-medium cursor-pointer select-none text-zinc-700 dark:text-zinc-200">
+          <input id="tmWaitingToggle" type="checkbox" onchange="toggleTaskModalWaiting(this.checked)" class="w-4 h-4 rounded accent-amber-500" />
+          <span>⏳ Czekam na kogoś z tym zadaniem (status Czekam na)</span>
+        </label>
+
+        <div id="tmWaitingDetails" class="hidden p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="relative">
+              <label class="block text-[11px] text-amber-700 dark:text-amber-300 font-medium mb-1">Na kogo czekasz?</label>
+              <input id="tmWaitingPersonSearch" type="text" autocomplete="off" placeholder="Wpisz osobę..."
+                onfocus="renderPersonDropdown('tmWaiting')"
+                oninput="renderPersonDropdown('tmWaiting')"
+                class="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-amber-500/30 focus:outline-none" />
+              <input type="hidden" id="tmWaitingPersonId" />
+              <div id="tmWaitingPersonDropdown" class="hidden absolute left-0 right-0 mt-1.5 bg-white dark:bg-[#252528] rounded-2xl shadow-xl border border-black/5 dark:border-white/10 z-30 max-h-44 overflow-y-auto p-1.5"></div>
+            </div>
+            <div>
+              <label class="block text-[11px] text-amber-700 dark:text-amber-300 font-medium mb-1">Termin przypomnienia (Follow-up)</label>
+              <input id="tmWaitingFollowUp" type="date"
+                class="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-amber-500/30 font-mono focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] text-amber-700 dark:text-amber-300 font-medium mb-1">Czego brakuje? (Notatka)</label>
+            <input id="tmWaitingReason" type="text" placeholder="np. Czekam na zestawienie od logistyki"
+              class="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-amber-500/30 focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Kroki milowe + Notatki -->
+      <div class="space-y-3 pt-1 border-t border-black/5 dark:border-white/5">
+        <div>
+          <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
+          <textarea id="tmMilestonesText" rows="3" placeholder="Eksport tabeli z ERP&#10;Walidacja rekordów&#10;Wysłanie podsumowania"
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1"></textarea>
+        </div>
 
         <div>
           <label class="block text-[11px] text-zinc-400 font-medium mb-1.5">Kontekst i Notatki robocze (1 wspólne pole)</label>
@@ -420,34 +529,50 @@
   <div id="manualTimeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/25 dark:bg-black/65 backdrop-blur-sm p-4">
     <div class="bento-card max-w-sm w-full space-y-4 fade-in">
       <div class="flex items-center justify-between">
-        <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Dopisz czas z palca</span>
+        <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">Dodaj sesję</span>
         <button onclick="closeManualTimeModal()" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
       </div>
 
-      <div id="mtTaskTitle" class="text-sm font-medium truncate"></div>
+      <div id="mtTaskTitle" class="text-sm font-semibold truncate"></div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-3">
         <div>
-          <label class="block text-[11px] text-zinc-400 mb-1">Czas pracy (minuty)</label>
-          <input id="mtMinutes" type="number" min="1" value="30"
-            class="w-full text-xs px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Czas pracy</label>
+          <div class="flex gap-2">
+            <select id="mtMinutesPreset" onchange="onManualMinutesPresetChange(this.value)"
+              class="flex-1 text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none cursor-pointer">
+              <option value="15">15 min</option>
+              <option value="25">25 min</option>
+              <option value="30" selected>30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min (1h)</option>
+              <option value="90">90 min (1.5h)</option>
+              <option value="120">120 min (2h)</option>
+              <option value="CUSTOM">Inny czas (wpisz)...</option>
+            </select>
+            <div id="mtMinutesCustomWrapper" class="hidden w-24">
+              <input id="mtMinutes" type="number" min="1" max="600" value="30" placeholder="min"
+                class="w-full text-xs px-3 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono text-center focus:outline-none" />
+            </div>
+          </div>
         </div>
+
         <div>
-          <label class="block text-[11px] text-zinc-400 mb-1">Data wykonania</label>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Data wykonania</label>
           <input id="mtDate" type="date"
-            class="w-full text-xs px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
         </div>
-      </div>
 
-      <div>
-        <label class="block text-[11px] text-zinc-400 mb-1">Notatka z sesji (opcjonalnie)</label>
-        <input id="mtNote" type="text" placeholder="np. Czyszczenie tabeli indeksów w Excelu"
-          class="w-full text-xs px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none" />
+        <div>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Notatka z sesji (opcjonalnie)</label>
+          <input id="mtNote" type="text" placeholder="np. Analiza danych w Excelu"
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none" />
+        </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeManualTimeModal()" class="px-3.5 py-1.5 text-xs text-zinc-400">Anuluj</button>
-        <button onclick="saveManualTimeModal()" class="px-4 py-2 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">
+        <button onclick="closeManualTimeModal()" class="px-3.5 py-2 rounded-full text-xs text-zinc-400 hover:text-zinc-600">Anuluj</button>
+        <button onclick="saveManualTimeModal()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">
           Dodaj sesję
         </button>
       </div>
@@ -725,7 +850,8 @@
       </div>
       <p class="text-xs text-zinc-500">Wpisz ile minut ma trwać kolejna sesja Pomodoro:</p>
       <div>
-        <input id="ctmMinutes" type="number" min="1" max="240" step="1" value="25"
+        <input id="ctmMinutes" type="number" min="1" max="240" step="1" value="" placeholder="np. 35"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();applyCustomTimerMinutes();}"
           class="w-full text-2xl font-bold font-mono text-center px-4 py-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
       </div>
       <div class="flex items-center justify-end gap-2 pt-1">
@@ -1530,31 +1656,71 @@
       updateTimerUI();
     }
 
+    // Presety Pomodoro: 15, 25, 45, 60, 90 minut
+    const POMODORO_PRESETS = [15, 25, 45, 60, 90];
+
+    function togglePomodoroMenu(e) {
+      if (e) e.stopPropagation();
+      if (timer.running) return;
+      const menu = document.getElementById('pomodoroDropdownMenu');
+      if (!menu) return;
+      menu.classList.toggle('hidden');
+    }
+
+    function closePomodoroMenu() {
+      const menu = document.getElementById('pomodoroDropdownMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+
+    function selectPomodoroMenuPreset(mins) {
+      closePomodoroMenu();
+      setPomodoroPreset(mins);
+      renderApp();
+    }
+
+    function openCustomTimerModalFromMenu() {
+      closePomodoroMenu();
+      openCustomTimerModal();
+    }
+
+    function openManualTimeForActiveTask() {
+      closePomodoroMenu();
+      const activeTask = getActiveMyDayTask();
+      if (activeTask) {
+        openManualTimeModal(activeTask.id);
+      } else {
+        showToast('Najpierw wybierz zadanie w Mój Dzień');
+      }
+    }
+
     function onPomodoroPresetChange(val) {
       if (val === 'CUSTOM') {
         openCustomTimerModal();
       } else if (val === 'MANUAL') {
-        const activeTask = getActiveMyDayTask();
-        if (activeTask) {
-          openManualTimeModal(activeTask.id);
-        } else {
-          showToast('Najpierw wybierz zadanie');
-        }
+        openManualTimeForActiveTask();
       } else {
         setPomodoroPreset(val);
       }
     }
 
     function openCustomTimerModal() {
+      closePomodoroMenu();
       const inp = document.getElementById('ctmMinutes');
-      if (inp) inp.value = timer.plannedMinutes || 25;
+      if (inp) {
+        inp.value = '';
+        inp.placeholder = 'np. 35';
+      }
       openModal('customTimerModal');
       setTimeout(() => { if (inp) inp.focus(); }, 50);
     }
 
     function applyCustomTimerMinutes() {
       const inp = document.getElementById('ctmMinutes');
-      const val = parseInt(inp ? inp.value : 25, 10) || 25;
+      const val = inp ? parseInt(inp.value, 10) : NaN;
+      if (!val || isNaN(val) || val <= 0) {
+        showToast('Wpisz liczbę minut');
+        return;
+      }
       closeModal('customTimerModal');
       setPomodoroPreset(val);
       renderApp();
@@ -1921,7 +2087,20 @@
         }
       }
 
-      // Synchronizacja listy rozwijanej presetów
+      // Blokada rozwijania menu stopera w trakcie aktywnego odliczania
+      const triggerBtn = document.getElementById('bentoTimerTriggerBtn');
+      const chevron = document.getElementById('bentoTimerChevron');
+      if (triggerBtn) {
+        triggerBtn.disabled = timer.running;
+      }
+      if (chevron) {
+        chevron.classList.toggle('hidden', timer.running);
+      }
+      if (timer.running) {
+        closePomodoroMenu();
+      }
+
+      // Synchronizacja listy rozwijanej presetów (jeśli obecna w DOM)
       const selectEl = document.getElementById('pomodoroPresetSelect');
       if (selectEl && document.activeElement !== selectEl) {
         if ([15, 25, 45, 60, 90].includes(timer.plannedMinutes)) {
@@ -2250,30 +2429,52 @@
               <div id="bentoTimerStateBadge" class="text-[11px] text-zinc-400 mt-0.5">Gotowy</div>
             </div>
 
-            <!-- Panel Zegara Pomodoro z pojedynczą listą rozwijaną (Presety: 15, 25, 45, 60, 90) -->
-            <div class="flex items-center gap-2 bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 px-3 py-1.5 rounded-2xl">
-              <!-- Presety Pomodoro: 15, 25, 45, 60, 90 minut -->
-              <select id="pomodoroPresetSelect" onchange="onPomodoroPresetChange(this.value)"
-                class="text-xs font-mono font-medium px-2.5 py-1 rounded-xl bg-white dark:bg-[#1C1C1E] text-zinc-700 dark:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] focus:outline-none cursor-pointer">
-                ${[15, 25, 45, 60, 90].map(m => `
-                  <option value="${m}" ${timer.plannedMinutes === m ? 'selected' : ''}>⏱ ${m} min</option>
-                `).join('')}
-                <option value="CUSTOM" ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? 'selected' : ''}>
-                  ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? `⏱ ${timer.plannedMinutes} min (własny)` : 'Inny czas...'}
-                </option>
-                <option value="MANUAL">✍️ Dopisz czas ręcznie (z palca)...</option>
-              </select>
+            <!-- Panel Zegara Pomodoro (Sam stoper rozwija listę opcji czasu) -->
+            <div class="relative flex items-center gap-2 bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 px-3 py-1.5 rounded-2xl">
+              <!-- Sam stoper jest interaktywnym przyciskiem rozwijającym opcje -->
+              <div class="relative">
+                <button type="button" id="bentoTimerTriggerBtn" onclick="togglePomodoroMenu(event)"
+                  ${timer.running ? 'disabled' : ''}
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer disabled:cursor-default disabled:hover:bg-transparent select-none"
+                  title="${timer.running ? 'Stoper w toku' : 'Kliknij stoper, aby wybrać czas (15, 25, 45, 60, 90) lub dodać sesję'}">
+                  <span id="bentoTimerDisplay" class="font-mono text-2xl sm:text-3xl font-semibold tracking-tight">
+                    ${timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds)}
+                  </span>
+                  <span id="bentoTimerChevron" class="text-xs text-zinc-400 dark:text-zinc-500 font-sans ${timer.running ? 'hidden' : ''}">▾</span>
+                </button>
 
-              <!-- Wyświetlacz zegara -->
-              <div id="bentoTimerDisplay" class="font-mono text-2xl sm:text-3xl font-semibold tracking-tight px-1.5">
-                25:00
+                <!-- Menu rozwijane opcji stopera: 15, 25, 45, 60, 90 min + Inny czas + Dodaj sesję -->
+                <div id="pomodoroDropdownMenu" onclick="event.stopPropagation()"
+                  class="hidden absolute left-0 top-full mt-2 z-40 min-w-[210px] p-2 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-black/10 dark:border-white/10 shadow-2xl space-y-1">
+                  <div class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Czas sesji (15, 25, 45, 60, 90)
+                  </div>
+                  ${[15, 25, 45, 60, 90].map(m => `
+                    <button type="button" onclick="selectPomodoroMenuPreset(${m})"
+                      class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono transition ${timer.plannedMinutes === m ? 'font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10' : 'text-zinc-700 dark:text-zinc-200 hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E]'}">
+                      <span>⏱ ${m} min</span>
+                      ${timer.plannedMinutes === m ? '<span class="text-xs font-bold">✓</span>' : ''}
+                    </button>
+                  `).join('')}
+                  <button type="button" onclick="openCustomTimerModalFromMenu()"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? 'font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10' : 'text-zinc-700 dark:text-zinc-200 hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E]'}">
+                    <span>Inny czas...</span>
+                    ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? `<span class="text-[11px] font-mono">(${timer.plannedMinutes}m)</span>` : ''}
+                  </button>
+                  <div class="h-px bg-black/5 dark:bg-white/5 my-1"></div>
+                  <button type="button" onclick="openManualTimeForActiveTask()"
+                    class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition">
+                    <span>➕</span>
+                    <span>Dodaj sesję</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Przyciski sterowania stoperem -->
               <div class="flex items-center gap-1.5">
                 <button id="bentoTimerStartBtn" onclick="togglePomodoro('${t.id}')"
                   class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition">
-                  Start
+                  ${timer.running ? 'Pauza' : 'Start'}
                 </button>
                 <button id="bentoTimerFinishBtn" onclick="finishAndSavePomodoroSession()"
                   class="hidden px-3.5 py-1.5 rounded-full text-xs font-medium bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition">
@@ -2857,9 +3058,10 @@
                     }
 
                     return `
-                      <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition ${isDone ? 'opacity-50' : ''}">
+                      <tr ondblclick="openTaskModal('${t.id}')" title="Podwójne kliknięcie: edytuj zadanie"
+                        class="hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition cursor-pointer select-none ${isDone ? 'opacity-50' : ''}">
                         <td class="py-2.5 px-3 text-center">
-                          <button onclick="toggleTaskMyDay('${t.id}')" title="${isInMyDay ? 'Usuń z Mój Dzień' : 'Dodaj do Mój Dzień'}"
+                          <button onclick="event.stopPropagation(); toggleTaskMyDay('${t.id}')" title="${isInMyDay ? 'Usuń z Mój Dzień' : 'Dodaj do Mój Dzień'}"
                             class="text-sm hover:scale-110 transition ${isInMyDay ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600 hover:text-amber-400'}">
                             ${isInMyDay ? '★' : '☆'}
                           </button>
@@ -2937,23 +3139,23 @@
                         <td class="py-2.5 px-3 text-right whitespace-nowrap">
                           <div class="inline-flex items-center gap-1.5">
                             ${!isDone ? `
-                              <button onclick="completeTask('${t.id}')" title="Ukończ zadanie"
+                              <button onclick="event.stopPropagation(); completeTask('${t.id}')" title="Ukończ zadanie"
                                 class="p-1 rounded-lg hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-500 transition">
                                 ✓
                               </button>
-                              <button onclick="openDupochronModal('${t.id}', 'WAITING_FOR')" title="Czekam na kogoś"
+                              <button onclick="event.stopPropagation(); openDupochronModal('${t.id}', 'WAITING_FOR')" title="Czekam na kogoś"
                                 class="p-1 rounded-lg hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 transition">
                                 ⏳
                               </button>
                             ` : `
-                              <button onclick="unblockWaitingTask('${t.id}', false)" title="Przywróć zadanie"
+                              <button onclick="event.stopPropagation(); unblockWaitingTask('${t.id}', false)" title="Przywróć zadanie"
                                 class="p-1 rounded-lg hover:bg-blue-500/10 text-zinc-400 hover:text-blue-500 transition">
                                 ↺
                               </button>
                             `}
-                            <button onclick="openTaskModal('${t.id}')" title="Edytuj zadanie"
-                              class="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
-                              ✎
+                            <button onclick="event.stopPropagation(); openTaskModal('${t.id}')" title="Edytuj zadanie"
+                              class="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
+                              ✏️
                             </button>
                           </div>
                         </td>
@@ -5496,7 +5698,7 @@
     }
 
     // =========================================================================
-    // MODAL DOPISYWANIA CZASU "Z PALCA"
+    // MODAL DODAWANIA SESJI PRACY (DODAJ SESJĘ)
     // =========================================================================
     let manualTimeTaskId = null;
 
@@ -5505,10 +5707,29 @@
       manualTimeTaskId = taskId;
       const t = db.tasks.find(x => x.id === taskId);
       document.getElementById('mtTaskTitle').textContent = t ? t.title : '';
+      const presetSelect = document.getElementById('mtMinutesPreset');
+      if (presetSelect) presetSelect.value = '30';
+      const customWrapper = document.getElementById('mtMinutesCustomWrapper');
+      if (customWrapper) customWrapper.classList.add('hidden');
       document.getElementById('mtMinutes').value = 30;
       document.getElementById('mtDate').value = getTodayISO();
       document.getElementById('mtNote').value = '';
       openModal('manualTimeModal');
+    }
+
+    function onManualMinutesPresetChange(val) {
+      const customWrapper = document.getElementById('mtMinutesCustomWrapper');
+      const input = document.getElementById('mtMinutes');
+      if (val === 'CUSTOM') {
+        if (customWrapper) customWrapper.classList.remove('hidden');
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+      } else {
+        if (customWrapper) customWrapper.classList.add('hidden');
+        if (input) input.value = val;
+      }
     }
 
     function closeManualTimeModal() {
@@ -5518,9 +5739,16 @@
     function saveManualTimeModal() {
       if (!requireDb()) return;
       if (!manualTimeTaskId) return;
-      const mins = Math.max(1, parseInt(document.getElementById('mtMinutes').value, 10) || 30);
+      const presetSelect = document.getElementById('mtMinutesPreset');
+      const presetVal = presetSelect ? presetSelect.value : 'CUSTOM';
+      let mins;
+      if (presetVal === 'CUSTOM') {
+        mins = Math.max(1, parseInt(document.getElementById('mtMinutes').value, 10) || 30);
+      } else {
+        mins = parseInt(presetVal, 10) || 30;
+      }
       const dateStr = document.getElementById('mtDate').value || getTodayISO();
-      const note = document.getElementById('mtNote').value.trim() || 'Wpis ręczny (z palca)';
+      const note = document.getElementById('mtNote').value.trim() || 'Dodana sesja pracy';
 
       db.timeLogs.unshift({
         id: generateId('ses'),
@@ -5543,6 +5771,17 @@
         t.auditLog.unshift({
           id: generateId('log'),
           timestamp: new Date().toISOString(),
+          timestampISO: new Date().toISOString(),
+          changeType: 'MANUAL_NOTE',
+          reasonComment: `Dodano sesję pracy: ${mins} min (${dateStr}) — ${note}`
+        });
+      }
+
+      closeManualTimeModal();
+      saveDatabase();
+      showToast(`Dopisano ${mins} min do statystyk zadania`);
+      renderApp();
+    }
           changeType: 'MANUAL_NOTE',
           reasonComment: `Dopisano ręcznie czas: ${mins} min (${dateStr}) — ${note}`
         });
@@ -6479,6 +6718,7 @@
       const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
 
       if (e.key === 'Escape') {
+        closePomodoroMenu();
         if (activeModalsStack.length > 0) {
           const topModalId = activeModalsStack[activeModalsStack.length - 1];
           closeModal(topModalId);
@@ -6511,6 +6751,18 @@
           switchView('DICTIONARIES');
         } else if (e.key === '7') {
           switchView('GUIDE');
+        }
+      }
+    });
+
+    // Zamknięcie menu opcji stopera przy kliknięciu poza menu
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('pomodoroDropdownMenu');
+      if (menu && !menu.classList.contains('hidden')) {
+        const trigger = document.getElementById('bentoTimerTriggerBtn');
+        if (trigger && (trigger.contains(e.target) || trigger === e.target)) return;
+        if (!menu.contains(e.target)) {
+          menu.classList.add('hidden');
         }
       }
     });

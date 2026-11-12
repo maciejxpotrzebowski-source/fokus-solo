@@ -1,7 +1,7 @@
 {
   "schemaVersion": "4.2-bento-solo",
   "theme": "LIGHT",
-  "activeView": "DAY",
+  "activeView": "ALL_TASKS",
   "selectedTaskId": "tsk_1",
   "card1Tab": "HISTORY",
   "reportPeriod": "MONTH",
@@ -171,7 +171,7 @@
         {
           "id": "m_2",
           "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary",
-          "isDone": true
+          "isDone": false
         },
         {
           "id": "m_3",
@@ -193,7 +193,7 @@
         {
           "id": "m_2",
           "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary",
-          "isDone": true
+          "isDone": false
         },
         {
           "id": "m_3",
@@ -215,6 +215,54 @@
       "createdAt": "2026-11-05T08:15:00.000Z",
       "createdAtISO": "2026-11-05T08:15:00.000Z",
       "auditLog": [
+        {
+          "id": "log_34846fa0b773",
+          "timestamp": "2026-11-12T19:01:19.590Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Cofnięto krok: Przygotowanie pliku korekty masowej dla zespołu zakupów"
+        },
+        {
+          "id": "log_f72209e2a0ea",
+          "timestamp": "2026-11-12T19:01:18.757Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Ukończono krok: Przygotowanie pliku korekty masowej dla zespołu zakupów"
+        },
+        {
+          "id": "log_2fe4e5d6a84e",
+          "timestamp": "2026-11-12T19:01:18.024Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Cofnięto krok: Skrypt wykrywający zerowe wagi i błędne jednostki miary"
+        },
+        {
+          "id": "log_47eb083979e4",
+          "timestamp": "2026-11-12T19:01:17.057Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Ukończono krok: Skrypt wykrywający zerowe wagi i błędne jednostki miary"
+        },
+        {
+          "id": "log_2cd53cb7bf12",
+          "timestamp": "2026-11-12T19:01:16.157Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Cofnięto krok: Skrypt wykrywający zerowe wagi i błędne jednostki miary"
+        },
+        {
+          "id": "log_94baf69b5800",
+          "timestamp": "2026-11-12T18:58:13.940Z",
+          "changeType": "MANUAL_NOTE",
+          "reasonComment": "Dopisano ręcznie czas: 30 min (2026-11-12) — Wpis ręczny (z palca)"
+        },
+        {
+          "id": "log_afe19200f523",
+          "timestamp": "2026-11-12T18:50:48.459Z",
+          "changeType": "STATUS_CHANGED",
+          "reasonComment": "Zapisano sesję skupienia: 1 min"
+        },
+        {
+          "id": "log_0912c7527e7d",
+          "timestamp": "2026-11-12T18:50:35.742Z",
+          "changeType": "STATUS_CHANGED",
+          "reasonComment": "Zapisano sesję skupienia: 1 min"
+        },
         {
           "id": "log_1",
           "timestamp": "2026-11-08T14:30:00.000Z",
@@ -470,7 +518,7 @@
           "isDone": false
         }
       ],
-      "status": "WAITING_FOR",
+      "status": "DONE",
       "inMyDay": false,
       "isMyDay": false,
       "myDayOrder": null,
@@ -479,6 +527,15 @@
       "createdAt": "2026-11-04T08:30:00.000Z",
       "createdAtISO": "2026-11-04T08:30:00.000Z",
       "auditLog": [
+        {
+          "id": "log_b13dd19759a0",
+          "timestamp": "2026-11-12T19:02:36.857Z",
+          "changeType": "STATUS_CHANGED",
+          "fieldChanged": "Status",
+          "oldValue": "W toku",
+          "newValue": "Ukończone",
+          "reasonComment": "Zadanie oznaczone jako ukończone"
+        },
         {
           "id": "log_w1",
           "timestamp": "2026-11-06T10:00:00.000Z",
@@ -490,7 +547,9 @@
           "reasonCategory": "WAITING_FOR_DATA",
           "reasonComment": "Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji"
         }
-      ]
+      ],
+      "completedAt": "2026-11-12T19:02:36.857Z",
+      "completedAtISO": "2026-11-12T19:02:36.857Z"
     },
     {
       "id": "tsk_done_1",
@@ -542,6 +601,51 @@
     }
   ],
   "timeLogs": [
+    {
+      "id": "ses_df81ed87231f",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:58:13.939Z",
+      "startedAtISO": "2026-11-12T18:58:13.939Z",
+      "plannedMinutes": 0,
+      "targetMinutes": 30,
+      "overtimeMinutes": 0,
+      "totalMinutes": 30,
+      "durationMinutes": 30,
+      "entryType": "MANUAL",
+      "note": "Wpis ręczny (z palca)"
+    },
+    {
+      "id": "ses_74283de2f3c9",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:50:40.675Z",
+      "startedAtISO": "2026-11-12T18:50:40.675Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
+    {
+      "id": "ses_fae6c978848d",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:50:29.592Z",
+      "startedAtISO": "2026-11-12T18:50:29.592Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
     {
       "id": "ses_1",
       "taskId": "tsk_1",
@@ -695,6 +799,51 @@
     }
   ],
   "timeSessions": [
+    {
+      "id": "ses_df81ed87231f",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:58:13.939Z",
+      "startedAtISO": "2026-11-12T18:58:13.939Z",
+      "plannedMinutes": 0,
+      "targetMinutes": 30,
+      "overtimeMinutes": 0,
+      "totalMinutes": 30,
+      "durationMinutes": 30,
+      "entryType": "MANUAL",
+      "note": "Wpis ręczny (z palca)"
+    },
+    {
+      "id": "ses_74283de2f3c9",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:50:40.675Z",
+      "startedAtISO": "2026-11-12T18:50:40.675Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
+    {
+      "id": "ses_fae6c978848d",
+      "taskId": "tsk_1",
+      "date": "2026-11-12",
+      "dateISO": "2026-11-12",
+      "startedAt": "2026-11-12T18:50:29.592Z",
+      "startedAtISO": "2026-11-12T18:50:29.592Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
     {
       "id": "ses_1",
       "taskId": "tsk_1",

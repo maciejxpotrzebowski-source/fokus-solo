@@ -597,5 +597,13 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('activeModalsStack'), 'Brak stosu activeModalsStack');
       assert.ok(content.includes('openDbFileModal'), 'Brak funkcji openDbFileModal');
     });
+
+    test('Fokus.html obsługuje stoper jako rozwijaną listę oraz edycję dwuklikiem w tabeli zadań', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('togglePomodoroMenu'), 'Brak funkcji togglePomodoroMenu');
+      assert.ok(content.includes('pomodoroDropdownMenu'), 'Brak menu pomodoroDropdownMenu');
+      assert.ok(content.includes('ondblclick="openTaskModal('), 'Brak obsługi dwukliku na wierszu zadania');
+      assert.ok(content.includes('mtMinutesPreset'), 'Brak presetów czasu w oknie Dodaj sesję');
+    });
   });
 });
