@@ -605,5 +605,16 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('ondblclick="openTaskModal('), 'Brak obsługi dwukliku na wierszu zadania');
       assert.ok(content.includes('mtMinutesPreset'), 'Brak presetów czasu w oknie Dodaj sesję');
     });
+
+    test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      const scriptMatches = [...content.matchAll(/<script[\s\S]*?>([\s\S]*?)<\/script>/gi)];
+      assert.ok(scriptMatches.length >= 2, 'Oczekiwano co najmniej 2 bloków skryptu');
+      scriptMatches.forEach((m, idx) => {
+        assert.doesNotThrow(() => {
+          new Function(m[1]);
+        }, `Błąd składni w bloku skryptu #${idx}`);
+      });
+    });
   });
 });
