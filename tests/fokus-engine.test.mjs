@@ -606,6 +606,94 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('mtMinutesPreset'), 'Brak presetów czasu w oknie Dodaj sesję');
     });
 
+    test('Fokus.html zawiera pola godzin cemStartTime/cemEndTime oraz cykliczność cemRecurrence w modal kalendarza', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="cemStartTime"'), 'Brak inputu cemStartTime w calendarEventModal');
+      assert.ok(content.includes('id="cemEndTime"'), 'Brak inputu cemEndTime w calendarEventModal');
+      assert.ok(content.includes('id="cemRecurrence"'), 'Brak selecta cemRecurrence w calendarEventModal');
+      assert.ok(content.includes('DAILY_WORKDAYS'), 'Brak opcji DAILY_WORKDAYS w cemRecurrence');
+      assert.ok(content.includes('WEEKLY'), 'Brak opcji WEEKLY w cemRecurrence');
+      assert.ok(content.includes('MONTHLY'), 'Brak opcji MONTHLY w cemRecurrence');
+      assert.ok(content.includes('isCalendarEventActiveOnDate'), 'Brak funkcji isCalendarEventActiveOnDate');
+    });
+
+    test('Logika cykliczności spotkań (isCalendarEventActiveOnDate): DAILY_WORKDAYS, WEEKLY, MONTHLY', () => {
+      function parseLocalDate(isoStr) {
+        const [y, m, d] = String(isoStr).split('-').map(Number);
+        return new Date(y, (m || 1) - 1, d || 1);
+      }
+
+      function isCalendarEventActiveOnDate(e, targetDateISO) {
+        if (!e || !e.dateISO || !targetDateISO) return false;
+        const recurrence = e.recurrence || 'NONE';
+
+        if (recurrence === 'NONE') {
+          if (e.endDateISO) {
+            return e.dateISO <= targetDateISO && targetDateISO <= e.endDateISO;
+          }
+          return e.dateISO === targetDateISO;
+        }
+
+        if (targetDateISO < e.dateISO) return false;
+        if (e.endDateISO && targetDateISO > e.endDateISO) return false;
+
+        const targetDate = parseLocalDate(targetDateISO);
+        const targetDayOfWeek = targetDate.getDay();
+        const targetDayOfMonth = targetDate.getDate();
+
+        if (recurrence === 'DAILY_WORKDAYS') {
+          return targetDayOfWeek >= 1 && targetDayOfWeek <= 5;
+        }
+        if (recurrence === 'DAILY') {
+          return true;
+        }
+        if (recurrence === 'WEEKLY') {
+          const baseDate = parseLocalDate(e.dateISO);
+          return targetDayOfWeek === baseDate.getDay();
+        }
+        if (recurrence === 'MONTHLY') {
+          const baseDate = parseLocalDate(e.dateISO);
+          return targetDayOfMonth === baseDate.getDate();
+        }
+
+        return e.dateISO === targetDateISO;
+      }
+
+      // 1. Zdarzenie jednorazowe
+      const single = { dateISO: '2026-11-12', recurrence: 'NONE' };
+      assert.equal(isCalendarEventActiveOnDate(single, '2026-11-12'), true);
+      assert.equal(isCalendarEventActiveOnDate(single, '2026-11-13'), false);
+
+      // 2. Codziennie w dni robocze (DAILY_WORKDAYS): start czwartek 2026-11-12
+      const dailyWorkdays = { dateISO: '2026-11-12', recurrence: 'DAILY_WORKDAYS' };
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-11'), false, 'Nie powinno być aktywne przed datą rozpoczęcia');
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-12'), true, 'Czwartek (dzień roboczy)');
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-13'), true, 'Piątek (dzień roboczy)');
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-14'), false, 'Sobota (weekend)');
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-15'), false, 'Niedziela (weekend)');
+      assert.equal(isCalendarEventActiveOnDate(dailyWorkdays, '2026-11-16'), true, 'Poniedziałek (dzień roboczy)');
+
+      // 3. Co tydzień (WEEKLY): start wtorek 2026-11-10
+      const weeklyTuesday = { dateISO: '2026-11-10', recurrence: 'WEEKLY' };
+      assert.equal(isCalendarEventActiveOnDate(weeklyTuesday, '2026-11-03'), false, 'Przed datą rozpoczęcia');
+      assert.equal(isCalendarEventActiveOnDate(weeklyTuesday, '2026-11-10'), true, 'Pierwszy wtorek');
+      assert.equal(isCalendarEventActiveOnDate(weeklyTuesday, '2026-11-11'), false, 'Środa - inny dzień tygodnia');
+      assert.equal(isCalendarEventActiveOnDate(weeklyTuesday, '2026-11-17'), true, 'Kolejny wtorek (+7 dni)');
+      assert.equal(isCalendarEventActiveOnDate(weeklyTuesday, '2026-11-24'), true, 'Kolejny wtorek (+14 dni)');
+
+      // 4. Co miesiąc (MONTHLY): 10. dzień każdego miesiąca
+      const monthly10th = { dateISO: '2026-11-10', recurrence: 'MONTHLY' };
+      assert.equal(isCalendarEventActiveOnDate(monthly10th, '2026-11-10'), true, '10 listopada');
+      assert.equal(isCalendarEventActiveOnDate(monthly10th, '2026-11-11'), false, '11 listopada');
+      assert.equal(isCalendarEventActiveOnDate(monthly10th, '2026-12-10'), true, '10 grudnia');
+      assert.equal(isCalendarEventActiveOnDate(monthly10th, '2027-01-10'), true, '10 stycznia kolejnego roku');
+
+      // 5. Zdarzenie cykliczne z datą końcową (endDateISO)
+      const weeklyWithEnd = { dateISO: '2026-11-10', endDateISO: '2026-11-20', recurrence: 'WEEKLY' };
+      assert.equal(isCalendarEventActiveOnDate(weeklyWithEnd, '2026-11-17'), true, 'Wtorek przed endDateISO');
+      assert.equal(isCalendarEventActiveOnDate(weeklyWithEnd, '2026-11-24'), false, 'Wtorek po endDateISO');
+    });
+
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       const scriptMatches = [...content.matchAll(/<script[\s\S]*?>([\s\S]*?)<\/script>/gi)];

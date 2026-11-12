@@ -660,15 +660,41 @@
       <!-- Daty: Od / Do -->
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1.5">
-          <label class="block text-[11px] text-zinc-400 font-medium">Data (od)</label>
+          <label class="block text-[11px] text-zinc-400 font-medium" id="cemDateLabel">Data (od)</label>
           <input id="cemDateISO" type="date"
-            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-mono" />
         </div>
         <div class="space-y-1.5">
-          <label class="block text-[11px] text-zinc-400 font-medium">Data (do - opcjonalnie)</label>
+          <label class="block text-[11px] text-zinc-400 font-medium" id="cemEndDateLabel">Data (do - opcjonalnie)</label>
           <input id="cemEndDateISO" type="date" placeholder="Tylko dla urlopu"
-            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-mono" />
         </div>
+      </div>
+
+      <!-- Godziny rozpoczęcia i zakończenia (dla spotkań i innych) -->
+      <div class="grid grid-cols-2 gap-3" id="cemTimeBlock">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] text-zinc-400 font-medium">Godzina rozpoczęcia</label>
+          <input id="cemStartTime" type="time" onchange="onCemTimeChange()"
+            class="w-full text-xs font-mono px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[11px] text-zinc-400 font-medium">Godzina zakończenia</label>
+          <input id="cemEndTime" type="time" onchange="onCemTimeChange()"
+            class="w-full text-xs font-mono px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+        </div>
+      </div>
+
+      <!-- Cykliczność zdarzenia (ukrywana dla urlopu) -->
+      <div class="space-y-1.5" id="cemRecurrenceBlock">
+        <label class="block text-[11px] text-zinc-400 font-medium">Cykliczność zdarzenia</label>
+        <select id="cemRecurrence" class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+          <option value="NONE" selected>Jednorazowe</option>
+          <option value="DAILY_WORKDAYS">Codziennie (dni robocze: pon-pt)</option>
+          <option value="DAILY">Codziennie (7 dni w tygodniu)</option>
+          <option value="WEEKLY">Co tydzień (w ten sam dzień tygodnia)</option>
+          <option value="MONTHLY">Co miesiąc (w ten sam dzień miesiąca)</option>
+        </select>
       </div>
 
       <!-- Czas trwania (ukrywany dla urlopu) -->
@@ -1464,6 +1490,44 @@
       return count;
     }
 
+    function isCalendarEventActiveOnDate(e, targetDateISO) {
+      if (!e || !e.dateISO || !targetDateISO) return false;
+      const recurrence = e.recurrence || 'NONE';
+
+      if (recurrence === 'NONE') {
+        if (e.endDateISO) {
+          return e.dateISO <= targetDateISO && targetDateISO <= e.endDateISO;
+        }
+        return e.dateISO === targetDateISO;
+      }
+
+      // Cykliczne zdarzenie obowiązuje od daty początkowej
+      if (targetDateISO < e.dateISO) return false;
+      // Jeśli ustawiono datę zakończenia cyklu
+      if (e.endDateISO && targetDateISO > e.endDateISO) return false;
+
+      const targetDate = parseLocalDate(targetDateISO);
+      const targetDayOfWeek = targetDate.getDay(); // 0 = niedziela, 1 = poniedziałek ... 6 = sobota
+      const targetDayOfMonth = targetDate.getDate();
+
+      if (recurrence === 'DAILY_WORKDAYS') {
+        return targetDayOfWeek >= 1 && targetDayOfWeek <= 5;
+      }
+      if (recurrence === 'DAILY') {
+        return true;
+      }
+      if (recurrence === 'WEEKLY') {
+        const baseDate = parseLocalDate(e.dateISO);
+        return targetDayOfWeek === baseDate.getDay();
+      }
+      if (recurrence === 'MONTHLY') {
+        const baseDate = parseLocalDate(e.dateISO);
+        return targetDayOfMonth === baseDate.getDate();
+      }
+
+      return e.dateISO === targetDateISO;
+    }
+
     function getDailyCapacity(targetDateISO = getTodayISO()) {
       const baseBudget = 300; // 5 godzin czystego skupienia wg ALPEN
       const curYear = parseLocalDate(targetDateISO).getFullYear();
@@ -1475,10 +1539,7 @@
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
       const events = (typeof db !== 'undefined' && Array.isArray(db.calendarEvents) ? db.calendarEvents : []).filter(e => {
-        if (!e.dateISO) return false;
-        if (e.dateISO === targetDateISO) return true;
-        if (e.endDateISO && e.dateISO <= targetDateISO && targetDateISO <= e.endDateISO) return true;
-        return false;
+        return isCalendarEventActiveOnDate(e, targetDateISO);
       });
 
       const vacationEvent = events.find(e => e.type === 'VACATION' || e.isAllDay);
@@ -1744,7 +1805,7 @@
       const currentMinutesFromMidnight = now.getHours() * 60 + now.getMinutes();
 
       const candidates = db.calendarEvents.filter(e => {
-        if (e.dateISO !== todayIso || e.type === 'VACATION' || !e.startTime) return false;
+        if (!isCalendarEventActiveOnDate(e, todayIso) || e.type === 'VACATION' || !e.startTime) return false;
         const parts = e.startTime.split(':');
         if (parts.length < 2) return false;
         const mMin = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
@@ -4121,9 +4182,13 @@
                 const isToday = day.dateISO === todayISO;
                 const cap = getDailyCapacity(day.dateISO);
                 const dayEvents = (db.calendarEvents || []).filter(e => {
-                  if (e.dateISO === day.dateISO) return true;
-                  if (e.endDateISO && e.dateISO <= day.dateISO && day.dateISO <= e.endDateISO) return true;
-                  return false;
+                  return isCalendarEventActiveOnDate(e, day.dateISO);
+                });
+                dayEvents.sort((a, b) => {
+                  if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+                  if (a.startTime) return -1;
+                  if (b.startTime) return 1;
+                  return 0;
                 });
 
                 // Zadania mające termin w tym dniu
@@ -4172,11 +4237,15 @@
                       ${dayEvents.length === 0 && !cap.isDayOff ? `
                         <div class="text-[11px] text-zinc-400 italic">Brak zaplanowanych spotkań. Pełny budżet 5h dostępny na zadania analityczne.</div>
                       ` : dayEvents.map(e => `
-                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-xs">
+                        <div ondblclick="openCalendarEventModal('${e.id}')" title="Kliknij dwukrotnie, aby edytować"
+                          class="flex items-center justify-between p-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-xs cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition">
                           <div class="flex items-center gap-2.5 min-w-0">
                             <span class="text-sm">${e.type === 'VACATION' ? '🌴' : (e.type === 'OTHER' ? '📌' : '📅')}</span>
                             <div class="min-w-0">
-                              <span class="font-medium text-zinc-800 dark:text-zinc-100 truncate block">${escapeHtml(e.title)}</span>
+                              <span class="font-medium text-zinc-800 dark:text-zinc-100 truncate block">
+                                ${escapeHtml(e.title)}
+                                ${e.recurrence && e.recurrence !== 'NONE' ? `<span class="ml-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-zinc-500">🔁 ${e.recurrence === 'DAILY_WORKDAYS' ? 'Pn-Pt' : (e.recurrence === 'DAILY' ? 'Codziennie' : (e.recurrence === 'WEEKLY' ? 'Co tydzień' : 'Co miesiąc'))}</span>` : ''}
+                              </span>
                               ${e.notes ? `<span class="text-[11px] text-zinc-400 block truncate">${escapeHtml(e.notes)}</span>` : ''}
                             </div>
                           </div>
@@ -4192,10 +4261,10 @@
                             ${e.affectsCapacity !== false && !e.isAllDay ? `
                               <span class="text-[10px] text-amber-500 font-mono">-${e.durationMinutes}m ALPEN</span>
                             ` : ''}
-                            <button onclick="openCalendarEventModal('${e.id}')" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 px-1 text-xs">
+                            <button onclick="event.stopPropagation(); openCalendarEventModal('${e.id}')" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 px-1 text-xs">
                               ✎
                             </button>
-                            <button onclick="deleteCalendarEvent('${e.id}')" class="text-zinc-300 hover:text-rose-500 px-1 text-xs">
+                            <button onclick="event.stopPropagation(); deleteCalendarEvent('${e.id}')" class="text-zinc-300 hover:text-rose-500 px-1 text-xs">
                               ×
                             </button>
                           </div>
@@ -4227,7 +4296,13 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   ${weekendDays.map(wDay => {
-                    const wEvents = (db.calendarEvents || []).filter(e => e.dateISO === wDay.dateISO);
+                    const wEvents = (db.calendarEvents || []).filter(e => isCalendarEventActiveOnDate(e, wDay.dateISO));
+                    wEvents.sort((a, b) => {
+                      if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+                      if (a.startTime) return -1;
+                      if (b.startTime) return 1;
+                      return 0;
+                    });
                     return `
                       <div class="p-3 rounded-xl bg-white dark:bg-[#202022] space-y-1">
                         <div class="flex items-center justify-between">
@@ -4235,8 +4310,9 @@
                           <span class="font-mono text-zinc-400">${wDay.dateFormatted}</span>
                         </div>
                         ${wEvents.length > 0 ? wEvents.map(e => `
-                          <div class="text-[11px] text-zinc-500 truncate">
-                            📌 ${e.startTime ? `<span class="font-mono text-zinc-400">${escapeHtml(e.startTime)} </span>` : ''}${escapeHtml(e.title)}
+                          <div ondblclick="openCalendarEventModal('${e.id}')" title="Kliknij dwukrotnie, aby edytować"
+                            class="text-[11px] text-zinc-500 truncate cursor-pointer hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+                            📌 ${e.startTime ? `<span class="font-mono text-zinc-400">${escapeHtml(e.startTime)} </span>` : ''}${escapeHtml(e.title)}${e.recurrence && e.recurrence !== 'NONE' ? ' <span class="opacity-60">🔁</span>' : ''}
                           </div>
                         `).join('') : `<div class="text-[11px] text-zinc-400 italic">Brak zaplanowanych zdarzeń</div>`}
                       </div>
@@ -4521,8 +4597,9 @@
       document.getElementById('cemTitle').value = '';
       document.getElementById('cemDateISO').value = defaultDateISO || getTodayISO();
       document.getElementById('cemEndDateISO').value = '';
-      document.getElementById('cemStartTime').value = '';
-      document.getElementById('cemEndTime').value = '';
+      if (document.getElementById('cemStartTime')) document.getElementById('cemStartTime').value = '';
+      if (document.getElementById('cemEndTime')) document.getElementById('cemEndTime').value = '';
+      if (document.getElementById('cemRecurrence')) document.getElementById('cemRecurrence').value = 'NONE';
       document.getElementById('cemDurationMinutes').value = '60';
       document.getElementById('cemAffectsCapacity').checked = true;
       document.getElementById('cemNotes').value = '';
@@ -4534,27 +4611,34 @@
           document.getElementById('cemTitle').value = evt.title || '';
           document.getElementById('cemDateISO').value = evt.dateISO || getTodayISO();
           document.getElementById('cemEndDateISO').value = evt.endDateISO || '';
-          document.getElementById('cemStartTime').value = evt.startTime || '';
-          document.getElementById('cemEndTime').value = evt.endTime || '';
+          if (document.getElementById('cemStartTime')) document.getElementById('cemStartTime').value = evt.startTime || '';
+          if (document.getElementById('cemEndTime')) document.getElementById('cemEndTime').value = evt.endTime || '';
+          if (document.getElementById('cemRecurrence')) document.getElementById('cemRecurrence').value = evt.recurrence || 'NONE';
           document.getElementById('cemDurationMinutes').value = evt.durationMinutes || 60;
           document.getElementById('cemAffectsCapacity').checked = evt.affectsCapacity !== false;
           document.getElementById('cemNotes').value = evt.notes || '';
           setCalendarModalType(evt.type || 'MEETING');
-          delBtn.classList.remove('hidden');
+          if (delBtn) delBtn.classList.remove('hidden');
         }
       } else {
         header.textContent = 'Nowe zdarzenie w kalendarzu';
         setCalendarModalType('MEETING');
-        delBtn.classList.add('hidden');
+        if (delBtn) delBtn.classList.add('hidden');
       }
 
       openModal('calendarEventModal');
-      setTimeout(() => document.getElementById('cemTitle').focus(), 50);
+      setTimeout(() => {
+        const tInp = document.getElementById('cemTitle');
+        if (tInp) tInp.focus();
+      }, 50);
     }
 
     function onCemTimeChange() {
-      const start = document.getElementById('cemStartTime').value;
-      const end = document.getElementById('cemEndTime').value;
+      const startEl = document.getElementById('cemStartTime');
+      const endEl = document.getElementById('cemEndTime');
+      if (!startEl || !endEl) return;
+      const start = startEl.value;
+      const end = endEl.value;
       if (start && end) {
         const p1 = start.split(':');
         const p2 = end.split(':');
@@ -4565,6 +4649,15 @@
             const diff = min2 - min1;
             setCalendarDuration(diff);
           }
+        }
+      } else if (start && !end) {
+        const dur = parseInt(document.getElementById('cemDurationMinutes').value, 10) || 60;
+        const p = start.split(':');
+        if (p.length >= 2) {
+          const totalEndMin = parseInt(p[0], 10) * 60 + parseInt(p[1], 10) + dur;
+          const endH = Math.floor(totalEndMin / 60) % 24;
+          const endM = totalEndMin % 60;
+          endEl.value = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
         }
       }
     }
@@ -4587,10 +4680,20 @@
       });
 
       const durBlock = document.getElementById('cemDurationBlock');
+      const timeBlock = document.getElementById('cemTimeBlock');
+      const recBlock = document.getElementById('cemRecurrenceBlock');
+      const endLabel = document.getElementById('cemEndDateLabel');
+
       if (type === 'VACATION') {
-        durBlock.classList.add('hidden');
+        if (durBlock) durBlock.classList.add('hidden');
+        if (timeBlock) timeBlock.classList.add('hidden');
+        if (recBlock) recBlock.classList.add('hidden');
+        if (endLabel) endLabel.textContent = 'Data powrotu (opcjonalnie)';
       } else {
-        durBlock.classList.remove('hidden');
+        if (durBlock) durBlock.classList.remove('hidden');
+        if (timeBlock) timeBlock.classList.remove('hidden');
+        if (recBlock) recBlock.classList.remove('hidden');
+        if (endLabel) endLabel.textContent = 'Data (do - opcjonalnie)';
       }
     }
 
@@ -4604,6 +4707,18 @@
           btn.className = 'cem-dur-btn px-2.5 py-1 rounded-xl text-xs bg-[#F5F5F7] dark:bg-[#2C2C2E]';
         }
       });
+      // Jeśli wpisano czas rozpoczęcia, zaktualizuj automatycznie czas zakończenia
+      const startEl = document.getElementById('cemStartTime');
+      const endEl = document.getElementById('cemEndTime');
+      if (startEl && endEl && startEl.value && (!endEl.value || document.activeElement !== endEl)) {
+        const p = startEl.value.split(':');
+        if (p.length >= 2) {
+          const totalEndMin = parseInt(p[0], 10) * 60 + parseInt(p[1], 10) + parseInt(min, 10);
+          const endH = Math.floor(totalEndMin / 60) % 24;
+          const endM = totalEndMin % 60;
+          endEl.value = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        }
+      }
     }
 
     function saveCalendarEventModal() {
@@ -4613,8 +4728,9 @@
       const title = document.getElementById('cemTitle').value.trim();
       const dateISO = document.getElementById('cemDateISO').value;
       const endDateISO = document.getElementById('cemEndDateISO').value;
-      const startTime = document.getElementById('cemStartTime').value || '';
-      const endTime = document.getElementById('cemEndTime').value || '';
+      const startTime = document.getElementById('cemStartTime') ? document.getElementById('cemStartTime').value : '';
+      const endTime = document.getElementById('cemEndTime') ? document.getElementById('cemEndTime').value : '';
+      const recurrence = document.getElementById('cemRecurrence') ? document.getElementById('cemRecurrence').value : 'NONE';
       const durationMinutes = parseInt(document.getElementById('cemDurationMinutes').value, 10) || 60;
       const affectsCapacity = document.getElementById('cemAffectsCapacity').checked;
       const notes = document.getElementById('cemNotes').value.trim();
@@ -4639,6 +4755,7 @@
           existing.endDateISO = endDateISO || '';
           existing.startTime = startTime;
           existing.endTime = endTime;
+          existing.recurrence = type === 'VACATION' ? 'NONE' : recurrence;
           existing.durationMinutes = type === 'VACATION' ? 300 : durationMinutes;
           existing.isAllDay = type === 'VACATION';
           existing.affectsCapacity = affectsCapacity;
@@ -4653,6 +4770,7 @@
           endDateISO: endDateISO || '',
           startTime,
           endTime,
+          recurrence: type === 'VACATION' ? 'NONE' : recurrence,
           durationMinutes: type === 'VACATION' ? 300 : durationMinutes,
           isAllDay: type === 'VACATION',
           affectsCapacity,
@@ -4668,20 +4786,21 @@
     }
 
     function deleteCalendarEvent(eventId) {
-      if (!requireDb()) return;
-      if (!confirm('Czy na pewno chcesz usunąć to zdarzenie z kalendarza?')) return;
+      if (!requireDb()) return false;
+      if (!confirm('Czy na pewno chcesz usunąć to zdarzenie z kalendarza?')) return false;
       db.calendarEvents = (db.calendarEvents || []).filter(e => e.id !== eventId);
       saveDatabase();
       renderApp();
       showToast('Usunięto zdarzenie z kalendarza');
+      return true;
     }
 
     function deleteCalendarEventFromModal() {
       if (!requireDb()) return;
       const id = document.getElementById('cemEventId').value.trim();
       if (id) {
-        deleteCalendarEvent(id);
-        closeCalendarEventModal();
+        const deleted = deleteCalendarEvent(id);
+        if (deleted) closeCalendarEventModal();
       }
     }
 
