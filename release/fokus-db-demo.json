@@ -3,7 +3,7 @@
   "theme": "LIGHT",
   "activeView": "DAY",
   "selectedTaskId": "tsk_1",
-  "card1Tab": "STEPS",
+  "card1Tab": "HISTORY",
   "reportPeriod": "MONTH",
   "lastBackupDate": null,
   "calendarEvents": [
@@ -46,28 +46,47 @@
       "id": "per_grzegorz",
       "canonicalName": "Grzegorz",
       "roleOrDept": "Szef / Dyrektor",
-      "aliases": ["grzesiek", "gp", "szef", "prezes", "dyrektor"],
+      "aliases": [
+        "grzesiek",
+        "gp",
+        "szef",
+        "prezes",
+        "dyrektor"
+      ],
       "active": true
     },
     {
       "id": "per_tomek",
       "canonicalName": "Tomek",
       "roleOrDept": "Zakupy Opakowań",
-      "aliases": ["tk", "tomasz", "opakowania"],
+      "aliases": [
+        "tk",
+        "tomasz",
+        "opakowania"
+      ],
       "active": true
     },
     {
       "id": "per_ola",
       "canonicalName": "Ola",
       "roleOrDept": "Zakupy Surowców",
-      "aliases": ["ok", "aleksandra", "surowce"],
+      "aliases": [
+        "ok",
+        "aleksandra",
+        "surowce"
+      ],
       "active": true
     },
     {
       "id": "per_wlasne",
       "canonicalName": "Praca własna",
       "roleOrDept": "Rozwój / Systemy",
-      "aliases": ["ja", "wlasne", "analizy", "bi"],
+      "aliases": [
+        "ja",
+        "wlasne",
+        "analizy",
+        "bi"
+      ],
       "active": true
     }
   ],
@@ -144,16 +163,48 @@
       "notesAndContext": "Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.",
       "contextNotes": "Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.",
       "milestones": [
-        { "id": "m_1", "title": "Eksport tabeli indeksów i gramatur z Business Central", "isDone": true },
-        { "id": "m_2", "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary", "isDone": true },
-        { "id": "m_3", "title": "Przygotowanie pliku korekty masowej dla zespołu zakupów", "isDone": false },
-        { "id": "m_4", "title": "Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza", "isDone": false }
+        {
+          "id": "m_1",
+          "title": "Eksport tabeli indeksów i gramatur z Business Central",
+          "isDone": true
+        },
+        {
+          "id": "m_2",
+          "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary",
+          "isDone": true
+        },
+        {
+          "id": "m_3",
+          "title": "Przygotowanie pliku korekty masowej dla zespołu zakupów",
+          "isDone": false
+        },
+        {
+          "id": "m_4",
+          "title": "Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza",
+          "isDone": false
+        }
       ],
       "checklist": [
-        { "id": "m_1", "title": "Eksport tabeli indeksów i gramatur z Business Central", "isDone": true },
-        { "id": "m_2", "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary", "isDone": true },
-        { "id": "m_3", "title": "Przygotowanie pliku korekty masowej dla zespołu zakupów", "isDone": false },
-        { "id": "m_4", "title": "Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza", "isDone": false }
+        {
+          "id": "m_1",
+          "title": "Eksport tabeli indeksów i gramatur z Business Central",
+          "isDone": true
+        },
+        {
+          "id": "m_2",
+          "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary",
+          "isDone": true
+        },
+        {
+          "id": "m_3",
+          "title": "Przygotowanie pliku korekty masowej dla zespołu zakupów",
+          "isDone": false
+        },
+        {
+          "id": "m_4",
+          "title": "Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza",
+          "isDone": false
+        }
       ],
       "status": "IN_PROGRESS",
       "inMyDay": true,
@@ -202,14 +253,38 @@
       "notesAndContext": "Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.",
       "contextNotes": "Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.",
       "milestones": [
-        { "id": "m_21", "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)", "isDone": true },
-        { "id": "m_22", "title": "Model oszczędności rocznych w Excelu", "isDone": false },
-        { "id": "m_23", "title": "Rekomendacja na spotkanie z Tomkiem", "isDone": false }
+        {
+          "id": "m_21",
+          "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)",
+          "isDone": true
+        },
+        {
+          "id": "m_22",
+          "title": "Model oszczędności rocznych w Excelu",
+          "isDone": false
+        },
+        {
+          "id": "m_23",
+          "title": "Rekomendacja na spotkanie z Tomkiem",
+          "isDone": false
+        }
       ],
       "checklist": [
-        { "id": "m_21", "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)", "isDone": true },
-        { "id": "m_22", "title": "Model oszczędności rocznych w Excelu", "isDone": false },
-        { "id": "m_23", "title": "Rekomendacja na spotkanie z Tomkiem", "isDone": false }
+        {
+          "id": "m_21",
+          "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)",
+          "isDone": true
+        },
+        {
+          "id": "m_22",
+          "title": "Model oszczędności rocznych w Excelu",
+          "isDone": false
+        },
+        {
+          "id": "m_23",
+          "title": "Rekomendacja na spotkanie z Tomkiem",
+          "isDone": false
+        }
       ],
       "status": "TODO",
       "inMyDay": true,
@@ -241,14 +316,38 @@
       "notesAndContext": "Standardowa procedura zamknięcia miesiąca zakupowego.",
       "contextNotes": "Standardowa procedura zamknięcia miesiąca zakupowego.",
       "milestones": [
-        { "id": "m_31", "title": "Pobranie zrzutu faktur kosztowych z ERP", "isDone": true },
-        { "id": "m_32", "title": "Mapowanie brakujących kategorii zakupowych", "isDone": false },
-        { "id": "m_33", "title": "Komentarz do odchyleń MoM / YoY", "isDone": false }
+        {
+          "id": "m_31",
+          "title": "Pobranie zrzutu faktur kosztowych z ERP",
+          "isDone": true
+        },
+        {
+          "id": "m_32",
+          "title": "Mapowanie brakujących kategorii zakupowych",
+          "isDone": false
+        },
+        {
+          "id": "m_33",
+          "title": "Komentarz do odchyleń MoM / YoY",
+          "isDone": false
+        }
       ],
       "checklist": [
-        { "id": "m_31", "title": "Pobranie zrzutu faktur kosztowych z ERP", "isDone": true },
-        { "id": "m_32", "title": "Mapowanie brakujących kategorii zakupowych", "isDone": false },
-        { "id": "m_33", "title": "Komentarz do odchyleń MoM / YoY", "isDone": false }
+        {
+          "id": "m_31",
+          "title": "Pobranie zrzutu faktur kosztowych z ERP",
+          "isDone": true
+        },
+        {
+          "id": "m_32",
+          "title": "Mapowanie brakujących kategorii zakupowych",
+          "isDone": false
+        },
+        {
+          "id": "m_33",
+          "title": "Komentarz do odchyleń MoM / YoY",
+          "isDone": false
+        }
       ],
       "status": "TODO",
       "inMyDay": true,
@@ -280,10 +379,18 @@
       "notesAndContext": "Potrzebne do zgłoszenia celnego na granicy.",
       "contextNotes": "Potrzebne do zgłoszenia celnego na granicy.",
       "milestones": [
-        { "id": "m_41", "title": "Sprawdzenie specyfikacji od dostawcy", "isDone": false }
+        {
+          "id": "m_41",
+          "title": "Sprawdzenie specyfikacji od dostawcy",
+          "isDone": false
+        }
       ],
       "checklist": [
-        { "id": "m_41", "title": "Sprawdzenie specyfikacji od dostawcy", "isDone": false }
+        {
+          "id": "m_41",
+          "title": "Sprawdzenie specyfikacji od dostawcy",
+          "isDone": false
+        }
       ],
       "status": "TODO",
       "inMyDay": false,
@@ -340,12 +447,28 @@
       "notesAndContext": "Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.",
       "contextNotes": "Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.",
       "milestones": [
-        { "id": "mw_1", "title": "Zebranie cenników bazowych od 3 dostawców", "isDone": true },
-        { "id": "mw_2", "title": "Podstawienie wolumenów Q1", "isDone": false }
+        {
+          "id": "mw_1",
+          "title": "Zebranie cenników bazowych od 3 dostawców",
+          "isDone": true
+        },
+        {
+          "id": "mw_2",
+          "title": "Podstawienie wolumenów Q1",
+          "isDone": false
+        }
       ],
       "checklist": [
-        { "id": "mw_1", "title": "Zebranie cenników bazowych od 3 dostawców", "isDone": true },
-        { "id": "mw_2", "title": "Podstawienie wolumenów Q1", "isDone": false }
+        {
+          "id": "mw_1",
+          "title": "Zebranie cenników bazowych od 3 dostawców",
+          "isDone": true
+        },
+        {
+          "id": "mw_2",
+          "title": "Podstawienie wolumenów Q1",
+          "isDone": false
+        }
       ],
       "status": "WAITING_FOR",
       "inMyDay": false,
@@ -382,12 +505,28 @@
       "notesAndContext": "Wysłane na zarząd i zaakceptowane.",
       "contextNotes": "Wysłane na zarząd i zaakceptowane.",
       "milestones": [
-        { "id": "md_1", "title": "Zrzut danych z ERP", "isDone": true },
-        { "id": "md_2", "title": "Weryfikacja dostawców spoza UE", "isDone": true }
+        {
+          "id": "md_1",
+          "title": "Zrzut danych z ERP",
+          "isDone": true
+        },
+        {
+          "id": "md_2",
+          "title": "Weryfikacja dostawców spoza UE",
+          "isDone": true
+        }
       ],
       "checklist": [
-        { "id": "md_1", "title": "Zrzut danych z ERP", "isDone": true },
-        { "id": "md_2", "title": "Weryfikacja dostawców spoza UE", "isDone": true }
+        {
+          "id": "md_1",
+          "title": "Zrzut danych z ERP",
+          "isDone": true
+        },
+        {
+          "id": "md_2",
+          "title": "Weryfikacja dostawców spoza UE",
+          "isDone": true
+        }
       ],
       "status": "DONE",
       "inMyDay": false,
@@ -403,6 +542,159 @@
     }
   ],
   "timeLogs": [
+    {
+      "id": "ses_1",
+      "taskId": "tsk_1",
+      "date": "2026-11-09",
+      "dateISO": "2026-11-09",
+      "startedAt": "2026-11-09T08:30:00.000Z",
+      "startedAtISO": "2026-11-09T08:30:00.000Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 7,
+      "totalMinutes": 32,
+      "durationMinutes": 32,
+      "entryType": "POMODORO",
+      "note": "Eksport i czyszczenie tabeli BC"
+    },
+    {
+      "id": "ses_2",
+      "taskId": "tsk_1",
+      "date": "2026-11-09",
+      "dateISO": "2026-11-09",
+      "startedAt": "2026-11-09T09:15:00.000Z",
+      "startedAtISO": "2026-11-09T09:15:00.000Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 25,
+      "durationMinutes": 25,
+      "entryType": "POMODORO",
+      "note": "Skrypt walidujący wagi jednostkowe"
+    },
+    {
+      "id": "ses_3",
+      "taskId": "tsk_2",
+      "date": "2026-11-09",
+      "dateISO": "2026-11-09",
+      "startedAt": "2026-11-09T10:00:00.000Z",
+      "startedAtISO": "2026-11-09T10:00:00.000Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 5,
+      "totalMinutes": 30,
+      "durationMinutes": 30,
+      "entryType": "POMODORO",
+      "note": "Porównanie ofert taśm pakowych w TCO"
+    },
+    {
+      "id": "ses_4",
+      "taskId": "tsk_3",
+      "date": "2026-11-08",
+      "dateISO": "2026-11-08",
+      "startedAt": "2026-11-08T11:00:00.000Z",
+      "startedAtISO": "2026-11-08T11:00:00.000Z",
+      "plannedMinutes": 45,
+      "targetMinutes": 45,
+      "overtimeMinutes": 0,
+      "totalMinutes": 45,
+      "durationMinutes": 45,
+      "entryType": "MANUAL",
+      "note": "Zrzut faktur kosztowych z Business Central"
+    },
+    {
+      "id": "ses_5",
+      "taskId": "tsk_done_1",
+      "date": "2026-11-08",
+      "dateISO": "2026-11-08",
+      "startedAt": "2026-11-08T13:00:00.000Z",
+      "startedAtISO": "2026-11-08T13:00:00.000Z",
+      "plannedMinutes": 60,
+      "targetMinutes": 60,
+      "overtimeMinutes": 12,
+      "totalMinutes": 72,
+      "durationMinutes": 72,
+      "entryType": "POMODORO",
+      "note": "Pilny raport EUDR dla Grzegorza"
+    }
+  ],
+  "peopleDictionary": [
+    {
+      "id": "per_grzegorz",
+      "canonicalName": "Grzegorz",
+      "roleOrDept": "Szef / Dyrektor",
+      "aliases": [
+        "grzesiek",
+        "gp",
+        "szef",
+        "prezes",
+        "dyrektor"
+      ],
+      "active": true
+    },
+    {
+      "id": "per_tomek",
+      "canonicalName": "Tomek",
+      "roleOrDept": "Zakupy Opakowań",
+      "aliases": [
+        "tk",
+        "tomasz",
+        "opakowania"
+      ],
+      "active": true
+    },
+    {
+      "id": "per_ola",
+      "canonicalName": "Ola",
+      "roleOrDept": "Zakupy Surowców",
+      "aliases": [
+        "ok",
+        "aleksandra",
+        "surowce"
+      ],
+      "active": true
+    },
+    {
+      "id": "per_wlasne",
+      "canonicalName": "Praca własna",
+      "roleOrDept": "Rozwój / Systemy",
+      "aliases": [
+        "ja",
+        "wlasne",
+        "analizy",
+        "bi"
+      ],
+      "active": true
+    }
+  ],
+  "categoryDictionary": [
+    {
+      "id": "cat_erp",
+      "name": "ERP / Dane BC",
+      "colorHex": "#3B82F6"
+    },
+    {
+      "id": "cat_rfq",
+      "name": "Zakupy / RFQ",
+      "colorHex": "#F59E0B"
+    },
+    {
+      "id": "cat_raporty",
+      "name": "Raporty / Power BI",
+      "colorHex": "#10B981"
+    },
+    {
+      "id": "cat_ppwr",
+      "name": "Regulacje / PPWR",
+      "colorHex": "#8B5CF6"
+    },
+    {
+      "id": "cat_wlasne",
+      "name": "Praca własna / Organizacja",
+      "colorHex": "#64748B"
+    }
+  ],
+  "timeSessions": [
     {
       "id": "ses_1",
       "taskId": "tsk_1",

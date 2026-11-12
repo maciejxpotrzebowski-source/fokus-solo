@@ -430,11 +430,53 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
   // 7. ZADANIA CYKLICZNE (SOP): RECURRENCE ENGINE
   // =========================================================================
   describe('7. Logika odnawiania zadań cyklicznych (SOP)', () => {
-    function computeNextRecurrenceDate(baseIso, recurrence) {
+    function computeNextRecurrenceDate(baseIso, recurrence, rule = null) {
       const parts = baseIso.split('-');
       const y = parseInt(parts[0], 10);
       const m = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
+
+      if (!rule || !rule.pattern || rule.pattern === 'STANDARD') {
+        const d = new Date(y, m, day);
+        if (recurrence === 'WEEKLY') d.setDate(d.getDate() + 7);
+        else if (recurrence === 'MONTHLY') d.setMonth(d.getMonth() + 1);
+        else if (recurrence === 'QUARTERLY') d.setMonth(d.getMonth() + 3);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
+      if (recurrence === 'WEEKLY' && rule.pattern === 'WEEKLY_DAY') {
+        const targetWeekday = parseInt(rule.weekday != null ? rule.weekday : 1, 10);
+        const d = new Date(y, m, day);
+        d.setDate(d.getDate() + 1);
+        while (d.getDay() !== targetWeekday) {
+          d.setDate(d.getDate() + 1);
+        }
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
+      if (recurrence === 'MONTHLY' && rule.pattern === 'DAY_OF_MONTH') {
+        let nextYear = y;
+        let nextMonth = m + 1;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+        const targetDay = parseInt(rule.day, 10) || 10;
+        const maxDays = new Date(nextYear, nextMonth + 1, 0).getDate();
+        const finalDay = Math.min(targetDay, maxDays);
+        const d = new Date(nextYear, nextMonth, finalDay);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
       const d = new Date(y, m, day);
       if (recurrence === 'WEEKLY') d.setDate(d.getDate() + 7);
       else if (recurrence === 'MONTHLY') d.setMonth(d.getMonth() + 1);
@@ -455,6 +497,17 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
 
     test('QUARTERLY dodaje 3 miesiące', () => {
       assert.equal(computeNextRecurrenceDate('2026-11-01', 'QUARTERLY'), '2027-02-01');
+    });
+
+    test('MONTHLY z regułą DAY_OF_MONTH ustawia 10. dzień kolejnego miesiąca', () => {
+      const res = computeNextRecurrenceDate('2026-11-15', 'MONTHLY', { pattern: 'DAY_OF_MONTH', day: 10 });
+      assert.equal(res, '2026-12-10');
+    });
+
+    test('WEEKLY z regułą WEEKLY_DAY ustawia kolejny wtorek (weekday 2)', () => {
+      // 2026-11-12 to czwartek (day 4), kolejny wtorek to 2026-11-17
+      const res = computeNextRecurrenceDate('2026-11-12', 'WEEKLY', { pattern: 'WEEKLY_DAY', weekday: 2 });
+      assert.equal(res, '2026-11-17');
     });
   });
 
@@ -509,6 +562,32 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('downloadDailyBackup'), 'Brak funkcji downloadDailyBackup');
       assert.ok(content.includes('ensureDailyBackup'), 'Brak funkcji ensureDailyBackup');
+    });
+
+    test('Fokus.html zawiera zakładkę Wszystkie zadania oraz modale kolizji, edycji sesji i własnego czasu', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="navBtn-ALL_TASKS"'), 'Brak przycisku Wszystkie zadania w nawigacji');
+      assert.ok(content.includes('renderAllTasksBento'), 'Brak funkcji renderAllTasksBento');
+      assert.ok(content.includes('meetingConflictModal'), 'Brak modala meetingConflictModal');
+      assert.ok(content.includes('confirmPomodoroSessionModal'), 'Brak modala confirmPomodoroSessionModal');
+      assert.ok(content.includes('editTimeLogModal'), 'Brak modala editTimeLogModal');
+      assert.ok(content.includes('customTimerModal'), 'Brak modala customTimerModal');
+    });
+
+    test('Logika domyślnego czasu Pomodoro: <40 min ustawia estymację, >=40 min ustawia 25 min', () => {
+      function getRecommendedPomodoroMinutes(task) {
+        if (!task) return 25;
+        const est = parseInt(task.estimatedMinutes, 10) || 0;
+        if (est > 0 && est < 40) {
+          return est;
+        }
+        return 25;
+      }
+      assert.equal(getRecommendedPomodoroMinutes({ estimatedMinutes: 15 }), 15);
+      assert.equal(getRecommendedPomodoroMinutes({ estimatedMinutes: 30 }), 30);
+      assert.equal(getRecommendedPomodoroMinutes({ estimatedMinutes: 40 }), 25);
+      assert.equal(getRecommendedPomodoroMinutes({ estimatedMinutes: 60 }), 25);
+      assert.equal(getRecommendedPomodoroMinutes(null), 25);
     });
   });
 });

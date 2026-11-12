@@ -110,6 +110,9 @@
           <button onclick="switchView('MATRIX')" id="navBtn-MATRIX" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Eisenhower <span id="navBadge-MATRIX" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
+          <button onclick="switchView('ALL_TASKS')" id="navBtn-ALL_TASKS" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+            Wszystkie zadania <span id="navBadge-ALL_TASKS" class="ml-1 opacity-60 font-mono text-[11px]"></span>
+          </button>
           <button onclick="switchView('CALENDAR')" id="navBtn-CALENDAR" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Kalendarz <span id="navBadge-CALENDAR" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
@@ -200,7 +203,7 @@
             2. Dla kogo? <span class="text-zinc-400/70 font-normal">(wpisz np. gp, szef, tomek)</span>
           </label>
           <input id="tmPersonSearch" type="text" autocomplete="off"
-            placeholder="Szukaj osoby lub aliasu..."
+            placeholder="Szukaj osoby lub aliasu... (opcjonalnie)"
             onfocus="renderPersonDropdown('tm')"
             oninput="renderPersonDropdown('tm')"
             class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
@@ -247,18 +250,33 @@
       <!-- Estymacja czasu + Cykliczność + Mój Dzień (Z walidacją Ivy Lee) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
         <div>
-          <label class="block text-[11px] text-zinc-400 font-medium mb-1.5">Estymacja (minuty)</label>
-          <input id="tmEstMinutes" type="number" min="5" step="5" value="45"
-            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none font-mono" />
+          <label class="block text-[11px] text-zinc-400 font-medium mb-1.5">Estymacja czasu</label>
+          <div class="flex gap-2">
+            <select id="tmEstMinutesPreset" onchange="onEstMinutesPresetChange(this.value)"
+              class="flex-1 text-xs px-3 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none">
+              <option value="15">15 min</option>
+              <option value="25" selected>25 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min (1h)</option>
+              <option value="90">90 min (1.5h)</option>
+              <option value="120">120 min (2h)</option>
+              <option value="CUSTOM">Inny czas (wpisz)...</option>
+            </select>
+            <div id="tmEstCustomWrapper" class="hidden w-20">
+              <input id="tmEstMinutes" type="number" min="5" step="5" value="25" placeholder="min"
+                class="w-full text-xs px-2.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none font-mono text-center" />
+            </div>
+          </div>
         </div>
 
         <div>
           <label class="block text-[11px] text-zinc-400 font-medium mb-1.5">Cykliczność (SOP)</label>
-          <select id="tmRecurrence" class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none">
-            <option value="NONE">Jednorazowe</option>
-            <option value="WEEKLY">Co tydzień (+7 dni)</option>
-            <option value="MONTHLY">Co miesiąc (+1 mies.)</option>
-            <option value="QUARTERLY">Co kwartał (+3 mies.)</option>
+          <select id="tmRecurrence" onchange="onRecurrenceSelectChange(this.value)" class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none">
+            <option value="NONE" selected>Jednorazowe</option>
+            <option value="WEEKLY">Co tydzień</option>
+            <option value="MONTHLY">Co miesiąc</option>
+            <option value="QUARTERLY">Co kwartał</option>
           </select>
         </div>
 
@@ -579,6 +597,143 @@
             Zapisz w kalendarzu
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 6: OSTRZEŻENIE PRZED KOLIZJĄ ZE SPOTKANIEM W KALENDARZU             -->
+  <!-- ========================================================================= -->
+  <div id="meetingConflictModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-md w-full space-y-4 fade-in">
+      <div class="flex items-center gap-2.5 text-amber-500">
+        <span class="text-xl">⚠️</span>
+        <h3 class="text-sm font-semibold text-[#1D1D1F] dark:text-white">Zbliżające się spotkanie w kalendarzu</h3>
+      </div>
+      <p id="mcMessage" class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed"></p>
+      <div class="space-y-2 pt-2">
+        <button id="mcShortenBtn" class="w-full py-2.5 px-4 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-2">
+          Skróć sesję i startuj
+        </button>
+        <button id="mcContinueBtn" class="w-full py-2.5 px-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10 transition">
+          Uruchom pełną sesję mimo spotkania
+        </button>
+        <button onclick="closeModal('meetingConflictModal')" class="w-full py-2 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+          Nie, anuluj
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 7: POTWIERDZENIE I KOREKTA CZASU SESJI POMODORO (OVERTIME GUARD)     -->
+  <!-- ========================================================================= -->
+  <div id="confirmPomodoroSessionModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-md w-full space-y-4 fade-in">
+      <div class="flex items-center justify-between">
+        <span class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Zakończenie sesji skupienia</span>
+        <button onclick="closeModal('confirmPomodoroSessionModal')" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
+      </div>
+      <div>
+        <div id="cpsTaskTitle" class="text-sm font-semibold"></div>
+        <div id="cpsSubtitle" class="text-xs text-zinc-400 mt-0.5"></div>
+      </div>
+      <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300" id="cpsOvertimeNotice">
+        ⚠️ Stoper działał dłużej niż planowano (Overtime). Możesz skorygować zarejestrowany czas poniżej, aby nie zaburzać statystyk.
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Czas do zapisania (minuty)</label>
+          <input id="cpsMinutes" type="number" min="1" max="600"
+            class="w-full text-base font-semibold px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Zmierzono zegarem</label>
+          <div id="cpsMeasuredDisplay" class="text-sm font-mono font-medium py-2.5 text-zinc-500"></div>
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Notatka do sesji (opcjonalnie)</label>
+        <input id="cpsNote" type="text" placeholder="np. Analiza danych i raport końcowy"
+          class="w-full text-xs px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none" />
+      </div>
+      <div class="pt-2 flex items-center justify-between gap-2">
+        <button type="button" onclick="discardPomodoroSession()" class="text-xs text-rose-500 hover:underline px-2">
+          Odrzuć sesję (nie zapisuj)
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeModal('confirmPomodoroSessionModal')" class="px-3.5 py-2 rounded-full text-xs text-zinc-400 hover:text-zinc-600">
+            Anuluj
+          </button>
+          <button type="button" onclick="saveConfirmedPomodoroSession()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 shadow-sm transition">
+            Zapisz sesję
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 8: KOREKTA SESJI W HISTORII CZASU (Z POZIOMU RAPORTÓW)              -->
+  <!-- ========================================================================= -->
+  <div id="editTimeLogModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-sm w-full space-y-4 fade-in">
+      <div class="flex items-center justify-between">
+        <span class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Korekta sesji w historii</span>
+        <button onclick="closeModal('editTimeLogModal')" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
+      </div>
+      <input type="hidden" id="etlLogId" />
+      <div id="etlTaskTitle" class="text-sm font-semibold truncate"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Czas pracy (minuty)</label>
+          <input id="etlMinutes" type="number" min="1" max="600"
+            class="w-full text-sm font-semibold px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Data</label>
+          <input id="etlDate" type="date"
+            class="w-full text-xs px-3 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 font-mono focus:outline-none" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] text-zinc-400 mb-1 font-medium">Notatka</label>
+        <input id="etlNote" type="text"
+          class="w-full text-xs px-3.5 py-2 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none" />
+      </div>
+      <div class="pt-2 flex items-center justify-between">
+        <button type="button" onclick="deleteTimeLogFromModal()" class="text-xs text-rose-500 hover:underline">
+          Usuń tę sesję
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeModal('editTimeLogModal')" class="px-3.5 py-2 rounded-full text-xs text-zinc-400">
+            Anuluj
+          </button>
+          <button type="button" onclick="saveEditedTimeLog()" class="px-4 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">
+            Zapisz
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 9: WŁASNY CZAS SKUPIENIA POMODORO (DIALOG)                         -->
+  <!-- ========================================================================= -->
+  <div id="customTimerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-xs w-full space-y-4 fade-in">
+      <div class="flex items-center justify-between">
+        <span class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Własny czas sesji</span>
+        <button onclick="closeModal('customTimerModal')" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
+      </div>
+      <p class="text-xs text-zinc-500">Wpisz ile minut ma trwać kolejna sesja Pomodoro:</p>
+      <div>
+        <input id="ctmMinutes" type="number" min="1" max="240" step="1" value="25"
+          class="w-full text-2xl font-bold font-mono text-center px-4 py-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button type="button" onclick="closeModal('customTimerModal')" class="px-3 py-1.5 rounded-full text-xs text-zinc-400">Anuluj</button>
+        <button type="button" onclick="applyCustomTimerMinutes()" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">Ustaw czas</button>
       </div>
     </div>
   </div>
@@ -1358,15 +1513,108 @@
 
     function onPomodoroPresetChange(val) {
       if (val === 'CUSTOM') {
-        const custom = prompt('Wpisz własny czas w minutach (1-240):', timer.plannedMinutes || '30');
-        if (custom) {
-          setPomodoroPreset(custom);
+        openCustomTimerModal();
+      } else if (val === 'MANUAL') {
+        const activeTask = getActiveMyDayTask();
+        if (activeTask) {
+          openManualTimeModal(activeTask.id);
         } else {
-          renderApp();
+          showToast('Najpierw wybierz zadanie');
         }
       } else {
         setPomodoroPreset(val);
       }
+    }
+
+    function openCustomTimerModal() {
+      const inp = document.getElementById('ctmMinutes');
+      if (inp) inp.value = timer.plannedMinutes || 25;
+      openModal('customTimerModal');
+      setTimeout(() => { if (inp) inp.focus(); }, 50);
+    }
+
+    function applyCustomTimerMinutes() {
+      const inp = document.getElementById('ctmMinutes');
+      const val = parseInt(inp ? inp.value : 25, 10) || 25;
+      closeModal('customTimerModal');
+      setPomodoroPreset(val);
+      renderApp();
+    }
+
+    function getRecommendedPomodoroMinutes(task) {
+      if (!task) return 25;
+      const est = parseInt(task.estimatedMinutes, 10) || 0;
+      if (est > 0 && est < 40) {
+        return est;
+      }
+      return 25;
+    }
+
+    let pendingConflictDecision = null;
+
+    function checkUpcomingMeetingConflict(plannedMinutes) {
+      if (!db.calendarEvents || db.calendarEvents.length === 0) return null;
+      const todayIso = getTodayISO();
+      const now = new Date();
+      const currentMinutesFromMidnight = now.getHours() * 60 + now.getMinutes();
+
+      const candidates = db.calendarEvents.filter(e => {
+        if (e.dateISO !== todayIso || e.type === 'VACATION' || !e.startTime) return false;
+        const parts = e.startTime.split(':');
+        if (parts.length < 2) return false;
+        const mMin = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        const diff = mMin - currentMinutesFromMidnight;
+        return diff > 0 && diff < plannedMinutes;
+      });
+
+      if (candidates.length === 0) return null;
+
+      candidates.sort((a, b) => {
+        const ma = parseInt(a.startTime.split(':')[0], 10) * 60 + parseInt(a.startTime.split(':')[1], 10);
+        const mb = parseInt(b.startTime.split(':')[0], 10) * 60 + parseInt(b.startTime.split(':')[1], 10);
+        return ma - mb;
+      });
+
+      const nextMeeting = candidates[0];
+      const mMin = parseInt(nextMeeting.startTime.split(':')[0], 10) * 60 + parseInt(nextMeeting.startTime.split(':')[1], 10);
+      const minutesLeft = mMin - currentMinutesFromMidnight;
+
+      return {
+        meeting: nextMeeting,
+        minutesLeft
+      };
+    }
+
+    function showMeetingConflictModal(conflict, targetId) {
+      pendingConflictDecision = { conflict, targetId };
+      const msg = document.getElementById('mcMessage');
+      if (msg) {
+        msg.innerHTML = `Zaraz zaczynasz spotkanie <strong>„${escapeHtml(conflict.meeting.title)}”</strong> o <strong>${conflict.meeting.startTime}</strong> (za <strong>${conflict.minutesLeft} min</strong>).<br><br>Planowana sesja Pomodoro trwa <strong>${timer.plannedMinutes} min</strong>. Wybierz jak chcesz postąpić:`;
+      }
+      const shortBtn = document.getElementById('mcShortenBtn');
+      if (shortBtn) {
+        shortBtn.textContent = `Skróć sesję do ${conflict.minutesLeft} min i startuj`;
+        shortBtn.onclick = () => proceedPomodoroConflict('SHORTEN');
+      }
+      const contBtn = document.getElementById('mcContinueBtn');
+      if (contBtn) {
+        contBtn.onclick = () => proceedPomodoroConflict('FULL');
+      }
+      openModal('meetingConflictModal');
+    }
+
+    function proceedPomodoroConflict(action) {
+      if (!pendingConflictDecision) return;
+      const { conflict, targetId } = pendingConflictDecision;
+      closeModal('meetingConflictModal');
+      pendingConflictDecision = null;
+
+      if (action === 'SHORTEN') {
+        const mins = Math.max(1, conflict.minutesLeft);
+        timer.plannedMinutes = mins;
+        timer.remainingSeconds = mins * 60;
+      }
+      startPomodoroTimer(targetId);
     }
 
     function tickPomodoro() {
@@ -1414,6 +1662,19 @@
         return;
       }
 
+      // Sprawdź kolizję ze spotkaniem tylko jeśli stoper nie działa
+      if (!timer.running) {
+        const conflict = checkUpcomingMeetingConflict(timer.plannedMinutes);
+        if (conflict) {
+          showMeetingConflictModal(conflict, targetId);
+          return;
+        }
+      }
+
+      startPomodoroTimer(targetId);
+    }
+
+    function startPomodoroTimer(targetId) {
       if (timer.taskId && timer.taskId !== targetId) {
         const hasWork = timer.running || timer.remainingSeconds < timer.plannedMinutes * 60 || timer.isOvertime;
         if (hasWork) {
@@ -1452,18 +1713,65 @@
       updateTimerUI();
     }
 
-    function finishAndSavePomodoroSession() {
-      if (!requireDb()) return;
-      if (!timer.taskId) return;
-      clearInterval(timer.intervalId);
-      timer.running = false;
+    let pendingPomodoroSession = null;
 
-      const elapsedPlannedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
-      const elapsedPlannedMin = Math.max(1, Math.round(elapsedPlannedSec / 60));
-      const overtimeMin = Math.round(timer.overtimeSeconds / 60);
-      const totalMin = timer.isOvertime ? (timer.plannedMinutes + overtimeMin) : elapsedPlannedMin;
-      const startedAtIso = timer.sessionStartedAt || new Date().toISOString();
+    function openConfirmPomodoroSessionModal(info) {
+      pendingPomodoroSession = info;
+      const t = db.tasks.find(x => x.id === timer.taskId);
+      const titleEl = document.getElementById('cpsTaskTitle');
+      if (titleEl) titleEl.textContent = t ? t.title : 'Sesja skupienia';
 
+      const subEl = document.getElementById('cpsSubtitle');
+      if (subEl) subEl.textContent = `Planowano: ${info.plannedMinutes} min · Overtime: +${info.overtimeMinutes} min · Razem zmierzono: ${info.totalMinutes} min`;
+
+      const measuredEl = document.getElementById('cpsMeasuredDisplay');
+      if (measuredEl) measuredEl.textContent = `${info.totalMinutes} min (plan ${info.plannedMinutes}m + ${info.overtimeMinutes}m)`;
+
+      const minInp = document.getElementById('cpsMinutes');
+      if (minInp) minInp.value = info.totalMinutes;
+
+      const noteInp = document.getElementById('cpsNote');
+      if (noteInp) noteInp.value = `Sesja Pomodoro (${info.plannedMinutes}m + ${info.overtimeMinutes}m Overtime)`;
+
+      openModal('confirmPomodoroSessionModal');
+      setTimeout(() => { if (minInp) minInp.focus(); }, 50);
+    }
+
+    function saveConfirmedPomodoroSession() {
+      if (!pendingPomodoroSession) return;
+      const minInp = document.getElementById('cpsMinutes');
+      const mins = Math.max(1, parseInt(minInp ? minInp.value : pendingPomodoroSession.totalMinutes, 10) || pendingPomodoroSession.totalMinutes);
+      const noteInp = document.getElementById('cpsNote');
+      const note = (noteInp && noteInp.value.trim()) || `Sesja Pomodoro (${mins}m)`;
+
+      const planned = pendingPomodoroSession.plannedMinutes;
+      const overtime = Math.max(0, mins - planned);
+      const startedAt = pendingPomodoroSession.startedAtIso;
+
+      closeModal('confirmPomodoroSessionModal');
+      pendingPomodoroSession = null;
+      savePomodoroSessionDirect(mins, planned, overtime, startedAt, note);
+    }
+
+    function discardPomodoroSession() {
+      if (!confirm('Czy na pewno chcesz odrzucić tę sesję bez zapisywania w bazie?')) return;
+      closeModal('confirmPomodoroSessionModal');
+      pendingPomodoroSession = null;
+
+      timer.remainingSeconds = timer.plannedMinutes * 60;
+      timer.isOvertime = false;
+      timer.overtimeSeconds = 0;
+      timer.chimePlayed = false;
+      timer.sessionStartedAt = null;
+      timer.targetEndTimestamp = null;
+      try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
+      savePomodoroState();
+      updateTimerUI();
+      showToast('Odrzucono sesję skupienia (nie zapisano)');
+    }
+
+    function savePomodoroSessionDirect(totalMin, plannedMin, overtimeMin, startedAtIso, customNote = null) {
+      const note = customNote || (overtimeMin > 0 ? `Sesja Pomodoro (${plannedMin}m + ${overtimeMin}m Overtime)` : `Sesja Pomodoro (${totalMin}m)`);
       const logEntry = {
         id: generateId('ses'),
         taskId: timer.taskId,
@@ -1471,13 +1779,13 @@
         dateISO: getTodayISO(),
         startedAt: startedAtIso,
         startedAtISO: startedAtIso,
-        plannedMinutes: timer.plannedMinutes,
-        targetMinutes: timer.plannedMinutes,
+        plannedMinutes: plannedMin,
+        targetMinutes: plannedMin,
         overtimeMinutes: overtimeMin,
         totalMinutes: totalMin,
         durationMinutes: totalMin,
         entryType: 'POMODORO',
-        note: timer.isOvertime ? `Sesja Pomodoro (${timer.plannedMinutes}m + ${overtimeMin}m Overtime)` : `Sesja Pomodoro (${totalMin}m)`
+        note
       };
 
       db.timeLogs.unshift(logEntry);
@@ -1501,9 +1809,36 @@
       timer.targetEndTimestamp = null;
       try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
 
+      savePomodoroState();
       saveDatabase();
-      showToast(`Zapisano sesję (${totalMin} min) w historii i raportach`);
       renderApp();
+      showToast(`Zapisano sesję (${totalMin} min) w historii i raportach`);
+    }
+
+    function finishAndSavePomodoroSession() {
+      if (!requireDb()) return;
+      if (!timer.taskId) return;
+      clearInterval(timer.intervalId);
+      timer.running = false;
+
+      const elapsedPlannedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+      const elapsedPlannedMin = Math.max(1, Math.round(elapsedPlannedSec / 60));
+      const overtimeMin = Math.round(timer.overtimeSeconds / 60);
+      const totalMin = timer.isOvertime ? (timer.plannedMinutes + overtimeMin) : elapsedPlannedMin;
+      const startedAtIso = timer.sessionStartedAt || new Date().toISOString();
+
+      // Jeśli sesja trwała dłużej niż planowano o 10 lub więcej minut overtime:
+      if (timer.isOvertime && overtimeMin >= 10) {
+        openConfirmPomodoroSessionModal({
+          plannedMinutes: timer.plannedMinutes,
+          overtimeMinutes: overtimeMin,
+          totalMinutes: totalMin,
+          startedAtIso
+        });
+        return;
+      }
+
+      savePomodoroSessionDirect(totalMin, timer.plannedMinutes, overtimeMin, startedAtIso);
     }
 
     function formatClock(sec) {
@@ -1625,8 +1960,8 @@
     function renderApp() {
       applyTheme();
 
-      // Aktualizacja pigułek nawigacji (5 głównych zakładek operacyjnych)
-      const primaryViews = ['DAY', 'MATRIX', 'CALENDAR', 'WAITING', 'REPORTS'];
+      // Aktualizacja pigułek nawigacji (główne zakładki operacyjne)
+      const primaryViews = ['DAY', 'ALL_TASKS', 'MATRIX', 'CALENDAR', 'WAITING', 'REPORTS'];
       primaryViews.forEach(v => {
         const btn = document.getElementById('navBtn-' + v);
         if (!btn) return;
@@ -1656,6 +1991,8 @@
 
       const badgeDay = document.getElementById('navBadge-DAY');
       if (badgeDay) badgeDay.textContent = myDayCount;
+      const badgeAllTasks = document.getElementById('navBadge-ALL_TASKS');
+      if (badgeAllTasks) badgeAllTasks.textContent = db.tasks.length;
       const badgeMatrix = document.getElementById('navBadge-MATRIX');
       if (badgeMatrix) badgeMatrix.textContent = allActiveCount;
       const badgeWaiting = document.getElementById('navBadge-WAITING');
@@ -1679,6 +2016,8 @@
         canvas.className = 'flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col overflow-y-auto';
         if (db.activeView === 'MATRIX') {
           canvas.innerHTML = renderMatrixBento();
+        } else if (db.activeView === 'ALL_TASKS') {
+          canvas.innerHTML = renderAllTasksBento();
         } else if (db.activeView === 'CALENDAR') {
           canvas.innerHTML = renderCalendarBento();
         } else if (db.activeView === 'WAITING') {
@@ -1892,7 +2231,7 @@
               <div id="bentoTimerStateBadge" class="text-[11px] text-zinc-400 mt-0.5">Gotowy</div>
             </div>
 
-            <!-- Panel Zegara Pomodoro z pojedynczą listą rozwijaną (15, 25, 45, 60, 90 minut) -->
+            <!-- Panel Zegara Pomodoro z pojedynczą listą rozwijaną (Presety: 15, 25, 45, 60, 90) -->
             <div class="flex items-center gap-2 bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 px-3 py-1.5 rounded-2xl">
               <!-- Presety Pomodoro: 15, 25, 45, 60, 90 minut -->
               <select id="pomodoroPresetSelect" onchange="onPomodoroPresetChange(this.value)"
@@ -1903,6 +2242,7 @@
                 <option value="CUSTOM" ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? 'selected' : ''}>
                   ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? `⏱ ${timer.plannedMinutes} min (własny)` : 'Inny czas...'}
                 </option>
+                <option value="MANUAL">✍️ Dopisz czas ręcznie (z palca)...</option>
               </select>
 
               <!-- Wyświetlacz zegara -->
@@ -1919,10 +2259,6 @@
                 <button id="bentoTimerFinishBtn" onclick="finishAndSavePomodoroSession()"
                   class="hidden px-3.5 py-1.5 rounded-full text-xs font-medium bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition">
                   Zakończ i zapisz
-                </button>
-                <button onclick="openManualTimeModal('${t.id}')" title="Dopisz czas z palca (gdy zapomniałeś włączyć stoper)"
-                  class="px-2.5 py-1.5 rounded-full text-[11px] text-zinc-500 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
-                  + Z palca
                 </button>
               </div>
             </div>
@@ -2252,6 +2588,364 @@
             `}
           </div>
         </section>
+      `;
+    }
+
+    // =========================================================================
+    // WIDOK: "WSZYSTKIE ZADANIA" (LISTA WSZYSTKICH ZADAŃ Z SORTOWANIEM I FILTROWANIEM)
+    // =========================================================================
+    let allTasksState = {
+      search: '',
+      status: 'ALL',
+      categoryId: 'ALL',
+      personId: 'ALL',
+      urgency: 'ALL',
+      sortBy: 'dueDate',
+      sortDir: 'asc'
+    };
+
+    function setAllTasksFilter(key, val) {
+      allTasksState[key] = val;
+      renderApp();
+    }
+
+    function setAllTasksSort(col) {
+      if (allTasksState.sortBy === col) {
+        allTasksState.sortDir = allTasksState.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        allTasksState.sortBy = col;
+        allTasksState.sortDir = 'asc';
+      }
+      renderApp();
+    }
+
+    function renderAllTasksBento() {
+      let list = [...db.tasks];
+
+      // Filtrowanie tekstowe
+      if (allTasksState.search.trim()) {
+        const q = allTasksState.search.toLowerCase().trim();
+        list = list.filter(t => {
+          const inTitle = (t.title || '').toLowerCase().includes(q);
+          const inNotes = (t.notesAndContext || t.contextNotes || '').toLowerCase().includes(q);
+          const p = getPerson(t.requesterPersonId || t.personId);
+          const inPerson = (p.canonicalName || '').toLowerCase().includes(q) || (p.aliases || []).some(a => a.toLowerCase().includes(q));
+          return inTitle || inNotes || inPerson;
+        });
+      }
+
+      // Filtr statusu
+      if (allTasksState.status === 'ACTIVE') {
+        list = list.filter(t => t.status !== 'DONE');
+      } else if (allTasksState.status !== 'ALL') {
+        list = list.filter(t => t.status === allTasksState.status);
+      }
+
+      // Filtr kategorii
+      if (allTasksState.categoryId !== 'ALL') {
+        list = list.filter(t => t.categoryId === allTasksState.categoryId);
+      }
+
+      // Filtr osoby
+      if (allTasksState.personId !== 'ALL') {
+        list = list.filter(t => (t.requesterPersonId || t.personId) === allTasksState.personId);
+      }
+
+      // Filtr pilności
+      if (allTasksState.urgency !== 'ALL') {
+        list = list.filter(t => {
+          const eff = computeEffectiveUrgency(t);
+          return eff.level === allTasksState.urgency;
+        });
+      }
+
+      // Sortowanie kolumn
+      list.sort((a, b) => {
+        let valA, valB;
+        if (allTasksState.sortBy === 'title') {
+          valA = (a.title || '').toLowerCase();
+          valB = (b.title || '').toLowerCase();
+        } else if (allTasksState.sortBy === 'person') {
+          valA = getPerson(a.requesterPersonId || a.personId).canonicalName.toLowerCase();
+          valB = getPerson(b.requesterPersonId || b.personId).canonicalName.toLowerCase();
+        } else if (allTasksState.sortBy === 'category') {
+          valA = getCategory(a.categoryId).name.toLowerCase();
+          valB = getCategory(b.categoryId).name.toLowerCase();
+        } else if (allTasksState.sortBy === 'urgency') {
+          valA = computeEffectiveUrgency(a).weight;
+          valB = computeEffectiveUrgency(b).weight;
+        } else if (allTasksState.sortBy === 'importance') {
+          valA = a.importance === 'HIGH' ? 1 : 0;
+          valB = b.importance === 'HIGH' ? 1 : 0;
+        } else if (allTasksState.sortBy === 'dueDate') {
+          valA = a.dueDate || '9999-99-99';
+          valB = b.dueDate || '9999-99-99';
+        } else if (allTasksState.sortBy === 'estimatedMinutes') {
+          valA = parseInt(a.estimatedMinutes, 10) || 0;
+          valB = parseInt(b.estimatedMinutes, 10) || 0;
+        } else if (allTasksState.sortBy === 'status') {
+          valA = a.status || '';
+          valB = b.status || '';
+        } else {
+          valA = a.createdAt || '';
+          valB = b.createdAt || '';
+        }
+
+        if (valA < valB) return allTasksState.sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return allTasksState.sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      const sortIndicator = (col) => {
+        if (allTasksState.sortBy !== col) return '<span class="text-zinc-300 dark:text-zinc-600 ml-1">↕</span>';
+        return allTasksState.sortDir === 'asc'
+          ? '<span class="text-[#1D1D1F] dark:text-white font-bold ml-1">↑</span>'
+          : '<span class="text-[#1D1D1F] dark:text-white font-bold ml-1">↓</span>';
+      };
+
+      return `
+        <div class="space-y-6 fade-in pb-12">
+          <!-- Karta Bento: Filtry i wyszukiwarka -->
+          <div class="bento-card !p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 class="text-base sm:text-lg font-semibold tracking-tight text-[#1D1D1F] dark:text-white">
+                  Wszystkie zadania
+                </h1>
+                <p class="text-xs text-zinc-400 mt-0.5">
+                  Baza zadań z możliwością sortowania i filtrowania według dowolnego parametru
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-zinc-500 bg-[#F5F5F7] dark:bg-[#2C2C2E] px-3 py-1.5 rounded-full">
+                  Wyświetlono: <strong>${list.length}</strong> z ${db.tasks.length}
+                </span>
+                <button onclick="openTaskModal()"
+                  class="px-4 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition shadow-sm">
+                  + Nowe zadanie
+                </button>
+              </div>
+            </div>
+
+            <!-- Pasek filtrów -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-2 border-t border-black/[0.05] dark:border-white/5">
+              <div class="lg:col-span-2">
+                <input type="text" placeholder="Szukaj po tytule, osobie, notatkach..."
+                  value="${escapeHtml(allTasksState.search)}"
+                  oninput="setAllTasksFilter('search', this.value)"
+                  class="w-full text-xs px-3.5 py-2 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none" />
+              </div>
+
+              <div>
+                <select onchange="setAllTasksFilter('status', this.value)"
+                  class="w-full text-xs px-3 py-2 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-zinc-800 dark:text-zinc-100 focus:outline-none cursor-pointer">
+                  <option value="ALL" ${allTasksState.status === 'ALL' ? 'selected' : ''}>Status: Wszystkie</option>
+                  <option value="ACTIVE" ${allTasksState.status === 'ACTIVE' ? 'selected' : ''}>Status: Aktywne</option>
+                  <option value="TODO" ${allTasksState.status === 'TODO' ? 'selected' : ''}>Status: Do zrobienia</option>
+                  <option value="WAITING_FOR" ${allTasksState.status === 'WAITING_FOR' ? 'selected' : ''}>Status: Czekam na</option>
+                  <option value="DONE" ${allTasksState.status === 'DONE' ? 'selected' : ''}>Status: Ukończone</option>
+                </select>
+              </div>
+
+              <div>
+                <select onchange="setAllTasksFilter('categoryId', this.value)"
+                  class="w-full text-xs px-3 py-2 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-zinc-800 dark:text-zinc-100 focus:outline-none cursor-pointer">
+                  <option value="ALL">Kategoria: Wszystkie</option>
+                  ${db.categories.map(c => `
+                    <option value="${c.id}" ${allTasksState.categoryId === c.id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div>
+                <select onchange="setAllTasksFilter('personId', this.value)"
+                  class="w-full text-xs px-3 py-2 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-zinc-800 dark:text-zinc-100 focus:outline-none cursor-pointer">
+                  <option value="ALL">Dla kogo: Wszyscy</option>
+                  ${db.people.map(p => `
+                    <option value="${p.id}" ${allTasksState.personId === p.id ? 'selected' : ''}>${escapeHtml(p.canonicalName)}</option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Karta Bento: Tabela zadań z sortowaniem kolumn -->
+          <div class="bento-card !p-0 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-black/[0.06] dark:border-white/[0.06] bg-[#F5F5F7]/70 dark:bg-[#2C2C2E]/40 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider select-none">
+                    <th class="py-3 px-3 w-10 text-center">Dzień</th>
+                    <th onclick="setAllTasksSort('title')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Zadanie ${sortIndicator('title')}
+                    </th>
+                    <th onclick="setAllTasksSort('person')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Dla kogo ${sortIndicator('person')}
+                    </th>
+                    <th onclick="setAllTasksSort('category')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Kategoria ${sortIndicator('category')}
+                    </th>
+                    <th onclick="setAllTasksSort('urgency')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Pilność ${sortIndicator('urgency')}
+                    </th>
+                    <th onclick="setAllTasksSort('importance')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Ważność ${sortIndicator('importance')}
+                    </th>
+                    <th onclick="setAllTasksSort('dueDate')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Termin ${sortIndicator('dueDate')}
+                    </th>
+                    <th onclick="setAllTasksSort('estimatedMinutes')" class="py-3 px-3 text-right cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Czas ${sortIndicator('estimatedMinutes')}
+                    </th>
+                    <th onclick="setAllTasksSort('status')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                      Status ${sortIndicator('status')}
+                    </th>
+                    <th class="py-3 px-3 text-right">Akcje</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
+                  ${list.length === 0 ? `
+                    <tr>
+                      <td colspan="10" class="py-12 text-center text-zinc-400">
+                        Brak zadań spełniających wybrane kryteria filtrowania.
+                      </td>
+                    </tr>
+                  ` : list.map(t => {
+                    const eff = computeEffectiveUrgency(t);
+                    const person = getPerson(t.requesterPersonId || t.personId);
+                    const category = getCategory(t.categoryId);
+                    const isDone = t.status === 'DONE';
+                    const isWaiting = t.status === 'WAITING_FOR';
+                    const isInMyDay = !!(t.inMyDay || t.isMyDay);
+                    const milestones = t.milestones || t.checklist || [];
+                    const doneM = milestones.filter(m => m.isDone).length;
+
+                    let dueLabel = 'Brak';
+                    let dueClass = 'text-zinc-400';
+                    if (t.dueDate) {
+                      const todayIso = getTodayISO();
+                      const daysDiff = countBusinessDays(todayIso, t.dueDate);
+                      dueLabel = formatDateShort(t.dueDate);
+                      if (isDone) {
+                        dueClass = 'text-zinc-400';
+                      } else if (t.dueDate < todayIso) {
+                        dueClass = 'text-rose-500 font-semibold';
+                        dueLabel += ' (po terminie)';
+                      } else if (daysDiff <= 1) {
+                        dueClass = 'text-amber-500 font-medium';
+                        dueLabel += ' (jutro)';
+                      }
+                    }
+
+                    return `
+                      <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition ${isDone ? 'opacity-50' : ''}">
+                        <td class="py-2.5 px-3 text-center">
+                          <button onclick="toggleTaskMyDay('${t.id}')" title="${isInMyDay ? 'Usuń z Mój Dzień' : 'Dodaj do Mój Dzień'}"
+                            class="text-sm hover:scale-110 transition ${isInMyDay ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600 hover:text-amber-400'}">
+                            ${isInMyDay ? '★' : '☆'}
+                          </button>
+                        </td>
+
+                        <td class="py-2.5 px-3 max-w-xs sm:max-w-md">
+                          <div class="flex items-center gap-2">
+                            <span class="font-medium text-[#1D1D1F] dark:text-white truncate ${isDone ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
+                              ${escapeHtml(t.title)}
+                            </span>
+                            ${milestones.length > 0 ? `
+                              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-500 shrink-0">
+                                ${doneM}/${milestones.length}
+                              </span>
+                            ` : ''}
+                            ${t.recurrence && t.recurrence !== 'NONE' ? `
+                              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500 shrink-0" title="Cykliczne">
+                                🔄
+                              </span>
+                            ` : ''}
+                          </div>
+                          ${t.notesAndContext ? `
+                            <div class="text-[11px] text-zinc-400 truncate max-w-sm mt-0.5">
+                              ${escapeHtml(t.notesAndContext)}
+                            </div>
+                          ` : ''}
+                        </td>
+
+                        <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
+                          ${escapeHtml(person.canonicalName)}
+                        </td>
+
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                          <span class="inline-flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                            <span class="w-2 h-2 rounded-full" style="background:${category.colorHex}"></span>
+                            <span>#${escapeHtml(category.name)}</span>
+                          </span>
+                        </td>
+
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                          <span class="inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full ${getUrgencyDotClass(eff.level)}"></span>
+                            <span class="font-medium">${URGENCY_LABEL[eff.level]}</span>
+                          </span>
+                        </td>
+
+                        <td class="py-2.5 px-3 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                          ${t.importance === 'HIGH' ? '<span class="font-medium text-[#1D1D1F] dark:text-white">Ważne</span>' : 'Mniej ważne'}
+                        </td>
+
+                        <td class="py-2.5 px-3 whitespace-nowrap font-mono text-[11px] ${dueClass}">
+                          ${dueLabel}
+                        </td>
+
+                        <td class="py-2.5 px-3 text-right font-mono text-[11px] text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+                          ${t.estimatedMinutes ? t.estimatedMinutes + 'm' : '—'}
+                        </td>
+
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                          ${isDone ? `
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                              Ukończone
+                            </span>
+                          ` : isWaiting ? `
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                              Czekam na
+                            </span>
+                          ` : `
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                              Do zrobienia
+                            </span>
+                          `}
+                        </td>
+
+                        <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                          <div class="inline-flex items-center gap-1.5">
+                            ${!isDone ? `
+                              <button onclick="completeTask('${t.id}')" title="Ukończ zadanie"
+                                class="p-1 rounded-lg hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-500 transition">
+                                ✓
+                              </button>
+                              <button onclick="openDupochronModal('${t.id}', 'WAITING_FOR')" title="Czekam na kogoś"
+                                class="p-1 rounded-lg hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 transition">
+                                ⏳
+                              </button>
+                            ` : `
+                              <button onclick="unblockWaitingTask('${t.id}', false)" title="Przywróć zadanie"
+                                class="p-1 rounded-lg hover:bg-blue-500/10 text-zinc-400 hover:text-blue-500 transition">
+                                ↺
+                              </button>
+                            `}
+                            <button onclick="openTaskModal('${t.id}')" title="Edytuj zadanie"
+                              class="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
+                              ✎
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       `;
     }
 
@@ -2667,8 +3361,116 @@
               }).join('')}
             </div>
           </section>
+
+          <!-- DZIENNIK SESJI SKUPIENIA I CZASU PRACY (HISTORIA Z MOŻLIWOŚCIĄ EDYCJI I KOREKTY) -->
+          <section class="bento-card space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-semibold">Dziennik sesji skupienia i czasu pracy (Historia)</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Wszystkie sesje Pomodoro i wpisy ręczne w wybranym okresie z możliwością korekty czasu lub usunięcia</p>
+              </div>
+              <span class="text-xs font-mono text-zinc-400 bg-[#F5F5F7] dark:bg-[#2C2C2E] px-3 py-1 rounded-full">
+                ${periodLogs.length} sesji · ${formatMinutes(totalMinutes)}
+              </span>
+            </div>
+
+            ${periodLogs.length === 0 ? `
+              <div class="py-8 text-center text-xs text-zinc-400">Brak zarejestrowanych sesji w wybranym okresie.</div>
+            ` : `
+              <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E] text-xs">
+                ${periodLogs.map(log => {
+                  const task = db.tasks.find(x => x.id === log.taskId);
+                  const title = task ? task.title : 'Zadanie usunięte';
+                  const dateStr = log.dateISO || log.date || (log.startedAtISO ? log.startedAtISO.slice(0, 10) : '—');
+                  const mins = log.durationMinutes || log.totalMinutes || 0;
+                  const isManual = log.entryType === 'MANUAL';
+                  return `
+                    <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div class="space-y-0.5 min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-[#1D1D1F] dark:text-white truncate">${escapeHtml(title)}</span>
+                          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${isManual ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'} shrink-0">
+                            ${isManual ? 'Z palca' : 'Pomodoro'}
+                          </span>
+                        </div>
+                        ${log.note ? `<div class="text-[11px] text-zinc-400 truncate">${escapeHtml(log.note)}</div>` : ''}
+                      </div>
+                      <div class="flex items-center gap-3 shrink-0">
+                        <span class="font-mono text-zinc-400 text-[11px]">${dateStr}</span>
+                        <span class="font-mono font-semibold text-zinc-800 dark:text-zinc-100">${formatMinutes(mins)}</span>
+                        <div class="flex items-center gap-1">
+                          <button onclick="openEditTimeLogModal('${log.id}')" title="Edytuj czas sesji"
+                            class="px-2.5 py-1 rounded-lg text-xs bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:opacity-80 text-zinc-700 dark:text-zinc-200 transition">
+                            ✎ Edytuj
+                          </button>
+                          <button onclick="deleteTimeLog('${log.id}')" title="Usuń sesję"
+                            class="p-1 rounded-lg text-xs text-zinc-300 hover:text-rose-500 transition">
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </section>
         </div>
       `;
+    }
+
+    function openEditTimeLogModal(logId) {
+      if (!requireDb()) return;
+      const log = db.timeLogs.find(l => l.id === logId);
+      if (!log) return;
+      const t = db.tasks.find(x => x.id === log.taskId);
+
+      document.getElementById('etlLogId').value = log.id;
+      document.getElementById('etlTaskTitle').textContent = t ? t.title : 'Zadanie usunięte';
+      document.getElementById('etlMinutes').value = log.durationMinutes || log.totalMinutes || 25;
+      document.getElementById('etlDate').value = log.dateISO || log.date || getTodayISO();
+      document.getElementById('etlNote').value = log.note || '';
+
+      openModal('editTimeLogModal');
+      setTimeout(() => document.getElementById('etlMinutes').focus(), 50);
+    }
+
+    function saveEditedTimeLog() {
+      if (!requireDb()) return;
+      const id = document.getElementById('etlLogId').value;
+      const log = db.timeLogs.find(l => l.id === id);
+      if (!log) return;
+
+      const mins = Math.max(1, parseInt(document.getElementById('etlMinutes').value, 10) || 1);
+      const dateStr = document.getElementById('etlDate').value || getTodayISO();
+      const note = document.getElementById('etlNote').value.trim();
+
+      log.durationMinutes = mins;
+      log.totalMinutes = mins;
+      log.date = dateStr;
+      log.dateISO = dateStr;
+      log.note = note;
+
+      closeModal('editTimeLogModal');
+      saveDatabase();
+      renderApp();
+      showToast('Zaktualizowano czas sesji w historii');
+    }
+
+    function deleteTimeLogFromModal() {
+      const id = document.getElementById('etlLogId').value;
+      if (!id) return;
+      closeModal('editTimeLogModal');
+      deleteTimeLog(id);
+    }
+
+    function deleteTimeLog(logId) {
+      if (!requireDb()) return;
+      if (!confirm('Czy na pewno chcesz usunąć ten wpis sesji z historii? Statystyki czasu zostaną przeliczone.')) return;
+      db.timeLogs = db.timeLogs.filter(l => l.id !== logId);
+      saveDatabase();
+      renderApp();
+      showToast('Usunięto wpis sesji');
     }
 
     // =========================================================================
@@ -2825,6 +3627,9 @@
     // WIDOK 3: "KALENDARZ & ZASOBY CZASU" (TYDZIEŃ / SPOTKANIA / URLOPY)
     // =========================================================================
     let calendarWeekOffset = 0;
+    let calendarMiniPickerOpen = false;
+    let miniCalendarYear = new Date().getFullYear();
+    let miniCalendarMonth = new Date().getMonth();
 
     function changeCalendarWeek(delta) {
       calendarWeekOffset += delta;
@@ -2834,6 +3639,130 @@
     function resetCalendarWeek() {
       calendarWeekOffset = 0;
       renderApp();
+    }
+
+    function toggleCalendarMiniPicker(event) {
+      if (event) event.stopPropagation();
+      calendarMiniPickerOpen = !calendarMiniPickerOpen;
+      if (calendarMiniPickerOpen) {
+        const monday = getMondayOfWeek(calendarWeekOffset);
+        miniCalendarYear = monday.getFullYear();
+        miniCalendarMonth = monday.getMonth();
+      }
+      renderApp();
+    }
+
+    function changeMiniCalendarMonth(delta) {
+      miniCalendarMonth += delta;
+      if (miniCalendarMonth < 0) {
+        miniCalendarMonth = 11;
+        miniCalendarYear--;
+      } else if (miniCalendarMonth > 11) {
+        miniCalendarMonth = 0;
+        miniCalendarYear++;
+      }
+      renderApp();
+    }
+
+    function selectDateFromMiniCalendar(dateISO) {
+      calendarWeekOffset = getWeekOffsetForDate(dateISO);
+      calendarMiniPickerOpen = false;
+      renderApp();
+    }
+
+    function getWeekOffsetForDate(targetIso) {
+      const targetDate = parseLocalDate(targetIso);
+      const thisMonday = getMondayOfWeek(0);
+      thisMonday.setHours(0, 0, 0, 0);
+
+      const targetDay = targetDate.getDay();
+      const targetDiffToMonday = (targetDay === 0 ? -6 : 1) - targetDay;
+      const targetMonday = new Date(targetDate);
+      targetMonday.setDate(targetMonday.getDate() + targetDiffToMonday);
+      targetMonday.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.round((targetMonday - thisMonday) / (86400000 * 7));
+      return diffDays;
+    }
+
+    function renderMiniCalendarDropdown(currentWeekDays) {
+      if (!calendarMiniPickerOpen) return '';
+      const monthNames = [
+        'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
+        'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'
+      ];
+      const monthLabel = `${monthNames[miniCalendarMonth]} ${miniCalendarYear}`;
+
+      const firstDay = new Date(miniCalendarYear, miniCalendarMonth, 1);
+      const startingDay = (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1);
+      const daysInMonth = new Date(miniCalendarYear, miniCalendarMonth + 1, 0).getDate();
+
+      const activeWeekIsos = new Set(currentWeekDays.map(d => d.dateISO));
+      const todayIso = getTodayISO();
+
+      let daysHtml = '';
+      for (let i = 0; i < startingDay; i++) {
+        daysHtml += '<div class="h-8"></div>';
+      }
+
+      for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+        const dStr = String(dayNum).padStart(2, '0');
+        const mStr = String(miniCalendarMonth + 1).padStart(2, '0');
+        const dateIso = `${miniCalendarYear}-${mStr}-${dStr}`;
+
+        const isInActiveWeek = activeWeekIsos.has(dateIso);
+        const isToday = dateIso === todayIso;
+
+        const cap = getDailyCapacity(dateIso);
+        const dueTasks = db.tasks.filter(t => t.dueDate === dateIso && t.status !== 'DONE').length;
+        let dotColor = '';
+        if (cap.isDayOff) {
+          dotColor = 'bg-purple-500';
+        } else if (cap.meetingMinutes >= 120) {
+          dotColor = 'bg-rose-500';
+        } else if (cap.meetingMinutes > 0) {
+          dotColor = 'bg-amber-400';
+        } else if (dueTasks > 0) {
+          dotColor = 'bg-blue-400';
+        }
+
+        daysHtml += `
+          <button type="button" onclick="selectDateFromMiniCalendar('${dateIso}')"
+            class="h-8 w-8 mx-auto rounded-lg text-xs font-mono flex flex-col items-center justify-center relative transition ${
+              isInActiveWeek
+                ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] font-semibold shadow-sm'
+                : 'hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-300'
+            } ${isToday && !isInActiveWeek ? 'ring-1 ring-blue-500 font-semibold' : ''}">
+            <span>${dayNum}</span>
+            ${dotColor ? `<span class="w-1 h-1 rounded-full ${dotColor} absolute bottom-0.5"></span>` : ''}
+          </button>
+        `;
+      }
+
+      return `
+        <div onclick="event.stopPropagation()" class="absolute left-0 top-full mt-2 z-50 w-64 p-3.5 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-black/10 dark:border-white/10 shadow-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <button type="button" onclick="changeMiniCalendarMonth(-1)" class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-xs flex items-center justify-center font-bold">←</button>
+            <span class="text-xs font-semibold text-zinc-800 dark:text-zinc-100">${monthLabel}</span>
+            <button type="button" onclick="changeMiniCalendarMonth(1)" class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-xs flex items-center justify-center font-bold">→</button>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-zinc-400">
+            <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div>So</div><div>Nd</div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1">
+            ${daysHtml}
+          </div>
+
+          <div class="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-[10px] text-zinc-400">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Wolne</span>
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> &gt;2h</span>
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Spotk.</span>
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Termin</span>
+          </div>
+        </div>
+      `;
     }
 
     function getMondayOfWeek(offsetWeeks = 0) {
@@ -2945,9 +3874,15 @@
                 class="px-3 py-1.5 rounded-full text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:opacity-80 transition">
                 Następny →
               </button>
-              <span class="text-xs font-mono font-medium text-zinc-700 dark:text-zinc-200 ml-1">
-                ${weekStartLabel} – ${weekEndLabel}
-              </span>
+              <div class="relative inline-block">
+                <button type="button" onclick="toggleCalendarMiniPicker(event)"
+                  class="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-zinc-700 dark:text-zinc-200 bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center gap-1.5 cursor-pointer">
+                  <span>📅</span>
+                  <span>${weekStartLabel} – ${weekEndLabel}</span>
+                  <span class="text-[10px] opacity-60">▼</span>
+                </button>
+                ${renderMiniCalendarDropdown(days)}
+              </div>
             </div>
 
             <button onclick="openCalendarEventModal(null, '${todayISO}')"
@@ -3004,7 +3939,7 @@
                     <!-- Pasek podziału dnia (wizualny) -->
                     ${!cap.isDayOff ? `
                       <div class="py-2.5">
-                        <div class="w-full h-1.5 rounded-full bg-black/[0.05] dark:bg-white/[0.06] overflow-hidden flex">
+                        <div class="w-full h-1.5 rounded-full bg-black/[0.05] dark:border-white/[0.06] overflow-hidden flex">
                           <div class="bg-blue-500 h-full transition-all" style="width: ${Math.round((cap.focusCapacity / 300) * 100)}%" title="Czas na skupienie (${formatMinutes(cap.focusCapacity)})"></div>
                           <div class="bg-amber-400 h-full transition-all" style="width: ${Math.round((cap.meetingMinutes / 300) * 100)}%" title="Spotkania (${formatMinutes(cap.meetingMinutes)})"></div>
                         </div>
@@ -3025,6 +3960,11 @@
                             </div>
                           </div>
                           <div class="flex items-center gap-2 shrink-0">
+                            ${e.startTime ? `
+                              <span class="font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-200 bg-white dark:bg-[#1C1C1E] px-2 py-0.5 rounded-md border border-black/5 dark:border-white/10">
+                                🕒 ${escapeHtml(e.startTime)}${e.endTime ? '–' + escapeHtml(e.endTime) : ''}
+                              </span>
+                            ` : ''}
                             <span class="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
                               ${e.isAllDay ? 'Cały dzień' : formatMinutes(e.durationMinutes)}
                             </span>
@@ -3074,7 +4014,9 @@
                           <span class="font-mono text-zinc-400">${wDay.dateFormatted}</span>
                         </div>
                         ${wEvents.length > 0 ? wEvents.map(e => `
-                          <div class="text-[11px] text-zinc-500 truncate">📌 ${escapeHtml(e.title)}</div>
+                          <div class="text-[11px] text-zinc-500 truncate">
+                            📌 ${e.startTime ? `<span class="font-mono text-zinc-400">${escapeHtml(e.startTime)} </span>` : ''}${escapeHtml(e.title)}
+                          </div>
                         `).join('') : `<div class="text-[11px] text-zinc-400 italic">Brak zaplanowanych zdarzeń</div>`}
                       </div>
                     `;
@@ -3358,6 +4300,8 @@
       document.getElementById('cemTitle').value = '';
       document.getElementById('cemDateISO').value = defaultDateISO || getTodayISO();
       document.getElementById('cemEndDateISO').value = '';
+      document.getElementById('cemStartTime').value = '';
+      document.getElementById('cemEndTime').value = '';
       document.getElementById('cemDurationMinutes').value = '60';
       document.getElementById('cemAffectsCapacity').checked = true;
       document.getElementById('cemNotes').value = '';
@@ -3369,6 +4313,8 @@
           document.getElementById('cemTitle').value = evt.title || '';
           document.getElementById('cemDateISO').value = evt.dateISO || getTodayISO();
           document.getElementById('cemEndDateISO').value = evt.endDateISO || '';
+          document.getElementById('cemStartTime').value = evt.startTime || '';
+          document.getElementById('cemEndTime').value = evt.endTime || '';
           document.getElementById('cemDurationMinutes').value = evt.durationMinutes || 60;
           document.getElementById('cemAffectsCapacity').checked = evt.affectsCapacity !== false;
           document.getElementById('cemNotes').value = evt.notes || '';
@@ -3383,6 +4329,23 @@
 
       openModal('calendarEventModal');
       setTimeout(() => document.getElementById('cemTitle').focus(), 50);
+    }
+
+    function onCemTimeChange() {
+      const start = document.getElementById('cemStartTime').value;
+      const end = document.getElementById('cemEndTime').value;
+      if (start && end) {
+        const p1 = start.split(':');
+        const p2 = end.split(':');
+        if (p1.length >= 2 && p2.length >= 2) {
+          const min1 = parseInt(p1[0], 10) * 60 + parseInt(p1[1], 10);
+          const min2 = parseInt(p2[0], 10) * 60 + parseInt(p2[1], 10);
+          if (min2 > min1) {
+            const diff = min2 - min1;
+            setCalendarDuration(diff);
+          }
+        }
+      }
     }
 
     function closeCalendarEventModal() {
@@ -3429,6 +4392,8 @@
       const title = document.getElementById('cemTitle').value.trim();
       const dateISO = document.getElementById('cemDateISO').value;
       const endDateISO = document.getElementById('cemEndDateISO').value;
+      const startTime = document.getElementById('cemStartTime').value || '';
+      const endTime = document.getElementById('cemEndTime').value || '';
       const durationMinutes = parseInt(document.getElementById('cemDurationMinutes').value, 10) || 60;
       const affectsCapacity = document.getElementById('cemAffectsCapacity').checked;
       const notes = document.getElementById('cemNotes').value.trim();
@@ -3451,6 +4416,8 @@
           existing.title = title;
           existing.dateISO = dateISO;
           existing.endDateISO = endDateISO || '';
+          existing.startTime = startTime;
+          existing.endTime = endTime;
           existing.durationMinutes = type === 'VACATION' ? 300 : durationMinutes;
           existing.isAllDay = type === 'VACATION';
           existing.affectsCapacity = affectsCapacity;
@@ -3463,6 +4430,8 @@
           title,
           dateISO,
           endDateISO: endDateISO || '',
+          startTime,
+          endTime,
           durationMinutes: type === 'VACATION' ? 300 : durationMinutes,
           isAllDay: type === 'VACATION',
           affectsCapacity,
@@ -3559,13 +4528,17 @@
 
     // Zamykanie dropdownu po kliknięciu poza nim
     document.addEventListener('click', (e) => {
-      ['tm', 'dp'].forEach(prefix => {
+      ['tm', 'dp', 'tmWaiting'].forEach(prefix => {
         const drop = document.getElementById(prefix + 'PersonDropdown');
         const inp = document.getElementById(prefix + 'PersonSearch');
         if (drop && inp && !drop.contains(e.target) && e.target !== inp) {
           drop.classList.add('hidden');
         }
       });
+      if (calendarMiniPickerOpen) {
+        calendarMiniPickerOpen = false;
+        renderApp();
+      }
     });
 
     // =========================================================================
@@ -3573,6 +4546,12 @@
     // =========================================================================
     function selectTaskForCard01(taskId) {
       db.selectedTaskId = taskId;
+      const t = db.tasks.find(x => x.id === taskId);
+      if (t && !timer.running && !timer.isOvertime) {
+        const recMin = getRecommendedPomodoroMinutes(t);
+        timer.plannedMinutes = recMin;
+        timer.remainingSeconds = recMin * 60;
+      }
       saveUiPreferences();
       renderApp();
     }
@@ -3713,7 +4692,7 @@
 
       // Jeśli zadanie jest cykliczne (SOP), automatycznie utwórz nową instancję na kolejny okres
       if (t.recurrence && t.recurrence !== 'NONE') {
-        const nextDue = computeNextRecurrenceDate(t.dueDate || getTodayISO(), t.recurrence);
+        const nextDue = computeNextRecurrenceDate(t.dueDate || getTodayISO(), t.recurrence, t.recurrenceRule);
         const cloned = {
           ...JSON.parse(JSON.stringify(t)),
           id: generateId('tsk'),
@@ -3745,19 +4724,92 @@
       renderApp();
     }
 
-    function computeNextRecurrenceDate(baseIso, recurrence) {
+    function computeNextRecurrenceDate(baseIso, recurrence, rule = null) {
       const parts = baseIso.split('-');
       const y = parseInt(parts[0], 10);
       const m = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
+
+      // Jeśli brak niestandardowej reguły, wykonaj standardową arytmetykę
+      if (!rule || !rule.pattern || rule.pattern === 'STANDARD') {
+        const d = new Date(y, m, day);
+        if (recurrence === 'WEEKLY') d.setDate(d.getDate() + 7);
+        else if (recurrence === 'MONTHLY') d.setMonth(d.getMonth() + 1);
+        else if (recurrence === 'QUARTERLY') d.setMonth(d.getMonth() + 3);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
+      // Reguła tygodniowa z określonym dniem tygodnia
+      if (recurrence === 'WEEKLY' && rule.pattern === 'WEEKLY_DAY') {
+        const targetWeekday = parseInt(rule.weekday != null ? rule.weekday : 1, 10);
+        const d = new Date(y, m, day);
+        d.setDate(d.getDate() + 1);
+        while (d.getDay() !== targetWeekday) {
+          d.setDate(d.getDate() + 1);
+        }
+        return formatLocalYMD(d);
+      }
+
+      // Reguły miesięczne
+      if (recurrence === 'MONTHLY') {
+        let nextYear = y;
+        let nextMonth = m + 1;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+
+        if (rule.pattern === 'DAY_OF_MONTH') {
+          const targetDay = parseInt(rule.day, 10) || 10;
+          const maxDays = new Date(nextYear, nextMonth + 1, 0).getDate();
+          const finalDay = Math.min(targetDay, maxDays);
+          const d = new Date(nextYear, nextMonth, finalDay);
+          return formatLocalYMD(d);
+        }
+
+        if (rule.pattern === 'FIRST_FRIDAY') {
+          const d = new Date(nextYear, nextMonth, 1);
+          while (d.getDay() !== 5) {
+            d.setDate(d.getDate() + 1);
+          }
+          return formatLocalYMD(d);
+        }
+
+        if (rule.pattern === 'LAST_FRIDAY') {
+          const lastDay = new Date(nextYear, nextMonth + 1, 0).getDate();
+          const d = new Date(nextYear, nextMonth, lastDay);
+          while (d.getDay() !== 5) {
+            d.setDate(d.getDate() - 1);
+          }
+          return formatLocalYMD(d);
+        }
+
+        if (rule.pattern === 'FIRST_MONDAY') {
+          const d = new Date(nextYear, nextMonth, 1);
+          while (d.getDay() !== 1) {
+            d.setDate(d.getDate() + 1);
+          }
+          return formatLocalYMD(d);
+        }
+
+        if (rule.pattern === 'LAST_WORKDAY') {
+          const lastDay = new Date(nextYear, nextMonth + 1, 0).getDate();
+          const d = new Date(nextYear, nextMonth, lastDay);
+          while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(formatLocalYMD(d))) {
+            d.setDate(d.getDate() - 1);
+          }
+          return formatLocalYMD(d);
+        }
+      }
+
       const d = new Date(y, m, day);
       if (recurrence === 'WEEKLY') d.setDate(d.getDate() + 7);
       else if (recurrence === 'MONTHLY') d.setMonth(d.getMonth() + 1);
       else if (recurrence === 'QUARTERLY') d.setMonth(d.getMonth() + 3);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const dateStr = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${dateStr}`;
+      return formatLocalYMD(d);
     }
 
     function unblockWaitingTask(taskId, tryAddToMyDay = true) {
@@ -3956,21 +5008,121 @@
     // =========================================================================
     // MODAL DODAWANIA / EDYCJI ZADANIA
     // =========================================================================
+    function onEstMinutesPresetChange(val) {
+      const customWrapper = document.getElementById('tmEstCustomWrapper');
+      const input = document.getElementById('tmEstMinutes');
+      if (val === 'CUSTOM') {
+        customWrapper.classList.remove('hidden');
+        setTimeout(() => input.focus(), 50);
+      } else {
+        customWrapper.classList.add('hidden');
+        input.value = parseInt(val, 10) || 25;
+      }
+    }
+
+    function onRecurrenceSelectChange(rec) {
+      const config = document.getElementById('tmRecurrenceConfig');
+      const monthlyBlock = document.getElementById('tmRecurrenceMonthlyBlock');
+      const weeklyBlock = document.getElementById('tmRecurrenceWeeklyBlock');
+      const daySelectRow = document.getElementById('tmRecurrenceDaySelectRow');
+
+      if (rec === 'NONE') {
+        config.classList.add('hidden');
+      } else {
+        config.classList.remove('hidden');
+        if (rec === 'MONTHLY') {
+          monthlyBlock.classList.remove('hidden');
+          weeklyBlock.classList.add('hidden');
+          onRecurrenceRuleChange();
+        } else if (rec === 'WEEKLY') {
+          monthlyBlock.classList.add('hidden');
+          weeklyBlock.classList.remove('hidden');
+          daySelectRow.classList.add('hidden');
+        } else {
+          monthlyBlock.classList.add('hidden');
+          weeklyBlock.classList.add('hidden');
+          daySelectRow.classList.add('hidden');
+        }
+        updateRecurrenceHint();
+      }
+    }
+
+    function onRecurrenceRuleChange() {
+      const rule = document.getElementById('tmRecurrenceMonthlyRule').value;
+      const daySelectRow = document.getElementById('tmRecurrenceDaySelectRow');
+      if (rule === 'DAY_OF_MONTH') {
+        daySelectRow.classList.remove('hidden');
+      } else {
+        daySelectRow.classList.add('hidden');
+      }
+      updateRecurrenceHint();
+    }
+
+    function onRecurrenceDaySelectChange(val) {
+      updateRecurrenceHint();
+    }
+
+    function onRecurrenceWeekdayChange(val) {
+      updateRecurrenceHint();
+    }
+
+    function onRecurrenceFirstDateChange(val) {
+      const dueInput = document.getElementById('tmDueDate');
+      if (val && !dueInput.value) {
+        dueInput.value = val;
+      }
+      updateRecurrenceHint();
+    }
+
+    function updateRecurrenceHint() {
+      const rec = document.getElementById('tmRecurrence').value;
+      const hint = document.getElementById('tmRecurrenceHint');
+      if (!hint) return;
+      if (rec === 'NONE') {
+        hint.textContent = 'Zadanie jednorazowe.';
+        return;
+      }
+      const firstDate = document.getElementById('tmRecurrenceFirstDate').value;
+      const firstDateLabel = firstDate ? ` (start: ${firstDate})` : '';
+
+      if (rec === 'WEEKLY') {
+        const dayNames = ['niedzielę', 'poniedziałek', 'wtorek', 'środę', 'czwartek', 'piątek', 'sobotę'];
+        const dayIdx = parseInt(document.getElementById('tmRecurrenceWeekdaySelect').value, 10) || 1;
+        hint.textContent = `Zadanie będzie wznawiane w każdy ${dayNames[dayIdx]}${firstDateLabel}.`;
+      } else if (rec === 'MONTHLY') {
+        const rule = document.getElementById('tmRecurrenceMonthlyRule').value;
+        const day = document.getElementById('tmRecurrenceDaySelect').value;
+        if (rule === 'DAY_OF_MONTH') {
+          hint.textContent = `Zadanie będzie wznawiane na ${day}. dzień każdego miesiąca${firstDateLabel}.`;
+        } else if (rule === 'FIRST_FRIDAY') {
+          hint.textContent = `Zadanie będzie wznawiane w pierwszy piątek każdego miesiąca${firstDateLabel}.`;
+        } else if (rule === 'LAST_FRIDAY') {
+          hint.textContent = `Zadanie będzie wznawiane w ostatni piątek każdego miesiąca${firstDateLabel}.`;
+        } else if (rule === 'FIRST_MONDAY') {
+          hint.textContent = `Zadanie będzie wznawiane w pierwszy poniedziałek każdego miesiąca${firstDateLabel}.`;
+        } else if (rule === 'LAST_WORKDAY') {
+          hint.textContent = `Zadanie będzie wznawiane w ostatni dzień roboczy każdego miesiąca${firstDateLabel}.`;
+        }
+      } else if (rec === 'QUARTERLY') {
+        hint.textContent = `Zadanie będzie wznawiane co kwartał (+3 mies.)${firstDateLabel}.`;
+      }
+    }
+
+    function toggleTaskModalWaiting(checked) {
+      const details = document.getElementById('tmWaitingDetails');
+      if (checked) {
+        details.classList.remove('hidden');
+        setTimeout(() => document.getElementById('tmWaitingPersonSearch').focus(), 50);
+      } else {
+        details.classList.add('hidden');
+      }
+    }
+
     function openTaskModal(taskId = null) {
       if (!requireDb()) return;
       const catSelect = document.getElementById('tmCategoryId');
-      catSelect.innerHTML = db.categories.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
-
-      // Renderowanie dynamicznych przycisków szablonów SOP
-      const sopContainer = document.getElementById('tmSopButtonsContainer');
-      if (sopContainer) {
-        sopContainer.innerHTML = (db.sopTemplates || []).map(s => `
-          <button type="button" onclick="applySopTemplate('${s.id}')"
-            class="text-[10px] px-2 py-0.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
-            + ${escapeHtml(s.name)}
-          </button>
-        `).join('');
-      }
+      catSelect.innerHTML = `<option value="">-- Wybierz kategorię (opcjonalnie) --</option>` +
+        db.categories.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
 
       const delBtn = document.getElementById('tmDeleteBtn');
 
@@ -3980,15 +5132,65 @@
         document.getElementById('taskModalHeader').textContent = 'Edycja zadania';
         document.getElementById('tmTaskId').value = t.id;
         document.getElementById('tmTitle').value = t.title;
-        const p = getPerson(t.requesterPersonId || t.personId);
-        document.getElementById('tmPersonId').value = p.id;
-        document.getElementById('tmPersonSearch').value = p.canonicalName;
-        document.getElementById('tmCategoryId').value = t.categoryId;
-        document.getElementById('tmUrgencyTag').value = t.urgencyTag;
+        const p = (t.requesterPersonId || t.personId) ? getPerson(t.requesterPersonId || t.personId) : null;
+        document.getElementById('tmPersonId').value = p ? p.id : '';
+        document.getElementById('tmPersonSearch').value = p ? p.canonicalName : '';
+        document.getElementById('tmCategoryId').value = t.categoryId || '';
+        document.getElementById('tmUrgencyTag').value = t.urgencyTag || 'NORMAL';
         document.getElementById('tmDueDate').value = t.dueDate || '';
         document.getElementById('tmImportance').value = t.importance || 'HIGH';
-        document.getElementById('tmEstMinutes').value = t.estimatedMinutes || 45;
+
+        // Estymacja
+        const est = parseInt(t.estimatedMinutes, 10) || 25;
+        document.getElementById('tmEstMinutes').value = est;
+        if ([15, 25, 30, 45, 60, 90, 120].includes(est)) {
+          document.getElementById('tmEstMinutesPreset').value = String(est);
+          document.getElementById('tmEstCustomWrapper').classList.add('hidden');
+        } else {
+          document.getElementById('tmEstMinutesPreset').value = 'CUSTOM';
+          document.getElementById('tmEstCustomWrapper').classList.remove('hidden');
+        }
+
+        // Cykliczność
         document.getElementById('tmRecurrence').value = t.recurrence || 'NONE';
+        const recConfig = document.getElementById('tmRecurrenceConfig');
+        if (t.recurrence && t.recurrence !== 'NONE') {
+          recConfig.classList.remove('hidden');
+          const rule = t.recurrenceRule || {};
+          document.getElementById('tmRecurrenceFirstDate').value = rule.firstDate || t.dueDate || '';
+          if (t.recurrence === 'MONTHLY') {
+            document.getElementById('tmRecurrenceMonthlyRule').value = rule.pattern || 'DAY_OF_MONTH';
+            document.getElementById('tmRecurrenceDaySelect').value = String(rule.day || 10);
+          } else if (t.recurrence === 'WEEKLY') {
+            document.getElementById('tmRecurrenceWeekdaySelect').value = String(rule.weekday != null ? rule.weekday : 2);
+          }
+          onRecurrenceSelectChange(t.recurrence);
+        } else {
+          recConfig.classList.add('hidden');
+          document.getElementById('tmRecurrenceFirstDate').value = t.dueDate || '';
+        }
+
+        // Czekam na kogoś
+        const isWaiting = t.status === 'WAITING_FOR';
+        const waitToggle = document.getElementById('tmWaitingToggle');
+        const waitDetails = document.getElementById('tmWaitingDetails');
+        waitToggle.checked = isWaiting;
+        if (isWaiting) {
+          waitDetails.classList.remove('hidden');
+          const wpId = t.waitingForPersonId || (t.waitingFor && t.waitingFor.personId);
+          const wp = wpId ? getPerson(wpId) : null;
+          document.getElementById('tmWaitingPersonId').value = wp ? wp.id : '';
+          document.getElementById('tmWaitingPersonSearch').value = wp ? wp.canonicalName : '';
+          document.getElementById('tmWaitingReason').value = t.waitingForReason || (t.waitingFor && t.waitingFor.reason) || '';
+          document.getElementById('tmWaitingFollowUp').value = (t.waitingFor && t.waitingFor.followUpDate) || '';
+        } else {
+          waitDetails.classList.add('hidden');
+          document.getElementById('tmWaitingPersonId').value = '';
+          document.getElementById('tmWaitingPersonSearch').value = '';
+          document.getElementById('tmWaitingReason').value = '';
+          document.getElementById('tmWaitingFollowUp').value = '';
+        }
+
         document.getElementById('tmInMyDay').checked = !!(t.inMyDay || t.isMyDay);
         document.getElementById('tmMilestonesText').value = ((t.milestones || t.checklist) || []).map(m => m.title).join('\n');
         document.getElementById('tmNotes').value = t.notesAndContext || t.contextNotes || '';
@@ -3997,15 +5199,36 @@
         document.getElementById('taskModalHeader').textContent = 'Nowe zadanie';
         document.getElementById('tmTaskId').value = '';
         document.getElementById('tmTitle').value = '';
-        const defaultP = db.people[0] || { id: 'per_wlasne', canonicalName: 'Praca własna' };
-        document.getElementById('tmPersonId').value = defaultP.id;
-        document.getElementById('tmPersonSearch').value = defaultP.canonicalName;
+        document.getElementById('tmPersonId').value = '';
+        document.getElementById('tmPersonSearch').value = '';
+        document.getElementById('tmCategoryId').value = '';
         document.getElementById('tmUrgencyTag').value = 'NORMAL';
-        document.getElementById('tmDueDate').value = addDaysISO(2);
+        document.getElementById('tmDueDate').value = '';
         document.getElementById('tmImportance').value = 'HIGH';
-        document.getElementById('tmEstMinutes').value = 45;
+
+        // Estymacja - czysty start
+        document.getElementById('tmEstMinutesPreset').value = '25';
+        document.getElementById('tmEstMinutes').value = 25;
+        document.getElementById('tmEstCustomWrapper').classList.add('hidden');
+
+        // Cykliczność - czysty start
         document.getElementById('tmRecurrence').value = 'NONE';
-        document.getElementById('tmInMyDay').checked = getMyDayTasks().length < 6;
+        document.getElementById('tmRecurrenceConfig').classList.add('hidden');
+        document.getElementById('tmRecurrenceFirstDate').value = '';
+        document.getElementById('tmRecurrenceMonthlyRule').value = 'DAY_OF_MONTH';
+        document.getElementById('tmRecurrenceDaySelect').value = '10';
+        document.getElementById('tmRecurrenceWeekdaySelect').value = '2';
+        updateRecurrenceHint();
+
+        // Czekam na kogoś - czysty start
+        document.getElementById('tmWaitingToggle').checked = false;
+        document.getElementById('tmWaitingDetails').classList.add('hidden');
+        document.getElementById('tmWaitingPersonId').value = '';
+        document.getElementById('tmWaitingPersonSearch').value = '';
+        document.getElementById('tmWaitingReason').value = '';
+        document.getElementById('tmWaitingFollowUp').value = '';
+
+        document.getElementById('tmInMyDay').checked = false;
         document.getElementById('tmMilestonesText').value = '';
         document.getElementById('tmNotes').value = '';
         delBtn.classList.add('hidden');
@@ -4051,15 +5274,53 @@
         return;
       }
 
-      const personId = document.getElementById('tmPersonId').value || (db.people[0] && db.people[0].id);
-      const categoryId = document.getElementById('tmCategoryId').value || (db.categories[0] && db.categories[0].id);
-      const urgencyTag = document.getElementById('tmUrgencyTag').value;
-      const dueDate = document.getElementById('tmDueDate').value || null;
-      const importance = document.getElementById('tmImportance').value;
-      const estimatedMinutes = parseInt(document.getElementById('tmEstMinutes').value, 10) || 45;
+      const personId = document.getElementById('tmPersonId').value || (db.people[0] && db.people[0].id) || 'per_wlasne';
+      const categoryId = document.getElementById('tmCategoryId').value || (db.categories[0] && db.categories[0].id) || 'cat_wlasne';
+      const urgencyTag = document.getElementById('tmUrgencyTag').value || 'NORMAL';
+      let dueDate = document.getElementById('tmDueDate').value || null;
+      const importance = document.getElementById('tmImportance').value || 'HIGH';
+      const estimatedMinutes = parseInt(document.getElementById('tmEstMinutes').value, 10) || 25;
       const recurrence = document.getElementById('tmRecurrence').value;
       let inMyDay = document.getElementById('tmInMyDay').checked;
       const notesAndContext = document.getElementById('tmNotes').value;
+
+      // Cykliczność reguła
+      let recurrenceRule = null;
+      if (recurrence && recurrence !== 'NONE') {
+        const firstDate = document.getElementById('tmRecurrenceFirstDate').value || dueDate || getTodayISO();
+        if (!dueDate) {
+          dueDate = firstDate;
+        }
+        const rulePattern = document.getElementById('tmRecurrenceMonthlyRule').value;
+        const ruleDay = parseInt(document.getElementById('tmRecurrenceDaySelect').value, 10) || 10;
+        const ruleWeekday = parseInt(document.getElementById('tmRecurrenceWeekdaySelect').value, 10) || 2;
+        recurrenceRule = {
+          pattern: recurrence === 'MONTHLY' ? rulePattern : (recurrence === 'WEEKLY' ? 'WEEKLY_DAY' : 'STANDARD'),
+          day: ruleDay,
+          weekday: ruleWeekday,
+          firstDate
+        };
+      }
+
+      // Opcja Czekam na kogoś
+      const isWaiting = document.getElementById('tmWaitingToggle').checked;
+      let waitingForPersonId = null;
+      let waitingForReason = null;
+      let waitingSince = null;
+      let waitingFor = null;
+
+      if (isWaiting) {
+        waitingForPersonId = document.getElementById('tmWaitingPersonId').value || personId;
+        waitingForReason = document.getElementById('tmWaitingReason').value.trim() || 'Oczekiwanie na informację / akceptację';
+        const followUp = document.getElementById('tmWaitingFollowUp').value || null;
+        waitingSince = new Date().toISOString();
+        waitingFor = {
+          personId: waitingForPersonId,
+          reason: waitingForReason,
+          followUpDate: followUp
+        };
+        inMyDay = false;
+      }
 
       // Strażnik 1.1: Ścisła walidacja limitu Ivy Lee (max 6 zadań w Mój Dzień)
       const currentMyDay = getMyDayTasks();
@@ -4090,13 +5351,28 @@
           t.importance = importance;
           t.estimatedMinutes = estimatedMinutes;
           t.recurrence = recurrence;
+          t.recurrenceRule = recurrenceRule;
           t.inMyDay = inMyDay;
           t.isMyDay = inMyDay;
           t.notesAndContext = notesAndContext;
           t.contextNotes = notesAndContext;
 
+          if (isWaiting) {
+            t.status = 'WAITING_FOR';
+            t.waitingForPersonId = waitingForPersonId;
+            t.waitingForReason = waitingForReason;
+            t.waitingSince = t.waitingSince || waitingSince;
+            t.waitingFor = waitingFor;
+          } else if (t.status === 'WAITING_FOR') {
+            t.status = 'TODO';
+            t.waitingForPersonId = null;
+            t.waitingForReason = null;
+            t.waitingSince = null;
+            t.waitingFor = null;
+          }
+
           // Zachowaj status istniejących kroków o tym samym tytule
-          t.milestones = lines.map((line, idx) => {
+          t.milestones = lines.map((line) => {
             const existing = (t.milestones || []).find(m => m.title === line);
             return existing || { id: generateId('m'), title: line, isDone: false };
           });
@@ -4155,27 +5431,32 @@
           importance,
           estimatedMinutes,
           recurrence,
-          status: 'TODO',
+          recurrenceRule,
+          status: isWaiting ? 'WAITING_FOR' : 'TODO',
+          waitingForPersonId: isWaiting ? waitingForPersonId : null,
+          waitingForReason: isWaiting ? waitingForReason : null,
+          waitingSince: isWaiting ? waitingSince : null,
+          waitingFor: isWaiting ? waitingFor : null,
           inMyDay,
           isMyDay: inMyDay,
           myDayOrder: inMyDay ? getMyDayTasks().length + 1 : null,
           notesAndContext,
           contextNotes: notesAndContext,
           milestones: lines.map((line) => ({ id: generateId('m'), title: line, isDone: false })),
-          checklist: null, // zostanie powiązane poniżej
+          checklist: null,
           createdAt: new Date().toISOString(),
           createdAtISO: new Date().toISOString(),
           auditLog: [{
             id: generateId('log'),
             timestamp: new Date().toISOString(),
             changeType: 'CREATED',
-            reasonComment: `Utworzono zadanie${dueDate ? ' (termin: ' + dueDate + ')' : ''}`
+            reasonComment: `Utworzono zadanie${dueDate ? ' (termin: ' + dueDate + ')' : ''}${isWaiting ? ' [Czekam na kogoś]' : ''}`
           }]
         };
         newTask.checklist = newTask.milestones;
         db.tasks.unshift(newTask);
         if (inMyDay) db.selectedTaskId = newTask.id;
-        showToast('Dodano nowe zadanie');
+        showToast(isWaiting ? 'Dodano zadanie oczekujące na odpowiedź' : 'Dodano nowe zadanie');
       }
 
       closeTaskModal();
