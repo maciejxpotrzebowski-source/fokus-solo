@@ -173,9 +173,6 @@
     <button onclick="openDbFileModal()" class="px-3 py-1 rounded-full bg-white/25 hover:bg-white/35 transition font-semibold">Podłącz</button>
   </div>
 
-  <!-- DYSKRETNE POWIADOMIENIE TOAST (ZAMIAST ALERTÓW) -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
-
   <!-- ========================================================================= -->
   <!-- MODAL 1: DODAWANIE / EDYCJA ZADANIA (5 PYTAŃ + SŁOWNIK Z ALIASAMI)        -->
   <!-- ========================================================================= -->
@@ -738,6 +735,9 @@
     </div>
   </div>
 
+  <!-- DYSKRETNE POWIADOMIENIE TOAST (NAJWYŻSZA WARSTWA Z-INDEX NAD WSZYSTKIMI MODALAMI) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end" style="z-index: 99999;"></div>
+
   <script>
     // =========================================================================
     // ARCHITEKTURA DANYCH I STAN APLIKACJI (FOKUS SOLO CHROME v4.2 BENTO)
@@ -824,10 +824,22 @@
     let fileHandle = null;
     let directoryHandle = null;
 
-    // Uniwersalne kontrolki otwierania/zamykania modali (Uproszczenie 2.6)
+    // Uniwersalne kontrolki otwierania/zamykania modali ze stosem z-index (Dynamic Modal Stacking)
+    const activeModalsStack = [];
+
     function openModal(id) {
       const el = document.getElementById(id);
       if (!el) return;
+      const idx = activeModalsStack.indexOf(id);
+      if (idx !== -1) {
+        activeModalsStack.splice(idx, 1);
+      }
+      activeModalsStack.push(id);
+
+      // Bazowy z-index: 50. Każdy kolejny nakładający się modal otrzymuje +10 (50, 60, 70...)
+      const zIndex = 50 + ((activeModalsStack.length - 1) * 10);
+      el.style.zIndex = zIndex;
+
       el.classList.remove('hidden');
       el.classList.add('flex');
     }
@@ -837,6 +849,11 @@
       if (!el) return;
       el.classList.add('hidden');
       el.classList.remove('flex');
+      el.style.zIndex = '';
+      const idx = activeModalsStack.indexOf(id);
+      if (idx !== -1) {
+        activeModalsStack.splice(idx, 1);
+      }
     }
 
     // Bezpieczne generowanie unikalnych ID bez kolizji (Uproszczenie 2.7)
@@ -1466,13 +1483,15 @@
 
     function showToast(msg) {
       const container = document.getElementById('toastContainer');
+      if (!container) return;
       const el = document.createElement('div');
-      el.className = 'px-4 py-2.5 rounded-full bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] text-xs font-medium shadow-lg fade-in';
+      el.className = 'px-4 py-2.5 rounded-full bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] text-xs font-semibold shadow-2xl border border-black/10 dark:border-white/20 fade-in pointer-events-auto select-none';
       el.textContent = msg;
       container.appendChild(el);
       setTimeout(() => {
         el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s ease';
+        el.style.transform = 'translateY(6px)';
+        el.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
         setTimeout(() => el.remove(), 250);
       }, 2600);
     }
@@ -6251,18 +6270,15 @@
 
     function openDbFileModal() {
       renderDbModalContent();
-      const m = document.getElementById('dbFileModal');
-      if (m) {
-        m.classList.remove('hidden');
-        m.classList.add('flex');
-      }
+      openModal('dbFileModal');
     }
 
     function closeDbFileModal() {
-      const m = document.getElementById('dbFileModal') || document.getElementById('oneDriveModal');
-      if (m) {
-        m.classList.add('hidden');
-        m.classList.remove('flex');
+      closeModal('dbFileModal');
+      const legacy = document.getElementById('oneDriveModal');
+      if (legacy) {
+        legacy.classList.add('hidden');
+        legacy.classList.remove('flex');
       }
     }
 
@@ -6463,11 +6479,20 @@
       const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
 
       if (e.key === 'Escape') {
-        closeTaskModal();
-        closeDupochronModal();
-        closeManualTimeModal();
-        closeDbFileModal();
-        closeCalendarEventModal();
+        if (activeModalsStack.length > 0) {
+          const topModalId = activeModalsStack[activeModalsStack.length - 1];
+          closeModal(topModalId);
+        } else {
+          closeTaskModal();
+          closeDupochronModal();
+          closeManualTimeModal();
+          closeDbFileModal();
+          closeCalendarEventModal();
+          closeModal('meetingConflictModal');
+          closeModal('confirmPomodoroSessionModal');
+          closeModal('editTimeLogModal');
+          closeModal('customTimerModal');
+        }
       } else if (!isTyping) {
         if (e.key === 'n' || e.key === 'N') {
           e.preventDefault();

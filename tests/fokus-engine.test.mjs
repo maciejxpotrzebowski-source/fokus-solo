@@ -589,5 +589,13 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.equal(getRecommendedPomodoroMinutes({ estimatedMinutes: 60 }), 25);
       assert.equal(getRecommendedPomodoroMinutes(null), 25);
     });
+
+    test('Fokus.html posiada najwyższy z-index dla powiadomień toast i dynamiczny stos modali', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="toastContainer"'), 'Brak kontenera toastContainer');
+      assert.ok(content.includes('z-[9999]'), 'Brak klasy z-[9999] dla toastContainer');
+      assert.ok(content.includes('activeModalsStack'), 'Brak stosu activeModalsStack');
+      assert.ok(content.includes('openDbFileModal'), 'Brak funkcji openDbFileModal');
+    });
   });
 });
