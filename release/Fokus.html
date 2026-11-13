@@ -87,17 +87,9 @@
   <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#F5F5F7]/85 dark:bg-[#000000]/80 border-b border-black/[0.04] dark:border-[#2C2C2E]/70 transition-colors shrink-0">
     <div class="max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-4">
       
-      <!-- Lewy powiększony logotyp FOKUS SOLO + status aktywnego stopera -->
+      <!-- Lewy powiększony logotyp FOKUS + status aktywnego stopera -->
       <div class="flex items-center gap-3 shrink-0">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-2xl bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] flex items-center justify-center font-bold text-sm tracking-tight shadow-sm">
-            F
-          </div>
-          <div class="flex flex-col">
-            <span class="text-sm sm:text-base font-bold tracking-tight leading-none text-[#1D1D1F] dark:text-white">Fokus</span>
-            <span class="text-[9px] text-zinc-400 font-semibold tracking-wider uppercase mt-0.5">System Skupienia</span>
-          </div>
-        </div>
+        <span onclick="switchView('DAY')" class="cursor-pointer text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>
         <span id="headerMiniTimer" onclick="switchView('DAY')" class="hidden cursor-pointer items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-black/[0.05] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition"></span>
       </div>
 
@@ -393,10 +385,10 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
-            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">+</code> = zrobione (✓), <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">-</code> = do zrobienia (-)</span>
+            <span class="text-[10px] text-zinc-400">Pary: <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">+</code> = zrobione (✓), <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">-</code> = do zrobienia (○)</span>
           </div>
           <textarea id="tmMilestonesText" rows="3" onblur="normalizeMilestonesTextarea()"
-            placeholder="+ Eksport tabeli z ERP (ukończony)&#10;- Walidacja rekordów (do zrobienia)&#10;- Wysłanie podsumowania"
+            placeholder="✓ Eksport tabeli z ERP (ukończony)&#10;○ Walidacja rekordów (do zrobienia)&#10;○ Wysłanie podsumowania"
             class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1 font-mono"></textarea>
         </div>
 
@@ -1493,6 +1485,8 @@
       let title = line;
       if (title.startsWith('-')) {
         title = title.slice(1).trim();
+      } else if (title.startsWith('○') || title.startsWith('\u25CB')) {
+        title = title.replace(/^[\u25CB]\s*/, '').trim();
       } else if (/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/.test(title)) {
         title = title.replace(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/, '').trim();
       }
@@ -1508,7 +1502,7 @@
       if (!Array.isArray(milestones)) return '';
       return milestones.map(m => {
         const title = (m && m.title ? m.title : '').trim();
-        return m && m.isDone ? `✓ ${title}` : `- ${title}`;
+        return m && m.isDone ? `✓ ${title}` : `○ ${title}`;
       }).join('\n');
     }
 
@@ -1521,7 +1515,7 @@
         if (!trimmed) return line;
         const parsed = parseMilestoneLine(trimmed);
         if (!parsed) return line;
-        return parsed.isDone ? `✓ ${parsed.title}` : `- ${parsed.title}`;
+        return parsed.isDone ? `✓ ${parsed.title}` : `○ ${parsed.title}`;
       }).join('\n');
       if (normalized !== area.value) {
         area.value = normalized;
@@ -5775,9 +5769,9 @@
     function applySopPreset(type) {
       const area = document.getElementById('tmMilestonesText');
       if (type === 'RFQ') {
-        area.value = 'Weryfikacja kompletności ofert handlowych\nSprowadzenie cen do wspólnej bazy (Incoterms DDP)\nBudowa matrycy porównawczej TCO w Excelu\nRekomendacja wyboru dostawcy';
+        area.value = '○ Weryfikacja kompletności ofert handlowych\n○ Sprowadzenie cen do wspólnej bazy (Incoterms DDP)\n○ Budowa matrycy porównawczej TCO w Excelu\n○ Rekomendacja wyboru dostawcy';
       } else if (type === 'RAPORT') {
-        area.value = 'Eksport transakcji z Business Central do CSV\nOczyszczenie anomalii i pustych rekordów\nAktualizacja modelu danych w Power BI\nKomentarz do odchyleń i wysyłka';
+        area.value = '○ Eksport transakcji z Business Central do CSV\n○ Oczyszczenie anomalii i pustych rekordów\n○ Aktualizacja modelu danych w Power BI\n○ Komentarz do odchyleń i wysyłka';
       }
     }
 
@@ -5786,7 +5780,11 @@
       if (!tpl) return;
       const area = document.getElementById('tmMilestonesText');
       if (area) {
-        area.value = (tpl.steps || []).join('\n');
+        area.value = (tpl.steps || []).map(s => {
+          const trimmed = s.trim();
+          if (trimmed.startsWith('○ ') || trimmed.startsWith('✓ ') || trimmed.startsWith('+ ') || trimmed.startsWith('- ')) return trimmed;
+          return `○ ${trimmed}`;
+        }).join('\n');
       }
     }
 

@@ -778,7 +778,7 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.equal(getFirstWorkdayOfMonth(2027, 0), '2027-01-04');
     });
 
-    test('Parser i formatowanie kroków milowych: + ze spacją lub bez i ✓ oznaczają wykonanie, - i brak znaku oznaczają brak wykonania (domyślny prefiks - dla niewykonanych, rezygnacja z v, x i [x])', () => {
+    test('Parser i formatowanie kroków milowych: pary ✓ i + (wykonane) oraz ○ i - (niewykonane)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('parseMilestoneLine'), 'Brak funkcji parseMilestoneLine');
       assert.ok(content.includes('formatMilestonesForTextarea'), 'Brak funkcji formatMilestonesForTextarea');
@@ -802,6 +802,8 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         let title = line;
         if (title.startsWith('-')) {
           title = title.slice(1).trim();
+        } else if (title.startsWith('○') || title.startsWith('\u25CB')) {
+          title = title.replace(/^[\u25CB]\s*/, '').trim();
         } else if (/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/.test(title)) {
           title = title.replace(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/, '').trim();
         }
@@ -817,7 +819,7 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         if (!Array.isArray(milestones)) return '';
         return milestones.map(m => {
           const title = (m && m.title ? m.title : '').trim();
-          return m && m.isDone ? `✓ ${title}` : `- ${title}`;
+          return m && m.isDone ? `✓ ${title}` : `○ ${title}`;
         }).join('\n');
       }
 
@@ -829,9 +831,11 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.deepEqual(parseMilestoneLine('✓ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
       assert.deepEqual(parseMilestoneLine('✓Eksport bazy'), { title: 'Eksport bazy', isDone: true });
 
-      // Minus ze spacją i bez spacji -> isDone: false (oznaczenie niewykonania)
+      // Minus i kółko ○ ze spacją i bez spacji -> isDone: false (oznaczenie niewykonania)
       assert.deepEqual(parseMilestoneLine('- Eksport bazy'), { title: 'Eksport bazy', isDone: false });
       assert.deepEqual(parseMilestoneLine('-Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+      assert.deepEqual(parseMilestoneLine('○ Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+      assert.deepEqual(parseMilestoneLine('○Eksport bazy'), { title: 'Eksport bazy', isDone: false });
 
       // Brak znaku na początku -> isDone: false
       assert.deepEqual(parseMilestoneLine('Eksport bazy'), { title: 'Eksport bazy', isDone: false });
@@ -841,12 +845,12 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.deepEqual(parseMilestoneLine('x Eksport bazy'), { title: 'x Eksport bazy', isDone: false });
       assert.deepEqual(parseMilestoneLine('[x] Eksport bazy'), { title: '[x] Eksport bazy', isDone: false });
 
-      // Formatowanie: zrobione otrzymują ✓ , niezrobione otrzymują domyślny myślnik - 
+      // Formatowanie: zrobione otrzymują ✓ , niezrobione otrzymują eleganckie kółko ○
       const formatted = formatMilestonesForTextarea([
         { title: 'Krok 1', isDone: true },
         { title: 'Krok 2', isDone: false }
       ]);
-      assert.equal(formatted, '✓ Krok 1\n- Krok 2');
+      assert.equal(formatted, '✓ Krok 1\n○ Krok 2');
     });
 
     test('Modal dialog dla własnej estymacji czasu (customEstimateModal) z czystym polem', () => {
@@ -861,6 +865,12 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
     test('Dwuklik na zadaniu w sekcji Czekam na otwiera edycję zadania', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('ondblclick="openTaskModal(\'${w.id}\')"'), 'Brak obsługi dwukliku w sekcji Czekam na');
+    });
+
+    test('Powiększone minimalistyczne logo Fokus w nagłówku (usunięto literę F w kółku i napis System Skupienia)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>'), 'Brak powiększonego logotypu Fokus');
+      assert.ok(!content.includes('System Skupienia'), 'Logo nie powinno zawierać tekstu System Skupienia');
     });
 
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
