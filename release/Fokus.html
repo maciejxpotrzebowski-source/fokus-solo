@@ -398,9 +398,10 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
-            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">v </code> lub <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">✓ </code> na początku linii = zrobione</span>
+            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">+</code> na początku linii = zrobione (zamieni się na ✓)</span>
           </div>
-          <textarea id="tmMilestonesText" rows="3" placeholder="✓ Eksport tabeli z ERP (ukończony)&#10;Walidacja rekordów (wpisz v lub ✓ na początku, aby oznaczyć jako zrobione)&#10;Wysłanie podsumowania"
+          <textarea id="tmMilestonesText" rows="3" onblur="normalizeMilestonesTextarea()"
+            placeholder="+ Eksport tabeli z ERP (ukończony)&#10;Walidacja rekordów (do zrobienia)&#10;Wysłanie podsumowania"
             class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1 font-mono"></textarea>
         </div>
 
@@ -1453,33 +1454,41 @@
       const line = (rawLine || '').trim();
       if (!line) return null;
 
-      // Sprawdź czy linia zaczyna się od znacznika ukończenia:
-      // Obsługiwane prefiksy:
-      // - "✓ " lub "✔ "
-      // - "v " lub "V " (najwygodniejszy z klawiatury bez Shift)
-      // - "x " lub "X " (standard Todo.txt)
-      // - "+ "
-      // - "[x] " lub "[X] " lub "[v] " lub "[V] "
-      // - "- [x] " lub "* [x] "
-      const doneMatch = line.match(/^(\u2713|\u2714|\[[xXvV]\]|[vVxX\+]|[-*]\s*\[[xXvV]\])\s+(.*)$/);
-      if (doneMatch) {
-        return {
-          title: doneMatch[2].trim(),
-          isDone: true
-        };
+      // 1. Znak wykonania zadania:
+      // - '+' na początku linii (niezależnie czy ze spacją: "+ zadanie" czy bez: "+zadanie")
+      // - '✓' lub '✔' na początku linii (ze spacją lub bez: "✓ zadanie", "✓zadanie")
+      // - 'v ' lub 'V ' (litera v ze spacją)
+      // Uwaga: rezygnujemy ze znaków x oraz [x]
+      if (line.startsWith('+')) {
+        const title = line.slice(1).trim();
+        if (!title) return null;
+        return { title, isDone: true };
+      }
+      if (line.startsWith('✓') || line.startsWith('✔')) {
+        const title = line.replace(/^[\u2713\u2714]\s*/, '').trim();
+        if (!title) return null;
+        return { title, isDone: true };
+      }
+      if (/^[vV]\s+/.test(line)) {
+        const title = line.replace(/^[vV]\s+/, '').trim();
+        if (!title) return null;
+        return { title, isDone: true };
       }
 
-      // Sprawdź czy linia ma znacznik pusty np. "[ ] ", "- [ ] ", "- ", "* "
-      const emptyMatch = line.match(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*])\s+(.*)$/);
-      if (emptyMatch) {
-        return {
-          title: emptyMatch[2].trim(),
-          isDone: false
-        };
+      // 2. Znak niewykonania zadania:
+      // - '-' na początku linii (ze spacją lub bez: "- zadanie", "-zadanie")
+      // - '[ ] ' lub '- [ ] '
+      // - lub brak jakiegokolwiek prefiksu (zwykły tekst)
+      let title = line;
+      if (title.startsWith('-')) {
+        title = title.slice(1).trim();
+      } else if (/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/.test(title)) {
+        title = title.replace(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/, '').trim();
       }
 
+      if (!title) return null;
       return {
-        title: line,
+        title,
         isDone: false
       };
     }
@@ -1490,6 +1499,22 @@
         const title = (m && m.title ? m.title : '').trim();
         return m && m.isDone ? `✓ ${title}` : title;
       }).join('\n');
+    }
+
+    function normalizeMilestonesTextarea() {
+      const area = document.getElementById('tmMilestonesText');
+      if (!area) return;
+      const lines = area.value.split('\n');
+      const normalized = lines.map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return line;
+        const parsed = parseMilestoneLine(trimmed);
+        if (!parsed) return line;
+        return parsed.isDone ? `✓ ${parsed.title}` : parsed.title;
+      }).join('\n');
+      if (normalized !== area.value) {
+        area.value = normalized;
+      }
     }
 
     function getCombinedFreeDays(calendarEvents = (typeof db !== 'undefined' ? db.calendarEvents : [])) {

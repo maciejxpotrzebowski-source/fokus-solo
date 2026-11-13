@@ -778,23 +778,44 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.equal(getFirstWorkdayOfMonth(2027, 0), '2027-01-04');
     });
 
-    test('Parser i formatowanie kroków milowych: prefiksy ✓, v, +, x oznaczają krok wykonany', () => {
+    test('Parser i formatowanie kroków milowych: + ze spacją lub bez i ✓ oznaczają wykonanie, - i brak znaku oznaczają brak wykonania (rezygnacja z x i [x])', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('parseMilestoneLine'), 'Brak funkcji parseMilestoneLine');
       assert.ok(content.includes('formatMilestonesForTextarea'), 'Brak funkcji formatMilestonesForTextarea');
+      assert.ok(content.includes('normalizeMilestonesTextarea'), 'Brak funkcji normalizeMilestonesTextarea');
 
       function parseMilestoneLine(rawLine) {
         const line = (rawLine || '').trim();
         if (!line) return null;
-        const doneMatch = line.match(/^(\u2713|\u2714|\[[xXvV]\]|[vVxX\+]|[-*]\s*\[[xXvV]\])\s+(.*)$/);
-        if (doneMatch) {
-          return { title: doneMatch[2].trim(), isDone: true };
+
+        if (line.startsWith('+')) {
+          const title = line.slice(1).trim();
+          if (!title) return null;
+          return { title, isDone: true };
         }
-        const emptyMatch = line.match(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*])\s+(.*)$/);
-        if (emptyMatch) {
-          return { title: emptyMatch[2].trim(), isDone: false };
+        if (line.startsWith('✓') || line.startsWith('✔')) {
+          const title = line.replace(/^[\u2713\u2714]\s*/, '').trim();
+          if (!title) return null;
+          return { title, isDone: true };
         }
-        return { title: line, isDone: false };
+        if (/^[vV]\s+/.test(line)) {
+          const title = line.replace(/^[vV]\s+/, '').trim();
+          if (!title) return null;
+          return { title, isDone: true };
+        }
+
+        let title = line;
+        if (title.startsWith('-')) {
+          title = title.slice(1).trim();
+        } else if (/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/.test(title)) {
+          title = title.replace(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*]\s+)/, '').trim();
+        }
+
+        if (!title) return null;
+        return {
+          title,
+          isDone: false
+        };
       }
 
       function formatMilestonesForTextarea(milestones = []) {
@@ -805,18 +826,26 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         }).join('\n');
       }
 
-      assert.deepEqual(parseMilestoneLine('✓ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
-      assert.deepEqual(parseMilestoneLine('v Eksport bazy'), { title: 'Eksport bazy', isDone: true });
-      assert.deepEqual(parseMilestoneLine('V Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      // Plus ze spacją i bez spacji -> isDone: true
       assert.deepEqual(parseMilestoneLine('+ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
-      assert.deepEqual(parseMilestoneLine('x Eksport bazy'), { title: 'Eksport bazy', isDone: true });
-      assert.deepEqual(parseMilestoneLine('[x] Eksport bazy'), { title: 'Eksport bazy', isDone: true });
-      assert.deepEqual(parseMilestoneLine('- [x] Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('+Eksport bazy'), { title: 'Eksport bazy', isDone: true });
 
-      assert.deepEqual(parseMilestoneLine('Eksport bazy'), { title: 'Eksport bazy', isDone: false });
-      assert.deepEqual(parseMilestoneLine('Van z towarem'), { title: 'Van z towarem', isDone: false });
+      // Ptaszek ✓ ze spacją i bez spacji -> isDone: true
+      assert.deepEqual(parseMilestoneLine('✓ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('✓Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+
+      // Minus ze spacją i bez spacji -> isDone: false (oznaczenie niewykonania)
       assert.deepEqual(parseMilestoneLine('- Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+      assert.deepEqual(parseMilestoneLine('-Eksport bazy'), { title: 'Eksport bazy', isDone: false });
 
+      // Brak znaku na początku -> isDone: false
+      assert.deepEqual(parseMilestoneLine('Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+
+      // Rezygnacja z x oraz [x] -> nie są traktowane jako wykonane
+      assert.deepEqual(parseMilestoneLine('x Eksport bazy'), { title: 'x Eksport bazy', isDone: false });
+      assert.deepEqual(parseMilestoneLine('[x] Eksport bazy'), { title: '[x] Eksport bazy', isDone: false });
+
+      // Formatowanie: zrobione otrzymują ✓ , niezrobione nie mają prefiksu
       const formatted = formatMilestonesForTextarea([
         { title: 'Krok 1', isDone: true },
         { title: 'Krok 2', isDone: false }
