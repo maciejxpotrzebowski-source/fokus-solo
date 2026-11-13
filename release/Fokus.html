@@ -67,6 +67,13 @@
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor-blink {
+      animation: cursorBlink 1s infinite;
+    }
 
     input[type="date"]::-webkit-calendar-picker-indicator {
       opacity: 0.5;
@@ -87,9 +94,13 @@
   <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#F5F5F7]/85 dark:bg-[#000000]/80 border-b border-black/[0.04] dark:border-[#2C2C2E]/70 transition-colors shrink-0">
     <div class="max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-4">
       
-      <!-- Lewy powiększony logotyp FOKUS + status aktywnego stopera -->
+      <!-- Lewy logotyp 5B FOKUS CLI PROMPT + status aktywnego stopera -->
       <div class="flex items-center gap-3 shrink-0">
-        <span onclick="switchView('DAY')" class="cursor-pointer text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>
+        <div onclick="switchView('DAY')" class="cursor-pointer flex items-center font-mono text-2xl sm:text-3xl font-extrabold tracking-tight select-none" title="Fokus · Mój Dzień">
+          <span id="logoPromptChar" class="mr-1 font-bold text-emerald-500 transition-colors">&gt;</span>
+          <span class="text-[#1D1D1F] dark:text-white">fokus</span>
+          <span id="logoCursorChar" class="w-2.5 h-6 bg-emerald-500 ml-1 cursor-blink transition-colors"></span>
+        </div>
         <span id="headerMiniTimer" onclick="switchView('DAY')" class="hidden cursor-pointer items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-black/[0.05] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition"></span>
       </div>
 
@@ -126,31 +137,52 @@
         </button>
       </div>
 
-      <!-- Prawe subtelne akcje narzędziowe: Słowniki, Instrukcja, Magazyn pliku bazy, Motyw (słońce/księżyc) -->
-      <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
-        <button onclick="switchView('DICTIONARIES')" id="navBtn-DICTIONARIES" title="Słowniki osób, kategorii i SOP (Skrót: 6)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
-          <span>⚙️</span>
-          <span class="hidden xl:inline">Słowniki</span>
-        </button>
+      <!-- Prawe akcje narzędziowe: Kropka statusu bazy danych + Zębatka z rozwijanym menu -->
+      <div class="flex items-center justify-end gap-2 shrink-0 relative">
+        
+        <!-- Kolorowa kropka statusu bazy danych z dymkiem tooltip po najechaniu i kliknięciem do zmiany -->
+        <div class="relative group">
+          <button onclick="handleDbStatusClick()" id="dbFileStatusBtn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center cursor-pointer" title="Podpięcie bazy danych">
+            <span id="dbFileDot" class="w-3 h-3 rounded-full bg-zinc-400 block shadow-sm ring-2 ring-transparent transition"></span>
+          </button>
+          <!-- Tooltip z nazwą bazy po najechaniu -->
+          <div id="dbFileTooltip" class="pointer-events-none absolute right-0 top-full mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-xl whitespace-nowrap z-50">
+            <span id="dbFileLabel">fokus-db.json</span>
+            <span id="dbSaveInfo" class="text-[10px] opacity-70"></span>
+          </div>
+        </div>
 
-        <button onclick="switchView('GUIDE')" id="navBtn-GUIDE" title="Przewodnik metodyczny i instrukcja obsługi (Skrót: 7)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
-          <span>📖</span>
-          <span class="hidden xl:inline">Instrukcja</span>
-        </button>
+        <!-- Ikonka zębatki -->
+        <div class="relative">
+          <button onclick="toggleSettingsMenu(event)" id="headerGearBtn" title="Menu narzędzi i ustawienia"
+            class="w-9 h-9 rounded-full bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-[#2C2C2E] flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:opacity-80 active:scale-95 transition shadow-sm cursor-pointer">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
 
-        <button onclick="handleDbStatusClick()" id="dbFileStatusBtn" title="Status pliku fokus-db.json na dysku"
-          class="px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm">
-          <span id="dbFileDot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
-          <span class="hidden md:inline font-mono text-[11px]" id="dbFileLabel">fokus-db.json</span>
-          <span id="dbSaveInfo" class="hidden lg:inline text-[10px] text-zinc-400"></span>
-        </button>
+          <!-- Rozwijana lista zębatki (Dropdown) -->
+          <div id="settingsMenuDropdown" class="hidden absolute right-0 top-full mt-2 w-48 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] shadow-2xl p-1.5 z-50 fade-in">
+            <button onclick="closeSettingsMenu(); switchView('DICTIONARIES');" id="navBtn-DICTIONARIES" title="Słowniki osób i kategorii"
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition">
+              <span>⚙️</span>
+              <span>Słowniki</span>
+            </button>
+            <button onclick="closeSettingsMenu(); switchView('GUIDE');" id="navBtn-GUIDE" title="Przewodnik metodyczny i instrukcja obsługi"
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition">
+              <span>📖</span>
+              <span>Instrukcja</span>
+            </button>
+            <div class="my-1 border-t border-black/5 dark:border-white/5"></div>
+            <button onclick="closeSettingsMenu(); openSettingsModal();" id="navBtn-SETTINGS" title="Ustawienia wyglądu i motywu"
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition text-blue-600 dark:text-blue-400">
+              <span>🎨</span>
+              <span>Ustawienia</span>
+            </button>
+          </div>
+        </div>
 
-        <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw Jasny / Ciemny"
-          class="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] flex items-center justify-center text-xs hover:opacity-80 transition shadow-sm">
-          <span id="themeIcon">🌙</span>
-        </button>
       </div>
 
     </div>
@@ -900,6 +932,77 @@
     </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- MODAL 11: USTAWIENIA (MOTYW KOLORYSTYCZNY + KOLOR AKCENTU LOGO)           -->
+  <!-- ========================================================================= -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-md w-full space-y-6 fade-in bg-white dark:bg-[#1C1C1E]">
+      <div class="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🎨</span>
+          <span class="text-sm font-semibold tracking-tight">Ustawienia Wyglądu</span>
+        </div>
+        <button onclick="closeModal('settingsModal')" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Zamknij (Esc)</button>
+      </div>
+
+      <!-- 1. MOTYW KOLORYSTYCZNY STRONY -->
+      <div class="space-y-3">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Motyw kolorystyczny całej strony</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" onclick="setAppTheme('LIGHT')" id="themeSelectLight"
+            class="flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-black/30">
+            <span class="text-base">☀️</span>
+            <span>Motyw Jasny</span>
+          </button>
+          <button type="button" onclick="setAppTheme('DARK')" id="themeSelectDark"
+            class="flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-white/30">
+            <span class="text-base">🌙</span>
+            <span>Motyw Ciemny</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. KOLOR ELEMENTÓW W LOGO (> i _) -->
+      <div class="space-y-3 pt-3 border-t border-black/5 dark:border-white/5">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Kolor elementów w logo (&gt; oraz kursor _)</label>
+          <span id="currentLogoColorCode" class="text-xs font-mono text-zinc-400">#10B981</span>
+        </div>
+
+        <!-- Mini podgląd logo na żywo w modalu -->
+        <div class="h-16 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] flex items-center justify-center px-4">
+          <div class="flex items-center font-mono text-2xl font-black tracking-tight select-none">
+            <span id="settingsPreviewPrompt" class="mr-1.5 font-bold" style="color: #10B981">&gt;</span>
+            <span>fokus</span>
+            <span id="settingsPreviewCursor" class="w-2.5 h-5 ml-1 cursor-blink" style="background-color: #10B981"></span>
+          </div>
+        </div>
+
+        <!-- Paleta gotowych kolorów akcentowych -->
+        <div class="flex flex-wrap items-center gap-2.5 pt-1">
+          <button type="button" onclick="setLogoAccentColor('#10B981')" class="w-8 h-8 rounded-full bg-[#10B981] hover:scale-110 transition shadow-sm cursor-pointer" title="Szmaragd (Terminal)"></button>
+          <button type="button" onclick="setLogoAccentColor('#3B82F6')" class="w-8 h-8 rounded-full bg-[#3B82F6] hover:scale-110 transition shadow-sm cursor-pointer" title="Błękit (Apple Pro)"></button>
+          <button type="button" onclick="setLogoAccentColor('#F59E0B')" class="w-8 h-8 rounded-full bg-[#F59E0B] hover:scale-110 transition shadow-sm cursor-pointer" title="Bursztyn (ALPEN)"></button>
+          <button type="button" onclick="setLogoAccentColor('#8B5CF6')" class="w-8 h-8 rounded-full bg-[#8B5CF6] hover:scale-110 transition shadow-sm cursor-pointer" title="Fiolet"></button>
+          <button type="button" onclick="setLogoAccentColor('#F43F5E')" class="w-8 h-8 rounded-full bg-[#F43F5E] hover:scale-110 transition shadow-sm cursor-pointer" title="Różany (Laser)"></button>
+          <button type="button" onclick="setLogoAccentColor('#71717A')" class="w-8 h-8 rounded-full bg-[#71717A] hover:scale-110 transition shadow-sm cursor-pointer" title="Grafit (Neutralny)"></button>
+          
+          <!-- Własny kolor z próbnika -->
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] cursor-pointer hover:opacity-80 transition text-xs text-zinc-500">
+            <input type="color" id="settingsCustomColorInput" onchange="setLogoAccentColor(this.value)" class="w-5 h-5 rounded-full bg-transparent border-0 cursor-pointer p-0" />
+            <span class="text-[11px]">Własny...</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+        <button type="button" onclick="closeModal('settingsModal')" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
+          Gotowe
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- DYSKRETNE POWIADOMIENIE TOAST (NAJWYŻSZA WARSTWA Z-INDEX NAD WSZYSTKIMI MODALAMI) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end" style="z-index: 99999;"></div>
 
@@ -930,6 +1033,7 @@
     const DEFAULT_DB = {
       schemaVersion: '4.2-bento-solo',
       theme: 'LIGHT',
+      logoAccentColor: '#10B981',
       activeView: 'DAY',          // 'DAY' | 'MATRIX' | 'CALENDAR' | 'WAITING' | 'REPORTS' | 'DICTIONARIES' | 'GUIDE'
       selectedTaskId: null,
       card1Tab: 'STEPS',          // 'STEPS' | 'HISTORY'
@@ -1157,6 +1261,7 @@
       if (!data.people) data.people = DEFAULT_DB.people;
       if (!data.categories) data.categories = DEFAULT_DB.categories;
       if (!data.timeLogs) data.timeLogs = DEFAULT_DB.timeLogs;
+      if (!data.logoAccentColor) data.logoAccentColor = '#10B981';
       if (!data.sopTemplates || !Array.isArray(data.sopTemplates) || data.sopTemplates.length === 0) {
         data.sopTemplates = DEFAULT_DB.sopTemplates;
       }
@@ -2295,12 +2400,76 @@
         root.classList.remove('dark');
         if (icon) icon.textContent = '🌙';
       }
+      applyLogoAccent(db.logoAccentColor || '#10B981');
     }
 
     function toggleTheme() {
       db.theme = db.theme === 'DARK' ? 'LIGHT' : 'DARK';
       applyTheme();
-      saveUiPreferences();
+      saveDatabase();
+    }
+
+    function toggleSettingsMenu(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('settingsMenuDropdown');
+      if (dd) dd.classList.toggle('hidden');
+    }
+
+    function closeSettingsMenu() {
+      const dd = document.getElementById('settingsMenuDropdown');
+      if (dd) dd.classList.add('hidden');
+    }
+
+    function openSettingsModal() {
+      closeSettingsMenu();
+      updateSettingsModalThemeUI();
+      applyLogoAccent(db.logoAccentColor || '#10B981');
+      openModal('settingsModal');
+    }
+
+    function updateSettingsModalThemeUI() {
+      const lightBtn = document.getElementById('themeSelectLight');
+      const darkBtn = document.getElementById('themeSelectDark');
+      if (!lightBtn || !darkBtn) return;
+      const isDark = db.theme === 'DARK';
+      if (isDark) {
+        darkBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-semibold bg-[#2C2C2E] border-blue-500 text-white shadow-sm cursor-pointer';
+        lightBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-black/30 text-zinc-500 cursor-pointer';
+      } else {
+        lightBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-semibold bg-white border-blue-500 text-[#1D1D1F] shadow-sm cursor-pointer';
+        darkBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-white/30 text-zinc-500 cursor-pointer';
+      }
+    }
+
+    function setAppTheme(theme) {
+      db.theme = theme;
+      applyTheme();
+      saveDatabase();
+      updateSettingsModalThemeUI();
+      showToast(`Przełączono motyw na: ${theme === 'DARK' ? 'Ciemny' : 'Jasny'}`);
+    }
+
+    function applyLogoAccent(color) {
+      const c = color || db.logoAccentColor || '#10B981';
+      db.logoAccentColor = c;
+      const promptEl = document.getElementById('logoPromptChar');
+      const cursorEl = document.getElementById('logoCursorChar');
+      if (promptEl) promptEl.style.color = c;
+      if (cursorEl) cursorEl.style.backgroundColor = c;
+      const prevPrompt = document.getElementById('settingsPreviewPrompt');
+      const prevCursor = document.getElementById('settingsPreviewCursor');
+      if (prevPrompt) prevPrompt.style.color = c;
+      if (prevCursor) prevCursor.style.backgroundColor = c;
+      const codeEl = document.getElementById('currentLogoColorCode');
+      if (codeEl) codeEl.textContent = c;
+      const colorInp = document.getElementById('settingsCustomColorInput');
+      if (colorInp) colorInp.value = c;
+    }
+
+    function setLogoAccentColor(color) {
+      applyLogoAccent(color);
+      saveDatabase();
+      showToast('Zaktualizowano kolor elementów logo');
     }
 
     function switchView(view) {
@@ -2341,15 +2510,25 @@
         }
       });
 
-      // Aktualizacja przycisków narzędziowych po prawej: Słowniki i Instrukcja
+      // Aktualizacja przycisku zębatki oraz pozycji w rozwijanym menu
+      const gearBtn = document.getElementById('headerGearBtn');
+      const isUtilityActive = db.activeView === 'DICTIONARIES' || db.activeView === 'GUIDE';
+      if (gearBtn) {
+        if (isUtilityActive) {
+          gearBtn.className = 'w-9 h-9 rounded-full bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] border border-transparent flex items-center justify-center hover:opacity-80 active:scale-95 transition shadow-sm cursor-pointer';
+        } else {
+          gearBtn.className = 'w-9 h-9 rounded-full bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-[#2C2C2E] flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:opacity-80 active:scale-95 transition shadow-sm cursor-pointer';
+        }
+      }
+
       const utilityViews = ['DICTIONARIES', 'GUIDE'];
       utilityViews.forEach(v => {
         const btn = document.getElementById('navBtn-' + v);
         if (!btn) return;
         if (db.activeView === v) {
-          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm transition flex items-center gap-1.5';
+          btn.className = 'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left bg-black/[0.05] dark:bg-white/[0.08] text-[#1D1D1F] dark:text-white transition';
         } else {
-          btn.className = 'px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#1C1C1E] dark:border dark:border-[#2C2C2E] text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition flex items-center gap-1.5 shadow-sm';
+          btn.className = 'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] text-zinc-600 dark:text-zinc-300 transition';
         }
       });
 
@@ -3901,11 +4080,22 @@
                 </div>
               </div>
 
-              <!-- Lista osób w słowniku z edycją inline -->
+              <!-- Lista osób w słowniku z edycją inline oraz zmianą kolejności -->
               <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
-                ${db.people.map(p => `
+                ${db.people.map((p, idx) => `
                   <div class="py-3.5 space-y-2">
                     <div class="flex items-center justify-between gap-3">
+                      <!-- Przyciski przesuwania kolejności ↑ / ↓ -->
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="movePerson('${p.id}', -1)" title="Przesuń wyżej"
+                          class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs transition ${idx === 0 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}">
+                          ↑
+                        </button>
+                        <button onclick="movePerson('${p.id}', 1)" title="Przesuń niżej"
+                          class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs transition ${idx === db.people.length - 1 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}">
+                          ↓
+                        </button>
+                      </div>
                       <div class="flex-1 grid grid-cols-2 gap-2">
                         <input type="text" value="${escapeHtml(p.canonicalName)}"
                           onchange="updatePersonName('${p.id}', this.value)"
@@ -3916,7 +4106,7 @@
                       </div>
                       <button onclick="deletePerson('${p.id}')" class="text-xs text-zinc-300 hover:text-rose-500 shrink-0">Usuń</button>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 pl-14">
                       <span class="text-[11px] text-zinc-400 shrink-0">Aliasy:</span>
                       <input type="text" value="${escapeHtml((p.aliases || []).join(', '))}"
                         onchange="updatePersonAliases('${p.id}', this.value)"
@@ -3947,9 +4137,20 @@
               </div>
 
               <div class="divide-y divide-black/[0.05] dark:divide-[#2C2C2E]">
-                ${db.categories.map(c => `
+                ${db.categories.map((c, idx) => `
                   <div class="py-3 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 flex-1">
+                    <div class="flex items-center gap-2 flex-1">
+                      <!-- Przyciski przesuwania kolejności ↑ / ↓ -->
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="moveCategory('${c.id}', -1)" title="Przesuń wyżej"
+                          class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs transition ${idx === 0 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}">
+                          ↑
+                        </button>
+                        <button onclick="moveCategory('${c.id}', 1)" title="Przesuń niżej"
+                          class="w-6 h-6 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs transition ${idx === db.categories.length - 1 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}">
+                          ↓
+                        </button>
+                      </div>
                       <input type="color" value="${c.colorHex}"
                         onchange="updateCategoryColor('${c.id}', this.value)"
                         class="w-6 h-6 rounded-full bg-transparent cursor-pointer border-0 shrink-0" />
@@ -3964,54 +4165,6 @@
             </section>
 
           </div>
-
-          <!-- KAFELEK C: SZABLONY ZADAŃ CYKLICZNYCH (SOP) -->
-          <section class="bento-card space-y-5">
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-base font-semibold">Szablony Procedur (SOP)</h2>
-                <p class="text-xs text-zinc-400 mt-1">
-                  Gotowe zestawy kroków checklisty do wstawiania jednym kliknięciem podczas tworzenia lub edycji zadania.
-                </p>
-              </div>
-              <span class="text-xs font-mono text-zinc-400">${(db.sopTemplates || []).length} szablonów</span>
-            </div>
-
-            <!-- Formularz dodawania nowego szablonu SOP -->
-            <div class="p-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/50 space-y-3">
-              <input id="newSopName" type="text" placeholder="Nazwa procedury (np. Zamknięcie miesiąca magazynowego)"
-                class="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] focus:outline-none" />
-              <textarea id="newSopSteps" rows="3" placeholder="Kroki procedury (po jednym w nowej linii)&#10;Krok 1...&#10;Krok 2..."
-                class="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] focus:outline-none leading-relaxed"></textarea>
-              <div class="flex justify-end">
-                <button onclick="addSopTemplateFromDictionary()"
-                  class="px-4 py-2 rounded-xl text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">
-                  + Dodaj szablon SOP
-                </button>
-              </div>
-            </div>
-
-            <!-- Lista szablonów SOP -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              ${(db.sopTemplates || []).map(s => `
-                <div class="p-4 rounded-2xl bg-[#F5F5F7]/80 dark:bg-[#2C2C2E]/40 space-y-3 flex flex-col justify-between">
-                  <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                      <span class="text-xs font-semibold text-[#1D1D1F] dark:text-white">${escapeHtml(s.name)}</span>
-                      <button onclick="deleteSopTemplate('${s.id}')" class="text-xs text-zinc-300 hover:text-rose-500">Usuń</button>
-                    </div>
-                    <ul class="text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1 list-disc list-inside">
-                      ${(s.steps || []).map(st => `<li class="truncate">${escapeHtml(st)}</li>`).join('')}
-                    </ul>
-                  </div>
-                  <div class="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-[10px] font-mono text-zinc-400">
-                    <span>${(s.steps || []).length} kroków</span>
-                    <button onclick="applySopTemplateToModal('${s.id}')" class="text-blue-500 hover:underline font-sans font-medium">Użyj w zadaniu</button>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </section>
         </div>
       `;
     }
@@ -6167,6 +6320,19 @@
       renderApp();
     }
 
+    function movePerson(personId, dir) {
+      if (!requireDb()) return;
+      const idx = db.people.findIndex(p => p.id === personId);
+      if (idx === -1) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= db.people.length) return;
+      const item = db.people.splice(idx, 1)[0];
+      db.people.splice(targetIdx, 0, item);
+      saveDatabase();
+      renderApp();
+      showToast('Zaktualizowano kolejność osób');
+    }
+
     function addCategoryFromDictionary() {
       if (!requireDb()) return;
       const name = document.getElementById('newCatName').value.trim();
@@ -6212,6 +6378,19 @@
       db.categories = db.categories.filter(c => c.id !== catId);
       saveDatabase();
       renderApp();
+    }
+
+    function moveCategory(catId, dir) {
+      if (!requireDb()) return;
+      const idx = db.categories.findIndex(c => c.id === catId);
+      if (idx === -1) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= db.categories.length) return;
+      const item = db.categories.splice(idx, 1)[0];
+      db.categories.splice(targetIdx, 0, item);
+      saveDatabase();
+      renderApp();
+      showToast('Zaktualizowano kolejność kategorii');
     }
 
     function addSopTemplateFromDictionary() {
@@ -6656,7 +6835,7 @@
       const activeName = fileHandle ? (fileHandle.name || 'fokus-db.json') : (directoryHandle ? (directoryHandle.name + '/fokus-db.json') : 'fokus-db.json');
 
       if (state === 'CONNECTED') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+        dot.className = 'w-3 h-3 rounded-full bg-emerald-500 block shadow-sm ring-2 ring-emerald-500/20 transition';
         label.textContent = activeName;
         if (btn) btn.title = `Połączono z ${activeName}. Zapis na bieżąco.`;
         if (modalStatus) modalStatus.textContent = `Status: Połączono z ${activeName} (zapis aktywny).`;
@@ -6666,19 +6845,19 @@
           setSaveIndicator('');
         }
       } else if (state === 'NEEDS_PERMISSION') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+        dot.className = 'w-3 h-3 rounded-full bg-amber-400 block shadow-sm ring-2 ring-amber-400/20 transition animate-pulse';
         label.textContent = activeName + ' (wznów)';
         if (btn) btn.title = 'Wykryto zapamiętany plik — kliknij, aby zezwolić na zapis';
         if (modalStatus) modalStatus.textContent = 'Status: Wykryto zapamiętany plik (wymaga wznowienia uprawnień).';
         setSaveIndicator('Wymagana zgoda');
       } else if (state === 'ERROR') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        dot.className = 'w-3 h-3 rounded-full bg-rose-500 block shadow-sm ring-2 ring-rose-500/20 transition';
         label.textContent = activeName + ' (błąd)';
         if (btn) btn.title = 'Błąd dostępu do pliku bazy — kliknij, aby naprawić';
         if (modalStatus) modalStatus.textContent = 'Status: Błąd dostępu do pliku bazy.';
         setSaveIndicator('Błąd zapisu');
       } else {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
+        dot.className = 'w-3 h-3 rounded-full bg-zinc-400 block shadow-sm ring-2 ring-transparent transition';
         label.textContent = 'fokus-db.json (połącz)';
         if (btn) btn.title = 'Brak połączenia z plikiem bazy — kliknij, aby wskazać plik lub folder';
         if (modalStatus) modalStatus.textContent = 'Status: Nie połączono z plikiem bazy.';
@@ -7024,6 +7203,8 @@
 
       if (e.key === 'Escape') {
         closePomodoroMenu();
+        closeSettingsMenu();
+        closeModal('settingsModal');
         if (activeModalsStack.length > 0) {
           const topModalId = activeModalsStack[activeModalsStack.length - 1];
           if (topModalId === 'customEstimateModal') {
@@ -7065,14 +7246,25 @@
       }
     });
 
-    // Zamknięcie menu opcji stopera przy kliknięciu poza menu
+    // Zamknięcie menu opcji stopera i menu ustawień przy kliknięciu poza menu
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('pomodoroDropdownMenu');
       if (menu && !menu.classList.contains('hidden')) {
         const trigger = document.getElementById('bentoTimerTriggerBtn');
-        if (trigger && (trigger.contains(e.target) || trigger === e.target)) return;
-        if (!menu.contains(e.target)) {
+        if (trigger && (trigger.contains(e.target) || trigger === e.target)) {
+          // klik w triggerze
+        } else if (!menu.contains(e.target)) {
           menu.classList.add('hidden');
+        }
+      }
+
+      const gearMenu = document.getElementById('settingsMenuDropdown');
+      if (gearMenu && !gearMenu.classList.contains('hidden')) {
+        const gearBtn = document.getElementById('headerGearBtn');
+        if (gearBtn && (gearBtn.contains(e.target) || gearBtn === e.target)) {
+          // klik w przycisku zębatki
+        } else if (!gearMenu.contains(e.target)) {
+          gearMenu.classList.add('hidden');
         }
       }
     });

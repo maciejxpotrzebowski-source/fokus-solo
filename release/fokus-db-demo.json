@@ -1,9 +1,10 @@
 {
   "schemaVersion": "4.2-bento-solo",
   "theme": "LIGHT",
+  "logoAccentColor": "#10B981",
   "activeView": "ALL_TASKS",
-  "selectedTaskId": "tsk_1",
-  "card1Tab": "HISTORY",
+  "selectedTaskId": "tsk_ed32fa821369",
+  "card1Tab": "STEPS",
   "reportPeriod": "MONTH",
   "lastBackupDate": null,
   "calendarEvents": [
@@ -115,6 +116,11 @@
       "id": "cat_wlasne",
       "name": "Praca własna / Organizacja",
       "colorHex": "#64748B"
+    },
+    {
+      "id": "cat_aec9525dbeac",
+      "name": "JiPP",
+      "colorHex": "#ff0000"
     }
   ],
   "sopTemplates": [
@@ -150,6 +156,84 @@
     }
   ],
   "tasks": [
+    {
+      "id": "tsk_ed32fa821369",
+      "title": "JIPP zadania",
+      "requesterPersonId": "per_grzegorz",
+      "personId": "per_grzegorz",
+      "categoryId": "cat_erp",
+      "urgencyTag": "NORMAL",
+      "dueDate": null,
+      "originalDueDate": null,
+      "importance": "HIGH",
+      "estimatedMinutes": 25,
+      "recurrence": "NONE",
+      "recurrenceRule": null,
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": true,
+      "isMyDay": true,
+      "myDayOrder": 4,
+      "notesAndContext": "",
+      "contextNotes": "",
+      "milestones": [
+        {
+          "id": "m_760d4bec8ff6",
+          "title": "propozycja rozwiązania",
+          "isDone": false
+        },
+        {
+          "id": "m_f789484ffa7c",
+          "title": "budowa architektury zgodnie z C4",
+          "isDone": false
+        },
+        {
+          "id": "m_59d091cf86e6",
+          "title": "gra na klocki",
+          "isDone": false
+        },
+        {
+          "id": "m_b5a76d1c794f",
+          "title": "backend",
+          "isDone": false
+        }
+      ],
+      "checklist": [
+        {
+          "id": "m_760d4bec8ff6",
+          "title": "propozycja rozwiązania",
+          "isDone": false
+        },
+        {
+          "id": "m_f789484ffa7c",
+          "title": "budowa architektury zgodnie z C4",
+          "isDone": false
+        },
+        {
+          "id": "m_59d091cf86e6",
+          "title": "gra na klocki",
+          "isDone": false
+        },
+        {
+          "id": "m_b5a76d1c794f",
+          "title": "backend",
+          "isDone": false
+        }
+      ],
+      "createdAt": "2026-11-13T17:11:39.761Z",
+      "createdAtISO": "2026-11-13T17:11:39.761Z",
+      "auditLog": [
+        {
+          "id": "log_7476110dea27",
+          "timestamp": "2026-11-13T17:11:39.761Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie"
+        }
+      ]
+    },
     {
       "id": "tsk_1",
       "title": "Walidacja wag opakowań w Business Central pod raport PPWR",
@@ -210,7 +294,7 @@
       "inMyDay": true,
       "isMyDay": true,
       "myDayOrder": 1,
-      "estimatedMinutes": 90,
+      "estimatedMinutes": 67,
       "recurrence": "NONE",
       "createdAt": "2026-11-05T08:15:00.000Z",
       "createdAtISO": "2026-11-05T08:15:00.000Z",
@@ -286,7 +370,8 @@
           "changeType": "CREATED",
           "reasonComment": "Utworzono zadanie (pierwotny termin: 2026-11-07)"
         }
-      ]
+      ],
+      "recurrenceRule": null
     },
     {
       "id": "tsk_2",
@@ -796,6 +881,11 @@
       "id": "cat_wlasne",
       "name": "Praca własna / Organizacja",
       "colorHex": "#64748B"
+    },
+    {
+      "id": "cat_aec9525dbeac",
+      "name": "JiPP",
+      "colorHex": "#ff0000"
     }
   ],
   "timeSessions": [

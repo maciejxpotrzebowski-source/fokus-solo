@@ -615,10 +615,11 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes("'cat_wlasne'"), 'Brak kategorii cat_wlasne w słowniku domyślnym');
     });
 
-    test('Fokus.html zawiera szablony SOP (sopTemplates)', () => {
+    test('Fokus.html zawiera kompatybilność sopTemplates w schemacie oraz sortowanie słowników', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('sopTemplates'), 'Brak sekcji sopTemplates w DEFAULT_DB');
-      assert.ok(content.includes('Szablony Procedur (SOP)'), 'Brak widoku zarządzania SOP w Słownikach');
+      assert.ok(content.includes('movePerson'), 'Brak funkcji movePerson do przesuwania osób w słowniku');
+      assert.ok(content.includes('moveCategory'), 'Brak funkcji moveCategory do przesuwania kategorii w słowniku');
     });
 
     test('Fokus.html posiada obsługę kopii zapasowej dziennej', () => {
@@ -867,10 +868,23 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('ondblclick="openTaskModal(\'${w.id}\')"'), 'Brak obsługi dwukliku w sekcji Czekam na');
     });
 
-    test('Powiększone minimalistyczne logo Fokus w nagłówku (usunięto literę F w kółku i napis System Skupienia)', () => {
+    test('Powiększone minimalistyczne logo 5B Fokus CLI Prompt w nagłówku (znak zachęty > i migający kursor _)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
-      assert.ok(content.includes('text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>'), 'Brak powiększonego logotypu Fokus');
+      assert.ok(content.includes('id="logoPromptChar"'), 'Brak elementu logoPromptChar dla znaku >');
+      assert.ok(content.includes('id="logoCursorChar"'), 'Brak elementu logoCursorChar dla kursora _');
+      assert.ok(content.includes('fokus'), 'Brak napisu fokus w logo');
       assert.ok(!content.includes('System Skupienia'), 'Logo nie powinno zawierać tekstu System Skupienia');
+    });
+
+    test('Menu zębatki, modal ustawień wyglądu oraz kropka statusu bazy danych', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="headerGearBtn"'), 'Brak przycisku zębatki w nagłówku');
+      assert.ok(content.includes('id="settingsMenuDropdown"'), 'Brak rozwijanego menu zębatki');
+      assert.ok(content.includes('id="settingsModal"'), 'Brak modala ustawień settingsModal');
+      assert.ok(content.includes('setLogoAccentColor'), 'Brak funkcji zmiany koloru akcentu logo');
+      assert.ok(content.includes('setAppTheme'), 'Brak funkcji zmiany motywu strony');
+      assert.ok(content.includes('id="dbFileDot"'), 'Brak kropki statusu bazy');
+      assert.ok(content.includes('id="dbFileTooltip"'), 'Brak dymka tooltip dla statusu bazy');
     });
 
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
