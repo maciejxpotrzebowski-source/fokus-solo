@@ -869,7 +869,7 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
 
     test('Powiększone minimalistyczne logo Fokus w nagłówku (usunięto literę F w kółku i napis System Skupienia)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
-      assert.ok(content.includes('text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>'), 'Brak powiększonego logotypu Fokus');
+      assert.ok(content.includes('text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1D1D1F] dark:text-white select-none">Fokus</span>'), 'Brak powiększonego logotypu Fokus');
       assert.ok(!content.includes('System Skupienia'), 'Logo nie powinno zawierać tekstu System Skupienia');
     });
 
