@@ -303,9 +303,7 @@
               <select id="tmRecurrenceMonthlyRule" onchange="onRecurrenceRuleChange()"
                 class="w-full text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/10 focus:outline-none">
                 <option value="DAY_OF_MONTH">Wybrany dzień miesiąca (np. 10.)</option>
-                <option value="FIRST_FRIDAY">Pierwszy piątek miesiąca</option>
-                <option value="LAST_FRIDAY">Ostatni piątek miesiąca</option>
-                <option value="FIRST_MONDAY">Pierwszy poniedziałek miesiąca</option>
+                <option value="FIRST_WORKDAY">Pierwszy dzień roboczy miesiąca</option>
                 <option value="LAST_WORKDAY">Ostatni dzień roboczy miesiąca</option>
               </select>
               <div id="tmRecurrenceDaySelectRow" class="pt-1">
@@ -398,9 +396,12 @@
       <!-- 5. Kroki milowe + Notatki -->
       <div class="space-y-3 pt-1 border-t border-black/5 dark:border-white/5">
         <div>
-          <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
-          <textarea id="tmMilestonesText" rows="3" placeholder="Eksport tabeli z ERP&#10;Walidacja rekordów&#10;Wysłanie podsumowania"
-            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1"></textarea>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
+            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">v </code> lub <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">✓ </code> na początku linii = zrobione</span>
+          </div>
+          <textarea id="tmMilestonesText" rows="3" placeholder="✓ Eksport tabeli z ERP (ukończony)&#10;Walidacja rekordów (wpisz v lub ✓ na początku, aby oznaczyć jako zrobione)&#10;Wysłanie podsumowania"
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1 font-mono"></textarea>
         </div>
 
         <div>
@@ -693,6 +694,8 @@
           <option value="DAILY_WORKDAYS">Codziennie (dni robocze: pon-pt)</option>
           <option value="DAILY">Codziennie (7 dni w tygodniu)</option>
           <option value="WEEKLY">Co tydzień (w ten sam dzień tygodnia)</option>
+          <option value="MONTHLY_FIRST_WORKDAY">Co miesiąc (pierwszy dzień roboczy miesiąca)</option>
+          <option value="MONTHLY_LAST_WORKDAY">Co miesiąc (ostatni dzień roboczy miesiąca)</option>
           <option value="MONTHLY">Co miesiąc (w ten sam dzień miesiąca)</option>
         </select>
       </div>
@@ -1422,6 +1425,73 @@
       return map;
     }
 
+    function isHoliday(isoStr) {
+      if (!isoStr) return false;
+      const y = parseInt(isoStr.split('-')[0], 10) || new Date().getFullYear();
+      const holidays = getPolishHolidayDetails(y);
+      return !!holidays[isoStr];
+    }
+
+    function getFirstWorkdayOfMonth(year, month) {
+      const d = new Date(year, month, 1);
+      while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(formatLocalYMD(d))) {
+        d.setDate(d.getDate() + 1);
+      }
+      return formatLocalYMD(d);
+    }
+
+    function getLastWorkdayOfMonth(year, month) {
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const d = new Date(year, month, lastDay);
+      while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(formatLocalYMD(d))) {
+        d.setDate(d.getDate() - 1);
+      }
+      return formatLocalYMD(d);
+    }
+
+    function parseMilestoneLine(rawLine) {
+      const line = (rawLine || '').trim();
+      if (!line) return null;
+
+      // Sprawdź czy linia zaczyna się od znacznika ukończenia:
+      // Obsługiwane prefiksy:
+      // - "✓ " lub "✔ "
+      // - "v " lub "V " (najwygodniejszy z klawiatury bez Shift)
+      // - "x " lub "X " (standard Todo.txt)
+      // - "+ "
+      // - "[x] " lub "[X] " lub "[v] " lub "[V] "
+      // - "- [x] " lub "* [x] "
+      const doneMatch = line.match(/^(\u2713|\u2714|\[[xXvV]\]|[vVxX\+]|[-*]\s*\[[xXvV]\])\s+(.*)$/);
+      if (doneMatch) {
+        return {
+          title: doneMatch[2].trim(),
+          isDone: true
+        };
+      }
+
+      // Sprawdź czy linia ma znacznik pusty np. "[ ] ", "- [ ] ", "- ", "* "
+      const emptyMatch = line.match(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*])\s+(.*)$/);
+      if (emptyMatch) {
+        return {
+          title: emptyMatch[2].trim(),
+          isDone: false
+        };
+      }
+
+      return {
+        title: line,
+        isDone: false
+      };
+    }
+
+    function formatMilestonesForTextarea(milestones = []) {
+      if (!Array.isArray(milestones)) return '';
+      return milestones.map(m => {
+        const title = (m && m.title ? m.title : '').trim();
+        return m && m.isDone ? `✓ ${title}` : title;
+      }).join('\n');
+    }
+
     function getCombinedFreeDays(calendarEvents = (typeof db !== 'undefined' ? db.calendarEvents : [])) {
       const curYear = new Date().getFullYear();
       const holidaysMap = {
@@ -1523,6 +1593,16 @@
       if (recurrence === 'MONTHLY') {
         const baseDate = parseLocalDate(e.dateISO);
         return targetDayOfMonth === baseDate.getDate();
+      }
+      if (recurrence === 'MONTHLY_FIRST_WORKDAY') {
+        const y = targetDate.getFullYear();
+        const m = targetDate.getMonth();
+        return targetDateISO === getFirstWorkdayOfMonth(y, m);
+      }
+      if (recurrence === 'MONTHLY_LAST_WORKDAY') {
+        const y = targetDate.getFullYear();
+        const m = targetDate.getMonth();
+        return targetDateISO === getLastWorkdayOfMonth(y, m);
       }
 
       return e.dateISO === targetDateISO;
@@ -2417,9 +2497,10 @@
                     const daysColor = daysWaiting >= 3 ? 'text-rose-500' : 'text-amber-500';
                     const reason = w.waitingForReason || (w.waitingFor && w.waitingFor.reason);
                     return `
-                      <div class="py-2.5 flex items-start justify-between gap-3">
-                        <div class="space-y-0.5 min-w-0">
-                          <div class="text-xs font-medium text-zinc-800 dark:text-zinc-100 truncate">${escapeHtml(w.title)}</div>
+                      <div ondblclick="openTaskModal('${w.id}')" title="Kliknij dwukrotnie, aby edytować zadanie"
+                        class="py-2.5 flex items-start justify-between gap-3 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] -mx-2 px-2 rounded-xl transition">
+                        <div class="space-y-0.5 min-w-0" onclick="openTaskModal('${w.id}')">
+                          <div class="text-xs font-medium text-zinc-800 dark:text-zinc-100 truncate hover:underline">${escapeHtml(w.title)}</div>
                           <div class="text-[11px] text-zinc-400 flex items-center gap-1.5 truncate">
                             <span>Blokuje: <strong class="font-medium text-zinc-700 dark:text-zinc-200">${escapeHtml(blocker.canonicalName)}</strong></span>
                             <span>·</span>
@@ -2427,7 +2508,7 @@
                           </div>
                           ${reason ? `<div class="text-[11px] text-zinc-400 italic truncate">„${escapeHtml(reason)}”</div>` : ''}
                         </div>
-                        <button onclick="unblockWaitingTask('${w.id}')"
+                        <button onclick="event.stopPropagation(); unblockWaitingTask('${w.id}')"
                           class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 shrink-0 transition">
                           Odblokuj
                         </button>
@@ -3350,7 +3431,7 @@
                   const reason = w.waitingForReason || (w.waitingFor && w.waitingFor.reason);
 
                   return `
-                    <div class="py-4 space-y-3">
+                    <div ondblclick="openTaskModal('${w.id}')" title="Kliknij dwukrotnie, aby edytować zadanie" class="py-4 space-y-3 cursor-pointer hover:bg-black/[0.01] dark:hover:bg-white/[0.01] -mx-2 px-2 rounded-xl transition">
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="space-y-1 min-w-0">
                           <div class="flex items-center gap-2.5">
@@ -4244,7 +4325,7 @@
                             <div class="min-w-0">
                               <span class="font-medium text-zinc-800 dark:text-zinc-100 truncate block">
                                 ${escapeHtml(e.title)}
-                                ${e.recurrence && e.recurrence !== 'NONE' ? `<span class="ml-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-zinc-500">🔁 ${e.recurrence === 'DAILY_WORKDAYS' ? 'Pn-Pt' : (e.recurrence === 'DAILY' ? 'Codziennie' : (e.recurrence === 'WEEKLY' ? 'Co tydzień' : 'Co miesiąc'))}</span>` : ''}
+                                ${e.recurrence && e.recurrence !== 'NONE' ? `<span class="ml-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-zinc-500">🔁 ${e.recurrence === 'DAILY_WORKDAYS' ? 'Pn-Pt' : (e.recurrence === 'DAILY' ? 'Codziennie' : (e.recurrence === 'WEEKLY' ? 'Co tydzień' : (e.recurrence === 'MONTHLY_FIRST_WORKDAY' ? '1. dzień roboczy' : (e.recurrence === 'MONTHLY_LAST_WORKDAY' ? 'Ost. dzień roboczy' : 'Co miesiąc'))))}</span>` : ''}
                               </span>
                               ${e.notes ? `<span class="text-[11px] text-zinc-400 block truncate">${escapeHtml(e.notes)}</span>` : ''}
                             </div>
@@ -4967,7 +5048,8 @@
       const t = db.tasks.find(x => x.id === taskId);
       if (!t) return;
       if (!t.milestones) t.milestones = [];
-      const item = { id: generateId('m'), title: clean, isDone: false };
+      const parsed = parseMilestoneLine(clean) || { title: clean, isDone: false };
+      const item = { id: generateId('m'), title: parsed.title, isDone: parsed.isDone };
       t.milestones.push(item);
       t.checklist = t.milestones;
       saveDatabase();
@@ -5110,6 +5192,14 @@
           return formatLocalYMD(d);
         }
 
+        if (rule.pattern === 'FIRST_WORKDAY') {
+          return getFirstWorkdayOfMonth(nextYear, nextMonth);
+        }
+
+        if (rule.pattern === 'LAST_WORKDAY') {
+          return getLastWorkdayOfMonth(nextYear, nextMonth);
+        }
+
         if (rule.pattern === 'FIRST_FRIDAY') {
           const d = new Date(nextYear, nextMonth, 1);
           while (d.getDay() !== 5) {
@@ -5131,15 +5221,6 @@
           const d = new Date(nextYear, nextMonth, 1);
           while (d.getDay() !== 1) {
             d.setDate(d.getDate() + 1);
-          }
-          return formatLocalYMD(d);
-        }
-
-        if (rule.pattern === 'LAST_WORKDAY') {
-          const lastDay = new Date(nextYear, nextMonth + 1, 0).getDate();
-          const d = new Date(nextYear, nextMonth, lastDay);
-          while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(formatLocalYMD(d))) {
-            d.setDate(d.getDate() - 1);
           }
           return formatLocalYMD(d);
         }
@@ -5434,12 +5515,8 @@
         const day = document.getElementById('tmRecurrenceDaySelect').value;
         if (rule === 'DAY_OF_MONTH') {
           hint.textContent = `Zadanie będzie wznawiane na ${day}. dzień każdego miesiąca${firstDateLabel}.`;
-        } else if (rule === 'FIRST_FRIDAY') {
-          hint.textContent = `Zadanie będzie wznawiane w pierwszy piątek każdego miesiąca${firstDateLabel}.`;
-        } else if (rule === 'LAST_FRIDAY') {
-          hint.textContent = `Zadanie będzie wznawiane w ostatni piątek każdego miesiąca${firstDateLabel}.`;
-        } else if (rule === 'FIRST_MONDAY') {
-          hint.textContent = `Zadanie będzie wznawiane w pierwszy poniedziałek każdego miesiąca${firstDateLabel}.`;
+        } else if (rule === 'FIRST_WORKDAY') {
+          hint.textContent = `Zadanie będzie wznawiane w pierwszy dzień roboczy każdego miesiąca${firstDateLabel}.`;
         } else if (rule === 'LAST_WORKDAY') {
           hint.textContent = `Zadanie będzie wznawiane w ostatni dzień roboczy każdego miesiąca${firstDateLabel}.`;
         }
@@ -5532,7 +5609,7 @@
         }
 
         document.getElementById('tmInMyDay').checked = !!(t.inMyDay || t.isMyDay);
-        document.getElementById('tmMilestonesText').value = ((t.milestones || t.checklist) || []).map(m => m.title).join('\n');
+        document.getElementById('tmMilestonesText').value = formatMilestonesForTextarea(t.milestones || t.checklist || []);
         document.getElementById('tmNotes').value = t.notesAndContext || t.contextNotes || '';
         delBtn.classList.remove('hidden');
       } else {
@@ -5670,10 +5747,12 @@
         showToast('Kolejka Ivy Lee ma już 6 zadań — zadanie zapisano poza Mój Dzień');
       }
 
-      const lines = document.getElementById('tmMilestonesText').value
+      const rawLines = document.getElementById('tmMilestonesText').value
         .split('\n')
         .map(s => s.trim())
         .filter(Boolean);
+
+      const parsedMilestones = rawLines.map(parseMilestoneLine).filter(Boolean);
 
       if (id) {
         const t = db.tasks.find(x => x.id === id);
@@ -5711,10 +5790,16 @@
             t.waitingFor = null;
           }
 
-          // Zachowaj status istniejących kroków o tym samym tytule
-          t.milestones = lines.map((line) => {
-            const existing = (t.milestones || []).find(m => m.title === line);
-            return existing || { id: generateId('m'), title: line, isDone: false };
+          // Dopasuj istniejące identyfikatory kroków oraz zachowaj status ukończenia
+          const existingList = t.milestones || t.checklist || [];
+          t.milestones = parsedMilestones.map((pm, idx) => {
+            const matchByTitle = existingList.find(em => em.title === pm.title);
+            const mId = matchByTitle ? matchByTitle.id : (existingList[idx] ? existingList[idx].id : generateId('m'));
+            return {
+              id: mId,
+              title: pm.title,
+              isDone: pm.isDone
+            };
           });
           t.checklist = t.milestones;
 
@@ -5782,7 +5867,7 @@
           myDayOrder: inMyDay ? getMyDayTasks().length + 1 : null,
           notesAndContext,
           contextNotes: notesAndContext,
-          milestones: lines.map((line) => ({ id: generateId('m'), title: line, isDone: false })),
+          milestones: parsedMilestones.map(pm => ({ id: generateId('m'), title: pm.title, isDone: pm.isDone })),
           checklist: null,
           createdAt: new Date().toISOString(),
           createdAtISO: new Date().toISOString(),

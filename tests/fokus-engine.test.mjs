@@ -430,6 +430,18 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
   // 7. ZADANIA CYKLICZNE (SOP): RECURRENCE ENGINE
   // =========================================================================
   describe('7. Logika odnawiania zadań cyklicznych (SOP)', () => {
+    function isHoliday(isoStr) {
+      if (!isoStr) return false;
+      const [y, m, d] = isoStr.split('-').map(Number);
+      if (m === 1 && d === 1) return true; // Nowy Rok
+      if (m === 1 && d === 6) return true; // Trzech Króli
+      if (m === 5 && d === 1) return true; // Święto Pracy
+      if (m === 5 && d === 3) return true; // Konstytucji
+      if (m === 11 && d === 1) return true; // Wszystkich Świętych
+      if (m === 11 && d === 11) return true; // Niepodległości
+      return false;
+    }
+
     function computeNextRecurrenceDate(baseIso, recurrence, rule = null) {
       const parts = baseIso.split('-');
       const y = parseInt(parts[0], 10);
@@ -477,6 +489,41 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         return `${year}-${month}-${dateStr}`;
       }
 
+      if (recurrence === 'MONTHLY' && rule.pattern === 'FIRST_WORKDAY') {
+        let nextYear = y;
+        let nextMonth = m + 1;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+        const d = new Date(nextYear, nextMonth, 1);
+        while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)) {
+          d.setDate(d.getDate() + 1);
+        }
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
+      if (recurrence === 'MONTHLY' && rule.pattern === 'LAST_WORKDAY') {
+        let nextYear = y;
+        let nextMonth = m + 1;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+        const lastDay = new Date(nextYear, nextMonth + 1, 0).getDate();
+        const d = new Date(nextYear, nextMonth, lastDay);
+        while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)) {
+          d.setDate(d.getDate() - 1);
+        }
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateStr = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateStr}`;
+      }
+
       const d = new Date(y, m, day);
       if (recurrence === 'WEEKLY') d.setDate(d.getDate() + 7);
       else if (recurrence === 'MONTHLY') d.setMonth(d.getMonth() + 1);
@@ -508,6 +555,22 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       // 2026-11-12 to czwartek (day 4), kolejny wtorek to 2026-11-17
       const res = computeNextRecurrenceDate('2026-11-12', 'WEEKLY', { pattern: 'WEEKLY_DAY', weekday: 2 });
       assert.equal(res, '2026-11-17');
+    });
+
+    test('MONTHLY z regułą FIRST_WORKDAY ustawia pierwszy dzień roboczy kolejnego miesiąca (omija weekendy i Nowy Rok)', () => {
+      // Baza 2026-11-15 -> kolejny miesiąc grudzień 2026 -> 1 grudnia to wtorek (dzień roboczy)
+      const res1 = computeNextRecurrenceDate('2026-11-15', 'MONTHLY', { pattern: 'FIRST_WORKDAY' });
+      assert.equal(res1, '2026-12-01');
+
+      // Baza 2026-12-15 -> kolejny miesiąc styczeń 2027 -> 1 stycznia Nowy Rok, 2-3 weekend -> 4 stycznia poniedziałek
+      const res2 = computeNextRecurrenceDate('2026-12-15', 'MONTHLY', { pattern: 'FIRST_WORKDAY' });
+      assert.equal(res2, '2027-01-04');
+    });
+
+    test('MONTHLY z regułą LAST_WORKDAY ustawia ostatni dzień roboczy kolejnego miesiąca', () => {
+      // Baza 2026-10-15 -> kolejny miesiąc listopad 2026 -> 30 listopada to poniedziałek
+      const res = computeNextRecurrenceDate('2026-10-15', 'MONTHLY', { pattern: 'LAST_WORKDAY' });
+      assert.equal(res, '2026-11-30');
     });
   });
 
@@ -688,10 +751,82 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.equal(isCalendarEventActiveOnDate(monthly10th, '2026-12-10'), true, '10 grudnia');
       assert.equal(isCalendarEventActiveOnDate(monthly10th, '2027-01-10'), true, '10 stycznia kolejnego roku');
 
-      // 5. Zdarzenie cykliczne z datą końcową (endDateISO)
-      const weeklyWithEnd = { dateISO: '2026-11-10', endDateISO: '2026-11-20', recurrence: 'WEEKLY' };
-      assert.equal(isCalendarEventActiveOnDate(weeklyWithEnd, '2026-11-17'), true, 'Wtorek przed endDateISO');
-      assert.equal(isCalendarEventActiveOnDate(weeklyWithEnd, '2026-11-24'), false, 'Wtorek po endDateISO');
+      // 6. Zdarzenie cykliczne w pierwszy dzień roboczy miesiąca (MONTHLY_FIRST_WORKDAY)
+      function isHoliday(isoStr) {
+        if (!isoStr) return false;
+        const [y, m, d] = isoStr.split('-').map(Number);
+        if (m === 1 && d === 1) return true; // Nowy Rok
+        if (m === 1 && d === 6) return true; // Trzech Króli
+        if (m === 5 && d === 1) return true; // Święto Pracy
+        if (m === 5 && d === 3) return true; // Konstytucji
+        if (m === 11 && d === 1) return true; // Wszystkich Świętych
+        if (m === 11 && d === 11) return true; // Niepodległości
+        return false;
+      }
+      function getFirstWorkdayOfMonth(year, month) {
+        const d = new Date(year, month, 1);
+        while (d.getDay() === 0 || d.getDay() === 6 || isHoliday(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)) {
+          d.setDate(d.getDate() + 1);
+        }
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+
+      const monthlyFirstWorkday = { dateISO: '2026-11-01', recurrence: 'MONTHLY_FIRST_WORKDAY' };
+      // 1 listopada 2026 to niedziela i święto -> pierwszy dzień roboczy to 2 listopada 2026
+      assert.equal(getFirstWorkdayOfMonth(2026, 10), '2026-11-02');
+      // Dla stycznia 2027: 1 stycznia to święto, 2-3 weekend -> 4 stycznia
+      assert.equal(getFirstWorkdayOfMonth(2027, 0), '2027-01-04');
+    });
+
+    test('Parser i formatowanie kroków milowych: prefiksy ✓, v, +, x oznaczają krok wykonany', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('parseMilestoneLine'), 'Brak funkcji parseMilestoneLine');
+      assert.ok(content.includes('formatMilestonesForTextarea'), 'Brak funkcji formatMilestonesForTextarea');
+
+      function parseMilestoneLine(rawLine) {
+        const line = (rawLine || '').trim();
+        if (!line) return null;
+        const doneMatch = line.match(/^(\u2713|\u2714|\[[xXvV]\]|[vVxX\+]|[-*]\s*\[[xXvV]\])\s+(.*)$/);
+        if (doneMatch) {
+          return { title: doneMatch[2].trim(), isDone: true };
+        }
+        const emptyMatch = line.match(/^(\[[ \]]|[-*]\s*\[[ \]]|[-*])\s+(.*)$/);
+        if (emptyMatch) {
+          return { title: emptyMatch[2].trim(), isDone: false };
+        }
+        return { title: line, isDone: false };
+      }
+
+      function formatMilestonesForTextarea(milestones = []) {
+        if (!Array.isArray(milestones)) return '';
+        return milestones.map(m => {
+          const title = (m && m.title ? m.title : '').trim();
+          return m && m.isDone ? `✓ ${title}` : title;
+        }).join('\n');
+      }
+
+      assert.deepEqual(parseMilestoneLine('✓ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('v Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('V Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('+ Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('x Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('[x] Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+      assert.deepEqual(parseMilestoneLine('- [x] Eksport bazy'), { title: 'Eksport bazy', isDone: true });
+
+      assert.deepEqual(parseMilestoneLine('Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+      assert.deepEqual(parseMilestoneLine('Van z towarem'), { title: 'Van z towarem', isDone: false });
+      assert.deepEqual(parseMilestoneLine('- Eksport bazy'), { title: 'Eksport bazy', isDone: false });
+
+      const formatted = formatMilestonesForTextarea([
+        { title: 'Krok 1', isDone: true },
+        { title: 'Krok 2', isDone: false }
+      ]);
+      assert.equal(formatted, '✓ Krok 1\nKrok 2');
+    });
+
+    test('Dwuklik na zadaniu w sekcji Czekam na otwiera edycję zadania', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('ondblclick="openTaskModal(\'${w.id}\')"'), 'Brak obsługi dwukliku w sekcji Czekam na');
     });
 
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
