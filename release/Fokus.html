@@ -163,22 +163,22 @@
       <!-- Centralna sekcja: Segmented Control + Wyróżniony przycisk + Nowe zadanie -->
       <div class="flex items-center gap-2 sm:gap-3">
         <nav class="flex items-center bg-black/[0.05] dark:bg-[#1C1C1E] p-1 rounded-full border border-transparent dark:border-[#2C2C2E] overflow-x-auto">
-          <button onclick="switchView('DAY')" id="navBtn-DAY" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('DAY')" id="navBtn-DAY" title="Mój Dzień (Skrót: 1)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Mój Dzień <span id="navBadge-DAY" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
-          <button onclick="switchView('MATRIX')" id="navBtn-MATRIX" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('MATRIX')" id="navBtn-MATRIX" title="Eisenhower (Skrót: 2)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Eisenhower <span id="navBadge-MATRIX" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
-          <button onclick="switchView('ALL_TASKS')" id="navBtn-ALL_TASKS" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('ALL_TASKS')" id="navBtn-ALL_TASKS" title="Wszystkie zadania (Skrót: 3)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Wszystkie zadania <span id="navBadge-ALL_TASKS" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
-          <button onclick="switchView('CALENDAR')" id="navBtn-CALENDAR" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('CALENDAR')" id="navBtn-CALENDAR" title="Kalendarz (Skrót: 4)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Kalendarz <span id="navBadge-CALENDAR" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
-          <button onclick="switchView('WAITING')" id="navBtn-WAITING" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('WAITING')" id="navBtn-WAITING" title="Czekam na (Skrót: 5)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Czekam na <span id="navBadge-WAITING" class="ml-1 opacity-60 font-mono text-[11px]"></span>
           </button>
-          <button onclick="switchView('REPORTS')" id="navBtn-REPORTS" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
+          <button onclick="switchView('REPORTS')" id="navBtn-REPORTS" title="Raporty (Skrót: 6)" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap">
             Raporty
           </button>
         </nav>
@@ -220,12 +220,12 @@
 
           <!-- Rozwijana lista zębatki (Dropdown) -->
           <div id="settingsMenuDropdown" class="hidden absolute right-0 top-full mt-2 w-48 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] shadow-2xl p-1.5 z-50 fade-in">
-            <button onclick="closeSettingsMenu(); switchView('DICTIONARIES');" id="navBtn-DICTIONARIES" title="Słowniki osób i kategorii"
+            <button onclick="closeSettingsMenu(); switchView('DICTIONARIES');" id="navBtn-DICTIONARIES" title="Słowniki osób i kategorii (Skrót: 7)"
               class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition">
               <span>⚙️</span>
               <span>Słowniki</span>
             </button>
-            <button onclick="closeSettingsMenu(); switchView('GUIDE');" id="navBtn-GUIDE" title="Przewodnik metodyczny i instrukcja obsługi"
+            <button onclick="closeSettingsMenu(); switchView('GUIDE');" id="navBtn-GUIDE" title="Przewodnik metodyczny i instrukcja obsługi (Skrót: 8)"
               class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-left hover:bg-[#F5F5F7] dark:hover:bg-[#2C2C2E] transition">
               <span>📖</span>
               <span>Instrukcja</span>
@@ -494,7 +494,10 @@
       </div>
 
       <div class="flex items-center justify-between pt-2">
-        <button type="button" id="tmDeleteBtn" onclick="deleteTaskFromModal()" class="hidden text-xs text-rose-500 hover:underline">Usuń zadanie</button>
+        <div class="flex items-center gap-3">
+          <button type="button" id="tmDeleteBtn" onclick="deleteTaskFromModal()" class="hidden text-xs text-rose-500 hover:underline">Usuń zadanie</button>
+          <button type="button" id="tmDropBtn" onclick="dropTaskFromModal()" class="hidden text-xs text-amber-600 dark:text-amber-400 hover:underline">Porzuć zadanie</button>
+        </div>
         <div class="flex items-center gap-2 ml-auto">
           <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-full text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">Anuluj</button>
           <button type="button" onclick="saveTaskFromModal()" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
@@ -1129,6 +1132,40 @@
         </div>
       </div>
 
+      <!-- 4. POWIADOMIENIA I WIDŻET STOPERA (PIP / TYTUŁ / DESKTOP) -->
+      <div class="space-y-3 pt-3 border-t border-black/5 dark:border-white/5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Powiadomienia i Pływający Stoper</label>
+        
+        <div class="space-y-2">
+          <!-- Przełącznik 1: Powiadomienia systemowe (Desktop Notifications) -->
+          <label class="flex items-center justify-between p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 cursor-pointer">
+            <div class="space-y-0.5 pr-2">
+              <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Powiadomienia na pulpicie (00:00)</div>
+              <div class="text-[11px] text-zinc-400">Wyświetl natywny komunikat systemowy po ukończeniu 25 min</div>
+            </div>
+            <input type="checkbox" id="settingsDesktopNotificationsToggle" onchange="toggleDesktopNotificationsSetting(this.checked)" class="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+          </label>
+
+          <!-- Przełącznik 2: Zegar w tytule karty (document.title) -->
+          <label class="flex items-center justify-between p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 cursor-pointer">
+            <div class="space-y-0.5 pr-2">
+              <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Zegar w tytule karty przeglądarki</div>
+              <div class="text-[11px] text-zinc-400">Pokazuj odliczanie czasu i tytuł zadania na karcie przeglądarki</div>
+            </div>
+            <input type="checkbox" id="settingsTitleTimerToggle" onchange="toggleTitleTimerSetting(this.checked)" class="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+          </label>
+
+          <!-- Przełącznik 3: Pływający stoper (PiP) -->
+          <label class="flex items-center justify-between p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 cursor-pointer">
+            <div class="space-y-0.5 pr-2">
+              <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Pływające okno stopera (Always-on-Top)</div>
+              <div class="text-[11px] text-zinc-400">Zezwalaj na miniaturowe okno z zegarem i krokami milowymi</div>
+            </div>
+            <input type="checkbox" id="settingsPiPToggle" onchange="togglePiPSetting(this.checked)" class="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+          </label>
+        </div>
+      </div>
+
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 dark:border-white/5">
         <button type="button" onclick="closeModal('settingsModal')" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
           Gotowe
@@ -1188,38 +1225,6 @@
         { id: 'cat_raporty', name: 'Raporty / Power BI', colorHex: '#10B981' },
         { id: 'cat_ppwr', name: 'Regulacje / PPWR', colorHex: '#8B5CF6' },
         { id: 'cat_wlasne', name: 'Praca własna / Organizacja', colorHex: '#64748B' }
-      ],
-      sopTemplates: [
-        {
-          id: 'sop_rfq',
-          name: 'Analiza ofert RFQ (TCO)',
-          steps: [
-            'Weryfikacja kompletności ofert handlowych',
-            'Sprowadzenie cen do wspólnej bazy (Incoterms DDP)',
-            'Budowa matrycy porównawczej TCO w Excelu',
-            'Rekomendacja wyboru dostawcy i omówienie z kupcem'
-          ]
-        },
-        {
-          id: 'sop_raport',
-          name: 'Raport Miesięczny / Zamknięcie',
-          steps: [
-            'Eksport transakcji z Business Central do CSV',
-            'Oczyszczenie anomalii i pustych rekordów',
-            'Aktualizacja modelu danych w Power BI',
-            'Komentarz do odchyleń m/m i y/y oraz wysyłka'
-          ]
-        },
-        {
-          id: 'sop_ppwr',
-          name: 'Audyt wag i kodów PPWR/EUDR',
-          steps: [
-            'Pobranie indeksów asortymentowych z ERP',
-            'Weryfikacja kart charakterystyki dostawców',
-            'Walidacja mas jednostkowych netto/brutto',
-            'Wprowadzenie korekt do bazy ERP i notatka audytowa'
-          ]
-        }
       ],
       tasks: [],
       timeLogs: []
@@ -1400,9 +1405,6 @@
       if (!data.logoAccentColor) data.logoAccentColor = '#10B981';
       if (!data.pageThemeColor) data.pageThemeColor = 'NEUTRAL';
       if (!data.customPageThemeColor) data.customPageThemeColor = '#3B82F6';
-      if (!data.sopTemplates || !Array.isArray(data.sopTemplates) || data.sopTemplates.length === 0) {
-        data.sopTemplates = DEFAULT_DB.sopTemplates;
-      }
 
       if (!data.categories.some(c => c.id === 'cat_wlasne')) {
         data.categories.push({ id: 'cat_wlasne', name: 'Praca własna / Organizacja', colorHex: '#64748B' });
@@ -2107,16 +2109,6 @@
       }
     }
 
-    function onPomodoroPresetChange(val) {
-      if (val === 'CUSTOM') {
-        openCustomTimerModal();
-      } else if (val === 'MANUAL') {
-        openManualTimeForActiveTask();
-      } else {
-        setPomodoroPreset(val);
-      }
-    }
-
     function openCustomTimerModal() {
       closePomodoroMenu();
       const inp = document.getElementById('ctmMinutes');
@@ -2229,13 +2221,22 @@
         timer.remainingSeconds = 0;
         timer.isOvertime = true;
         timer.overtimeSeconds = Math.round((now - timer.targetEndTimestamp) / 1000);
+
+        // Safety Cap: jeśli overtime przekroczy 180 minut (3 godziny)
+        if (timer.overtimeSeconds >= 180 * 60 && timer.running) {
+          clearInterval(timer.intervalId);
+          timer.running = false;
+          showToast('⚠️ Auto-pauza: Nadgodziny przekroczyły 3 godziny. Sprawdź stoper.');
+        }
+
         if (!timer.chimePlayed) {
           timer.chimePlayed = true;
           playGentleChime();
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          if (db.notificationsEnabled !== false && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             try {
-              new Notification('Fokus Pomodoro', {
-                body: 'Sesja Pomodoro ukończona! Stoper liczy czas dalej w trybie Overtime (+00:01...).'
+              const activeT = db.tasks.find(t => t.id === timer.taskId);
+              new Notification('🔔 Fokus: Czas minął!', {
+                body: activeT ? `Sesja 25 min ukończona dla: "${activeT.title}". Stoper liczy czas dalej w trybie Overtime.` : 'Sesja ukończona! Czas na przerwę lub tryb flow.'
               });
             } catch (e) {}
           }
@@ -2244,6 +2245,7 @@
       }
       savePomodoroState();
       updateTimerUI();
+      updatePiPWindow();
     }
 
     function togglePomodoro(taskId) {
@@ -2457,6 +2459,22 @@
         ? `+${formatClock(timer.overtimeSeconds)}`
         : formatClock(timer.remainingSeconds);
 
+      if (db.titleTimerEnabled !== false) {
+        const activeT = db.tasks.find(t => t.id === timer.taskId);
+        const taskPrefix = activeT ? `${activeT.title.substring(0, 22)} · ` : '';
+        if (timer.isOvertime) {
+          document.title = `⚠️ +${formatClock(timer.overtimeSeconds)} · ${taskPrefix}Fokus`;
+        } else if (timer.running) {
+          document.title = `▶ ${formatClock(timer.remainingSeconds)} · ${taskPrefix}Fokus`;
+        } else if (timer.remainingSeconds < timer.plannedMinutes * 60) {
+          document.title = `⏸ ${formatClock(timer.remainingSeconds)} · ${taskPrefix}Fokus`;
+        } else {
+          document.title = 'Fokus Solo';
+        }
+      } else {
+        document.title = 'Fokus Solo';
+      }
+
       if (clockEl) {
         clockEl.textContent = displayStr;
         clockEl.className = `font-mono text-2xl sm:text-3xl font-semibold tracking-tight transition-colors ${
@@ -2513,15 +2531,200 @@
       if (timer.running) {
         closePomodoroMenu();
       }
+    }
 
-      // Synchronizacja listy rozwijanej presetów (jeśli obecna w DOM)
-      const selectEl = document.getElementById('pomodoroPresetSelect');
-      if (selectEl && document.activeElement !== selectEl) {
-        if ([15, 25, 45, 60, 90].includes(timer.plannedMinutes)) {
-          selectEl.value = String(timer.plannedMinutes);
-        } else {
-          selectEl.value = 'CUSTOM';
+    // =========================================================================
+    // PŁYWAJĄCE OKNO STOPERA (DOCUMENT PICTURE-IN-PICTURE Z KROKAMI MILOWYMI)
+    // =========================================================================
+    let pipWindow = null;
+
+    async function toggleTimerPiP() {
+      if (pipWindow && !pipWindow.closed) {
+        try {
+          pipWindow.close();
+        } catch (e) {}
+        pipWindow = null;
+        return;
+      }
+
+      // Sprawdź wsparcie dla Document Picture-in-Picture API (Chrome 111+)
+      if ('documentPictureInPicture' in window) {
+        try {
+          pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 380,
+            height: 480
+          });
+
+          [...document.styleSheets].forEach(sheet => {
+            try {
+              if (sheet.href) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = sheet.href;
+                pipWindow.document.head.appendChild(link);
+              } else if (sheet.cssRules) {
+                const style = document.createElement('style');
+                for (const rule of sheet.cssRules) {
+                  style.appendChild(document.createTextNode(rule.cssText));
+                }
+                pipWindow.document.head.appendChild(style);
+              }
+            } catch (e) {}
+          });
+
+          pipWindow.addEventListener('pagehide', () => {
+            pipWindow = null;
+          });
+
+          renderPiPContent();
+          return;
+        } catch (e) {
+          console.warn('Document PiP niedostępne, próba otwarcia okna popup:', e);
         }
+      }
+
+      // Fallback: popup Always-on-Top
+      try {
+        const left = Math.max(10, window.screen.width - 400);
+        const top = 60;
+        pipWindow = window.open('', 'FokusMiniTimer', `width=380,height=480,top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes`);
+        if (pipWindow) {
+          [...document.styleSheets].forEach(sheet => {
+            try {
+              if (sheet.href) {
+                const link = pipWindow.document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = sheet.href;
+                pipWindow.document.head.appendChild(link);
+              }
+            } catch (e) {}
+          });
+          pipWindow.addEventListener('beforeunload', () => {
+            pipWindow = null;
+          });
+          renderPiPContent();
+        }
+      } catch (err) {
+        showToast('Przeglądarka zablokowała wyskakujące okno stopera.');
+      }
+    }
+
+    function renderPiPContent() {
+      if (!pipWindow || pipWindow.closed) return;
+      const doc = pipWindow.document;
+      const isDark = db.theme === 'DARK';
+
+      doc.title = 'Fokus · Stoper i Kroki';
+      doc.body.className = `${isDark ? 'dark bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'} p-4 select-none min-h-screen flex flex-col justify-between`;
+
+      const activeTask = getActiveMyDayTask();
+      const title = activeTask ? activeTask.title : 'Brak aktywnego zadania';
+      const person = activeTask ? getPerson(activeTask.requesterPersonId || activeTask.personId) : null;
+      const milestones = activeTask ? (activeTask.milestones || activeTask.checklist || []) : [];
+      const displayStr = timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds);
+
+      doc.body.innerHTML = `
+        <div class="space-y-3 flex-1 flex flex-col min-h-0">
+          <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
+            <div class="flex items-center gap-1.5 font-mono text-sm font-bold">
+              <span style="color: ${db.logoAccentColor || '#10B981'}">&gt;</span>
+              <span>fokus</span>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${timer.isOvertime ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse' : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')}">
+              ${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}
+            </span>
+          </div>
+
+          <div>
+            <div class="text-xs font-semibold truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
+            ${person ? `<div class="text-[10px] text-zinc-400 truncate">${escapeHtml(person.canonicalName)}</div>` : ''}
+          </div>
+
+          <div class="py-2.5 px-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex items-center justify-between gap-3">
+            <span id="pipClockDisplay" class="font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500' : ''}">
+              ${displayStr}
+            </span>
+            <div class="flex items-center gap-1.5">
+              <button id="pipStartBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-white text-black' : 'bg-[#1D1D1F] text-white'} hover:opacity-90 transition">
+                ${timer.running ? 'Pauza' : 'Start'}
+              </button>
+              <button id="pipFinishBtn" class="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 transition ${(!timer.running && !timer.isOvertime && timer.remainingSeconds === timer.plannedMinutes * 60) ? 'hidden' : ''}">
+                ✓ Zapisz
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 min-h-0 flex flex-col pt-1">
+            <div class="text-[11px] font-medium text-zinc-400 pb-1.5 flex items-center justify-between">
+              <span>Kroki milowe</span>
+              <span class="font-mono text-[10px]">${milestones.filter(m => m.isDone).length}/${milestones.length}</span>
+            </div>
+            <div id="pipMilestonesList" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
+              ${milestones.length === 0 ? `
+                <div class="text-center py-4 text-xs text-zinc-400">Brak kroków milowych dla tego zadania.</div>
+              ` : milestones.map(m => `
+                <div data-m-id="${m.id}" class="pip-milestone-row group flex items-center gap-2.5 py-1.5 px-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition">
+                  <span class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${
+                    m.isDone
+                      ? (isDark ? 'bg-white border-white text-black' : 'bg-[#1D1D1F] border-[#1D1D1F] text-white')
+                      : 'border-zinc-400'
+                  }">
+                    ${m.isDone ? '✓' : ''}
+                  </span>
+                  <span class="text-xs truncate ${m.isDone ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
+                    ${escapeHtml(m.title)}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const pipStartBtn = doc.getElementById('pipStartBtn');
+      if (pipStartBtn && activeTask) {
+        pipStartBtn.onclick = () => {
+          togglePomodoro(activeTask.id);
+          renderPiPContent();
+        };
+      }
+
+      const pipFinishBtn = doc.getElementById('pipFinishBtn');
+      if (pipFinishBtn) {
+        pipFinishBtn.onclick = () => {
+          finishAndSavePomodoroSession();
+          renderPiPContent();
+        };
+      }
+
+      const rows = doc.querySelectorAll('.pip-milestone-row');
+      rows.forEach(r => {
+        r.onclick = () => {
+          const mId = r.getAttribute('data-m-id');
+          if (activeTask && mId) {
+            toggleMilestone(activeTask.id, mId);
+            renderPiPContent();
+          }
+        };
+      });
+    }
+
+    function updatePiPWindow() {
+      if (!pipWindow || pipWindow.closed) return;
+      const clock = pipWindow.document.getElementById('pipClockDisplay');
+      const btn = pipWindow.document.getElementById('pipStartBtn');
+      const finishBtn = pipWindow.document.getElementById('pipFinishBtn');
+      if (clock && btn) {
+        const displayStr = timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds);
+        clock.textContent = displayStr;
+        clock.className = `font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500' : ''}`;
+        btn.textContent = timer.running ? 'Pauza' : 'Start';
+        if (finishBtn) {
+          const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
+          finishBtn.classList.toggle('hidden', !hasProgress);
+        }
+      } else {
+        renderPiPContent();
       }
     }
 
@@ -2678,7 +2881,46 @@
       updateSettingsModalThemeUI();
       applyAppPalette();
       applyLogoAccent(db.logoAccentColor || '#10B981');
+      const notifChk = document.getElementById('settingsDesktopNotificationsToggle');
+      if (notifChk) notifChk.checked = db.notificationsEnabled !== false;
+      const titleChk = document.getElementById('settingsTitleTimerToggle');
+      if (titleChk) titleChk.checked = db.titleTimerEnabled !== false;
+      const pipChk = document.getElementById('settingsPiPToggle');
+      if (pipChk) pipChk.checked = db.pipEnabled !== false;
       openModal('settingsModal');
+    }
+
+    function toggleDesktopNotificationsSetting(enabled) {
+      db.notificationsEnabled = !!enabled;
+      if (enabled && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+        Notification.requestPermission().then(perm => {
+          if (perm !== 'granted') {
+            showToast('Brak uprawnień na powiadomienia w przeglądarce');
+            db.notificationsEnabled = false;
+            const chk = document.getElementById('settingsDesktopNotificationsToggle');
+            if (chk) chk.checked = false;
+          } else {
+            showToast('Włączono powiadomienia systemowe');
+          }
+          saveDatabase();
+        });
+        return;
+      }
+      saveDatabase();
+      showToast(enabled ? 'Włączono powiadomienia' : 'Wyłączono powiadomienia');
+    }
+
+    function toggleTitleTimerSetting(enabled) {
+      db.titleTimerEnabled = !!enabled;
+      saveDatabase();
+      updateTimerUI();
+      showToast(enabled ? 'Włączono zegar w tytule karty' : 'Wyłączono zegar w tytule karty');
+    }
+
+    function togglePiPSetting(enabled) {
+      db.pipEnabled = !!enabled;
+      saveDatabase();
+      showToast(enabled ? 'Włączono stoper Always-on-Top' : 'Wyłączono stoper Always-on-Top');
     }
 
     function updateSettingsModalThemeUI() {
@@ -2812,6 +3054,7 @@
       }
 
       const canvas = document.getElementById('mainCanvas');
+      const prevScroll = canvas ? canvas.scrollTop : 0;
       if (db.activeView === 'DAY') {
         canvas.className = 'flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-10 py-4 lg:py-5 min-h-0 flex flex-col lg:overflow-hidden';
         canvas.innerHTML = renderMyDayBento();
@@ -2832,9 +3075,11 @@
         } else if (db.activeView === 'GUIDE') {
           canvas.innerHTML = renderGuideBento();
         }
+        if (canvas) canvas.scrollTop = prevScroll;
       }
 
       updateTimerUI();
+      updatePiPWindow();
     }
 
     // =========================================================================
@@ -2916,6 +3161,14 @@
                       </div>
 
                       <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+                        <button onclick="moveMyDayTask('${t.id}', -1)" ${index === 0 ? 'disabled' : ''} title="Przesuń w górę"
+                          class="w-5 h-5 rounded flex items-center justify-center text-[10px] text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition">
+                          ↑
+                        </button>
+                        <button onclick="moveMyDayTask('${t.id}', 1)" ${index === myDayTasks.length - 1 ? 'disabled' : ''} title="Przesuń w dół"
+                          class="w-5 h-5 rounded flex items-center justify-center text-[10px] text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition">
+                          ↓
+                        </button>
                         ${index > 0 ? `
                           <button onclick="promoteToFrog('${t.id}')" title="Ustaw jako #1 Dzisiejszą Żabę"
                             class="px-2 py-0.5 rounded-full text-[10px] font-mono text-zinc-400 hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition">
@@ -3427,8 +3680,14 @@
       personId: 'ALL',
       urgency: 'ALL',
       sortBy: 'dueDate',
-      sortDir: 'asc'
+      sortDir: 'asc',
+      density: 'comfortable'
     };
+
+    function toggleAllTasksDensity() {
+      allTasksState.density = allTasksState.density === 'compact' ? 'comfortable' : 'compact';
+      renderApp();
+    }
 
     function setAllTasksFilter(key, val) {
       allTasksState[key] = val;
@@ -3462,7 +3721,12 @@
 
       // Filtr statusu
       if (allTasksState.status === 'ACTIVE') {
-        list = list.filter(t => t.status !== 'DONE');
+        list = list.filter(t => t.status !== 'DONE' && t.status !== 'DROPPED');
+      } else if (allTasksState.status === 'OVERDUE') {
+        const todayIso = getTodayISO();
+        list = list.filter(t => t.status !== 'DONE' && t.status !== 'DROPPED' && t.dueDate && t.dueDate < todayIso);
+      } else if (allTasksState.status === 'DROPPED') {
+        list = list.filter(t => t.status === 'DROPPED');
       } else if (allTasksState.status !== 'ALL') {
         list = list.filter(t => t.status === allTasksState.status);
       }
@@ -3487,6 +3751,17 @@
 
       // Sortowanie kolumn
       list.sort((a, b) => {
+        if (allTasksState.sortBy === 'dueDate') {
+          const hasA = Boolean(a.dueDate);
+          const hasB = Boolean(b.dueDate);
+          if (!hasA && !hasB) return 0;
+          if (!hasA) return 1; // Puste daty ZAWSZE na końcu
+          if (!hasB) return -1; // Puste daty ZAWSZE na końcu
+          const timeA = new Date(a.dueDate).getTime();
+          const timeB = new Date(b.dueDate).getTime();
+          return allTasksState.sortDir === 'asc' ? timeA - timeB : timeB - timeA;
+        }
+
         let valA, valB;
         if (allTasksState.sortBy === 'title') {
           valA = (a.title || '').toLowerCase();
@@ -3503,9 +3778,6 @@
         } else if (allTasksState.sortBy === 'importance') {
           valA = a.importance === 'HIGH' ? 1 : 0;
           valB = b.importance === 'HIGH' ? 1 : 0;
-        } else if (allTasksState.sortBy === 'dueDate') {
-          valA = a.dueDate || '9999-99-99';
-          valB = b.dueDate || '9999-99-99';
         } else if (allTasksState.sortBy === 'estimatedMinutes') {
           valA = parseInt(a.estimatedMinutes, 10) || 0;
           valB = parseInt(b.estimatedMinutes, 10) || 0;
@@ -3529,6 +3801,10 @@
           : '<span class="text-[#1D1D1F] dark:text-white font-bold ml-1">↓</span>';
       };
 
+      const isCompact = allTasksState.density === 'compact';
+      const thPad = isCompact ? 'py-1.5 px-2.5 text-[10px]' : 'py-3 px-3 text-[11px]';
+      const tdPad = isCompact ? 'py-1.5 px-2.5 text-[11px]' : 'py-2.5 px-3 text-xs';
+
       return `
         <div class="space-y-6 fade-in pb-12">
           <!-- Karta Bento: Filtry i wyszukiwarka -->
@@ -3543,6 +3819,10 @@
                 </p>
               </div>
               <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleAllTasksDensity()" title="Przełącz zagęszczenie wierszy tabeli (Komfortowy / Kompaktowy)"
+                  class="px-3 py-1.5 rounded-full text-xs font-mono bg-[#F5F5F7] dark:bg-[#2C2C2E] text-zinc-700 dark:text-zinc-200 hover:opacity-80 transition cursor-pointer">
+                  ${isCompact ? '☵ Kompaktowy' : '☰ Komfortowy'}
+                </button>
                 <span class="text-xs font-mono text-zinc-500 bg-[#F5F5F7] dark:bg-[#2C2C2E] px-3 py-1.5 rounded-full">
                   Wyświetlono: <strong>${list.length}</strong> z ${db.tasks.length}
                 </span>
@@ -3567,9 +3847,11 @@
                   class="w-full text-xs px-3 py-2 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/60 text-zinc-800 dark:text-zinc-100 focus:outline-none cursor-pointer">
                   <option value="ALL" ${allTasksState.status === 'ALL' ? 'selected' : ''}>Status: Wszystkie</option>
                   <option value="ACTIVE" ${allTasksState.status === 'ACTIVE' ? 'selected' : ''}>Status: Aktywne</option>
+                  <option value="OVERDUE" ${allTasksState.status === 'OVERDUE' ? 'selected' : ''}>Status: Po terminie ⚠️</option>
                   <option value="TODO" ${allTasksState.status === 'TODO' ? 'selected' : ''}>Status: Do zrobienia</option>
                   <option value="WAITING_FOR" ${allTasksState.status === 'WAITING_FOR' ? 'selected' : ''}>Status: Czekam na</option>
                   <option value="DONE" ${allTasksState.status === 'DONE' ? 'selected' : ''}>Status: Ukończone</option>
+                  <option value="DROPPED" ${allTasksState.status === 'DROPPED' ? 'selected' : ''}>Status: Porzucone</option>
                 </select>
               </div>
 
@@ -3600,33 +3882,33 @@
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
-                  <tr class="border-b border-black/[0.06] dark:border-white/[0.06] bg-[#F5F5F7]/70 dark:bg-[#2C2C2E]/40 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider select-none">
-                    <th class="py-3 px-3 w-10 text-center">Dzień</th>
-                    <th onclick="setAllTasksSort('title')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                  <tr class="border-b border-black/[0.06] dark:border-white/[0.06] bg-[#F5F5F7]/70 dark:bg-[#2C2C2E]/40 ${thPad} font-semibold text-zinc-500 uppercase tracking-wider select-none">
+                    <th class="${thPad} w-10 text-center">Dzień</th>
+                    <th onclick="setAllTasksSort('title')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Zadanie ${sortIndicator('title')}
                     </th>
-                    <th onclick="setAllTasksSort('person')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('person')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Dla kogo ${sortIndicator('person')}
                     </th>
-                    <th onclick="setAllTasksSort('category')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('category')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Kategoria ${sortIndicator('category')}
                     </th>
-                    <th onclick="setAllTasksSort('urgency')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('urgency')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Pilność ${sortIndicator('urgency')}
                     </th>
-                    <th onclick="setAllTasksSort('importance')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('importance')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Ważność ${sortIndicator('importance')}
                     </th>
-                    <th onclick="setAllTasksSort('dueDate')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('dueDate')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Termin ${sortIndicator('dueDate')}
                     </th>
-                    <th onclick="setAllTasksSort('estimatedMinutes')" class="py-3 px-3 text-right cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('estimatedMinutes')" class="${thPad} text-right cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Czas ${sortIndicator('estimatedMinutes')}
                     </th>
-                    <th onclick="setAllTasksSort('status')" class="py-3 px-3 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
+                    <th onclick="setAllTasksSort('status')" class="${thPad} cursor-pointer hover:text-zinc-900 dark:hover:text-white transition">
                       Status ${sortIndicator('status')}
                     </th>
-                    <th class="py-3 px-3 text-right">Akcje</th>
+                    <th class="${thPad} text-right">Akcje</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
@@ -3641,6 +3923,7 @@
                     const person = getPerson(t.requesterPersonId || t.personId);
                     const category = getCategory(t.categoryId);
                     const isDone = t.status === 'DONE';
+                    const isDropped = t.status === 'DROPPED';
                     const isWaiting = t.status === 'WAITING_FOR';
                     const isInMyDay = !!(t.inMyDay || t.isMyDay);
                     const milestones = t.milestones || t.checklist || [];
@@ -3652,7 +3935,7 @@
                       const todayIso = getTodayISO();
                       const daysDiff = countBusinessDays(todayIso, t.dueDate);
                       dueLabel = formatDateShort(t.dueDate);
-                      if (isDone) {
+                      if (isDone || isDropped) {
                         dueClass = 'text-zinc-400';
                       } else if (t.dueDate < todayIso) {
                         dueClass = 'text-rose-500 font-semibold';
@@ -3665,17 +3948,19 @@
 
                     return `
                       <tr ondblclick="openTaskModal('${t.id}')" title="Podwójne kliknięcie: edytuj zadanie"
-                        class="hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition cursor-pointer select-none ${isDone ? 'opacity-50' : ''}">
-                        <td class="py-2.5 px-3 text-center">
-                          <button onclick="event.stopPropagation(); toggleTaskMyDay('${t.id}')" title="${isInMyDay ? 'Usuń z Mój Dzień' : 'Dodaj do Mój Dzień'}"
-                            class="text-sm hover:scale-110 transition ${isInMyDay ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600 hover:text-amber-400'}">
-                            ${isInMyDay ? '★' : '☆'}
-                          </button>
+                        class="hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition cursor-pointer select-none ${isDone ? 'opacity-50' : (isDropped ? 'opacity-40 italic' : '')}">
+                        <td class="${tdPad} text-center">
+                          ${!isDone && !isDropped ? `
+                            <button onclick="event.stopPropagation(); toggleTaskMyDay('${t.id}')" title="${isInMyDay ? 'Usuń z Mój Dzień' : 'Dodaj do Mój Dzień'}"
+                              class="text-sm hover:scale-110 transition ${isInMyDay ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600 hover:text-amber-400'}">
+                              ${isInMyDay ? '★' : '☆'}
+                            </button>
+                          ` : '<span class="text-zinc-300 dark:text-zinc-600">—</span>'}
                         </td>
 
-                        <td class="py-2.5 px-3 max-w-xs sm:max-w-md">
+                        <td class="${tdPad} max-w-xs sm:max-w-md">
                           <div class="flex items-center gap-2">
-                            <span class="font-medium text-[#1D1D1F] dark:text-white truncate ${isDone ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
+                            <span class="font-medium text-[#1D1D1F] dark:text-white truncate ${isDone || isDropped ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
                               ${escapeHtml(t.title)}
                             </span>
                             ${milestones.length > 0 ? `
@@ -3696,40 +3981,44 @@
                           ` : ''}
                         </td>
 
-                        <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
+                        <td class="${tdPad} text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
                           ${escapeHtml(person.canonicalName)}
                         </td>
 
-                        <td class="py-2.5 px-3 whitespace-nowrap">
+                        <td class="${tdPad} whitespace-nowrap">
                           <span class="inline-flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
                             <span class="w-2 h-2 rounded-full" style="background:${category.colorHex}"></span>
                             <span>#${escapeHtml(category.name)}</span>
                           </span>
                         </td>
 
-                        <td class="py-2.5 px-3 whitespace-nowrap">
+                        <td class="${tdPad} whitespace-nowrap">
                           <span class="inline-flex items-center gap-1.5">
                             <span class="w-1.5 h-1.5 rounded-full ${getUrgencyDotClass(eff.level)}"></span>
                             <span class="font-medium">${URGENCY_LABEL[eff.level]}</span>
                           </span>
                         </td>
 
-                        <td class="py-2.5 px-3 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                        <td class="${tdPad} whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                           ${t.importance === 'HIGH' ? '<span class="font-medium text-[#1D1D1F] dark:text-white">Ważne</span>' : 'Mniej ważne'}
                         </td>
 
-                        <td class="py-2.5 px-3 whitespace-nowrap font-mono text-[11px] ${dueClass}">
+                        <td class="${tdPad} whitespace-nowrap font-mono text-[11px] ${dueClass}">
                           ${dueLabel}
                         </td>
 
-                        <td class="py-2.5 px-3 text-right font-mono text-[11px] text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+                        <td class="${tdPad} text-right font-mono text-[11px] text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
                           ${t.estimatedMinutes ? t.estimatedMinutes + 'm' : '—'}
                         </td>
 
-                        <td class="py-2.5 px-3 whitespace-nowrap">
+                        <td class="${tdPad} whitespace-nowrap">
                           ${isDone ? `
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                               Ukończone
+                            </span>
+                          ` : isDropped ? `
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-400">
+                              Porzucone
                             </span>
                           ` : isWaiting ? `
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
@@ -3742,9 +4031,9 @@
                           `}
                         </td>
 
-                        <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                        <td class="${tdPad} text-right whitespace-nowrap">
                           <div class="inline-flex items-center gap-1.5">
-                            ${!isDone ? `
+                            ${!isDone && !isDropped ? `
                               <button onclick="event.stopPropagation(); completeTask('${t.id}')" title="Ukończ zadanie"
                                 class="p-1 rounded-lg hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-500 transition">
                                 ✓
@@ -3753,8 +4042,12 @@
                                 class="p-1 rounded-lg hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 transition">
                                 ⏳
                               </button>
+                              <button onclick="event.stopPropagation(); dropTask('${t.id}')" title="Porzuć zadanie"
+                                class="p-1 rounded-lg hover:bg-rose-500/10 text-zinc-400 hover:text-rose-500 transition">
+                                ✕
+                              </button>
                             ` : `
-                              <button onclick="event.stopPropagation(); unblockWaitingTask('${t.id}', false)" title="Przywróć zadanie"
+                              <button onclick="event.stopPropagation(); ${isDropped ? `restoreDroppedTask('${t.id}')` : `unblockWaitingTask('${t.id}', false)`}" title="Przywróć zadanie"
                                 class="p-1 rounded-lg hover:bg-blue-500/10 text-zinc-400 hover:text-blue-500 transition">
                                 ↺
                               </button>
@@ -5435,6 +5728,22 @@
       renderApp();
     }
 
+    function moveMyDayTask(taskId, dir) {
+      if (!requireDb()) return;
+      const myDay = getMyDayTasks();
+      const idx = myDay.findIndex(t => t.id === taskId);
+      if (idx === -1) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= myDay.length) return;
+      const item = myDay.splice(idx, 1)[0];
+      myDay.splice(targetIdx, 0, item);
+      myDay.forEach((t, i) => {
+        t.myDayOrder = i + 1;
+      });
+      saveDatabase();
+      renderApp();
+    }
+
     function toggleTaskMyDay(taskId) {
       if (!requireDb()) return;
       const t = db.tasks.find(x => x.id === taskId);
@@ -5582,6 +5891,58 @@
 
       saveDatabase();
       renderApp();
+    }
+
+    function dropTask(taskId) {
+      if (!requireDb()) return;
+      const t = db.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      const reason = prompt('Podaj powód porzucenia zadania (zostanie trwale zapisany w historii Dupochronu):', 'Nieaktualne / Anulowane');
+      if (reason === null) return;
+      const cleanReason = reason.trim() || 'Porzucono bez podania przyczyny';
+      const oldStatus = t.status;
+      t.status = 'DROPPED';
+      t.inMyDay = false;
+      t.isMyDay = false;
+      t.droppedAt = new Date().toISOString();
+      t.auditLog.unshift({
+        id: generateId('log'),
+        timestamp: new Date().toISOString(),
+        changeType: 'STATUS_CHANGED',
+        fieldChanged: 'Status',
+        oldValue: oldStatus,
+        newValue: 'Porzucone',
+        reasonComment: cleanReason
+      });
+
+      if (db.selectedTaskId === taskId) {
+        const remaining = getMyDayTasks();
+        db.selectedTaskId = remaining.length > 0 ? remaining[0].id : null;
+      }
+
+      saveDatabase();
+      renderApp();
+      showToast(`Zadanie porzucone (${cleanReason})`);
+    }
+
+    function restoreDroppedTask(taskId) {
+      if (!requireDb()) return;
+      const t = db.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      t.status = 'TODO';
+      delete t.droppedAt;
+      t.auditLog.unshift({
+        id: generateId('log'),
+        timestamp: new Date().toISOString(),
+        changeType: 'STATUS_CHANGED',
+        fieldChanged: 'Status',
+        oldValue: 'Porzucone',
+        newValue: 'Do zrobienia',
+        reasonComment: 'Przywrócono zadanie do realizacji'
+      });
+      saveDatabase();
+      renderApp();
+      showToast('Przywrócono zadanie');
     }
 
     function computeNextRecurrenceDate(baseIso, recurrence, rule = null) {
@@ -6035,6 +6396,7 @@
         db.categories.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
 
       const delBtn = document.getElementById('tmDeleteBtn');
+      const dropBtn = document.getElementById('tmDropBtn');
 
       if (taskId) {
         const t = db.tasks.find(x => x.id === taskId);
@@ -6122,6 +6484,7 @@
         document.getElementById('tmMilestonesText').value = formatMilestonesForTextarea(t.milestones || t.checklist || []);
         document.getElementById('tmNotes').value = t.notesAndContext || t.contextNotes || '';
         delBtn.classList.remove('hidden');
+        if (dropBtn) dropBtn.classList.remove('hidden');
       } else {
         document.getElementById('taskModalHeader').textContent = 'Nowe zadanie';
         document.getElementById('tmTaskId').value = '';
@@ -6164,41 +6527,22 @@
         document.getElementById('tmMilestonesText').value = '';
         document.getElementById('tmNotes').value = '';
         delBtn.classList.add('hidden');
+        if (dropBtn) dropBtn.classList.add('hidden');
       }
 
       openModal('taskModal');
       setTimeout(() => document.getElementById('tmTitle').focus(), 50);
     }
 
+    function dropTaskFromModal() {
+      const id = document.getElementById('tmTaskId').value;
+      if (!id) return;
+      closeTaskModal();
+      dropTask(id);
+    }
+
     function closeTaskModal() {
       closeModal('taskModal');
-    }
-
-    function applySopPreset(type) {
-      const area = document.getElementById('tmMilestonesText');
-      if (type === 'RFQ') {
-        area.value = '○ Weryfikacja kompletności ofert handlowych\n○ Sprowadzenie cen do wspólnej bazy (Incoterms DDP)\n○ Budowa matrycy porównawczej TCO w Excelu\n○ Rekomendacja wyboru dostawcy';
-      } else if (type === 'RAPORT') {
-        area.value = '○ Eksport transakcji z Business Central do CSV\n○ Oczyszczenie anomalii i pustych rekordów\n○ Aktualizacja modelu danych w Power BI\n○ Komentarz do odchyleń i wysyłka';
-      }
-    }
-
-    function applySopTemplate(sopId) {
-      const tpl = (db.sopTemplates || []).find(s => s.id === sopId);
-      if (!tpl) return;
-      const area = document.getElementById('tmMilestonesText');
-      if (area) {
-        area.value = (tpl.steps || []).map(s => {
-          const trimmed = s.trim();
-          if (trimmed.startsWith('○ ') || trimmed.startsWith('✓ ') || trimmed.startsWith('+ ') || trimmed.startsWith('- ')) return trimmed;
-          return `○ ${trimmed}`;
-        }).join('\n');
-      }
-    }
-
-    function applySopTemplateToModal(sopId) {
-      openTaskModal();
-      applySopTemplate(sopId);
     }
 
     function saveTaskFromModal() {
@@ -6646,35 +6990,6 @@
       saveDatabase();
       renderApp();
       showToast('Zaktualizowano kolejność kategorii');
-    }
-
-    function addSopTemplateFromDictionary() {
-      if (!requireDb()) return;
-      const name = document.getElementById('newSopName').value.trim();
-      const stepsText = document.getElementById('newSopSteps').value;
-      if (!name) {
-        showToast('Wpisz nazwę procedury SOP');
-        return;
-      }
-      const steps = stepsText.split('\n').map(s => s.trim()).filter(Boolean);
-      if (!db.sopTemplates) db.sopTemplates = [];
-      db.sopTemplates.push({
-        id: generateId('sop'),
-        name,
-        steps
-      });
-      saveDatabase();
-      showToast(`Dodano szablon procedury: ${name}`);
-      renderApp();
-    }
-
-    function deleteSopTemplate(sopId) {
-      if (!requireDb()) return;
-      if (!db.sopTemplates) return;
-      if (!confirm('Czy na pewno chcesz usunąć ten szablon SOP?')) return;
-      db.sopTemplates = db.sopTemplates.filter(s => s.id !== sopId);
-      saveDatabase();
-      renderApp();
     }
 
     // =========================================================================
@@ -7253,11 +7568,6 @@
 
     function closeDbFileModal() {
       closeModal('dbFileModal');
-      const legacy = document.getElementById('oneDriveModal');
-      if (legacy) {
-        legacy.classList.add('hidden');
-        legacy.classList.remove('flex');
-      }
     }
 
     async function requestDbFilePermission() {
@@ -7267,12 +7577,6 @@
     async function connectDatabaseDirectory() {
       openDbFileModal();
     }
-
-    // Kompatybilność wsteczna aliasów
-    function openOneDriveModal() { openDbFileModal(); }
-    function closeOneDriveModal() { closeDbFileModal(); }
-    async function connectOneDriveDirectory() { return connectDatabaseDirectory(); }
-    async function writeToOneDriveFolder() { return writeDbNow(); }
 
     function downloadDailyBackup() {
       const today = getTodayISO();
@@ -7459,7 +7763,6 @@
       if (e.key === 'Escape') {
         closePomodoroMenu();
         closeSettingsMenu();
-        closeModal('settingsModal');
         if (activeModalsStack.length > 0) {
           const topModalId = activeModalsStack[activeModalsStack.length - 1];
           if (topModalId === 'customEstimateModal') {
@@ -7473,6 +7776,7 @@
           closeManualTimeModal();
           closeDbFileModal();
           closeCalendarEventModal();
+          closeModal('settingsModal');
           closeModal('meetingConflictModal');
           closeModal('confirmPomodoroSessionModal');
           closeModal('editTimeLogModal');
@@ -7488,14 +7792,16 @@
         } else if (e.key === '2') {
           switchView('MATRIX');
         } else if (e.key === '3') {
-          switchView('CALENDAR');
+          switchView('ALL_TASKS');
         } else if (e.key === '4') {
-          switchView('WAITING');
+          switchView('CALENDAR');
         } else if (e.key === '5') {
-          switchView('REPORTS');
+          switchView('WAITING');
         } else if (e.key === '6') {
-          switchView('DICTIONARIES');
+          switchView('REPORTS');
         } else if (e.key === '7') {
+          switchView('DICTIONARIES');
+        } else if (e.key === '8') {
           switchView('GUIDE');
         }
       }

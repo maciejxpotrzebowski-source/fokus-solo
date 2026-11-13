@@ -1,8 +1,11 @@
 {
   "schemaVersion": "4.2-bento-solo",
-  "theme": "LIGHT",
-  "activeView": "DAY",
-  "selectedTaskId": null,
+  "theme": "DARK",
+  "logoAccentColor": "#10B981",
+  "pageThemeColor": "INDIGO",
+  "customPageThemeColor": "#3B82F6",
+  "activeView": "ALL_TASKS",
+  "selectedTaskId": "tsk_46bd25065b88",
   "card1Tab": "STEPS",
   "reportPeriod": "MONTH",
   "lastBackupDate": null,
@@ -10,92 +13,177 @@
   "people": [
     {
       "id": "per_grzegorz",
-      "canonicalName": "Grzegorz",
-      "roleOrDept": "Szef / Dyrektor",
-      "aliases": ["grzesiek", "gp", "szef", "prezes", "dyrektor"],
+      "canonicalName": "Maciek",
+      "roleOrDept": "Moje",
+      "aliases": [],
       "active": true
     },
     {
       "id": "per_tomek",
-      "canonicalName": "Tomek",
-      "roleOrDept": "Zakupy Opakowań",
-      "aliases": ["tk", "tomasz", "opakowania"],
-      "active": true
-    },
-    {
-      "id": "per_ola",
-      "canonicalName": "Ola",
-      "roleOrDept": "Zakupy Surowców",
-      "aliases": ["ok", "aleksandra", "surowce"],
-      "active": true
-    },
-    {
-      "id": "per_wlasne",
-      "canonicalName": "Praca własna",
-      "roleOrDept": "Rozwój / Systemy",
-      "aliases": ["ja", "wlasne", "analizy", "bi"],
+      "canonicalName": "Klaudia",
+      "roleOrDept": "Żona",
+      "aliases": [],
       "active": true
     }
   ],
   "categories": [
     {
       "id": "cat_erp",
-      "name": "ERP / Dane BC",
+      "name": "Studia",
       "colorHex": "#3B82F6"
     },
     {
-      "id": "cat_rfq",
-      "name": "Zakupy / RFQ",
-      "colorHex": "#F59E0B"
-    },
-    {
-      "id": "cat_raporty",
-      "name": "Raporty / Power BI",
-      "colorHex": "#10B981"
-    },
-    {
-      "id": "cat_ppwr",
-      "name": "Regulacje / PPWR",
-      "colorHex": "#8B5CF6"
+      "id": "cat_1c56eb559ab5",
+      "name": "Praca",
+      "colorHex": "#f73b3b"
     },
     {
       "id": "cat_wlasne",
-      "name": "Praca własna / Organizacja",
+      "name": "Pozostałe",
       "colorHex": "#64748B"
     }
   ],
-  "sopTemplates": [
+  "tasks": [
     {
-      "id": "sop_rfq",
-      "name": "Analiza ofert RFQ (TCO)",
-      "steps": [
-        "Weryfikacja kompletności ofert handlowych",
-        "Sprowadzenie cen do wspólnej bazy (Incoterms DDP)",
-        "Budowa matrycy porównawczej TCO w Excelu",
-        "Rekomendacja wyboru dostawcy i omówienie z kupcem"
+      "id": "tsk_46bd25065b88",
+      "title": "Czynsz za garaż",
+      "requesterPersonId": "per_grzegorz",
+      "categoryId": "cat_wlasne",
+      "urgencyTag": "ASAP",
+      "dueDate": "2026-12-01",
+      "originalDueDate": "2026-12-01",
+      "importance": "CRITICAL",
+      "estimatedMinutes": 25,
+      "recurrence": "MONTHLY",
+      "recurrenceRule": {
+        "pattern": "FIRST_WORKDAY",
+        "day": 10,
+        "weekday": 2,
+        "firstDate": "2026-12-01"
+      },
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": false,
+      "myDayOrder": null,
+      "notesAndContext": "",
+      "milestones": [],
+      "createdAt": "2026-11-13T18:13:01.770Z",
+      "auditLog": [
+        {
+          "id": "log_18b5f69e2dca",
+          "timestamp": "2026-11-13T18:13:01.770Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie (termin: 2026-12-01)"
+        }
       ]
     },
     {
-      "id": "sop_raport",
-      "name": "Raport Miesięczny / Zamknięcie",
-      "steps": [
-        "Eksport transakcji z Business Central do CSV",
-        "Oczyszczenie anomalii i pustych rekordów",
-        "Aktualizacja modelu danych w Power BI",
-        "Komentarz do odchyleń m/m i y/y oraz wysyłka"
+      "id": "tsk_b1b1c8ebf719",
+      "title": "Podstawy Przedsiebiorczosci",
+      "requesterPersonId": "per_grzegorz",
+      "categoryId": "cat_erp",
+      "urgencyTag": "NORMAL",
+      "dueDate": null,
+      "originalDueDate": null,
+      "importance": "HIGH",
+      "estimatedMinutes": 25,
+      "recurrence": "NONE",
+      "recurrenceRule": null,
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": true,
+      "myDayOrder": 2,
+      "notesAndContext": "",
+      "milestones": [
+        {
+          "id": "m_4fc5b70b096f",
+          "title": "zadanie 1 (03.10-22.10)",
+          "isDone": true
+        },
+        {
+          "id": "m_c383b2627ca3",
+          "title": "zadanie 2 (23.10-20.11)",
+          "isDone": false
+        },
+        {
+          "id": "m_a6ba66527cb0",
+          "title": "zadanie 3 (21.11-31.12)",
+          "isDone": false
+        },
+        {
+          "id": "m_db941f24d6be",
+          "title": "zadanie 4 (04.01-20.01)",
+          "isDone": false
+        }
+      ],
+      "createdAt": "2026-11-13T18:07:16.489Z",
+      "auditLog": [
+        {
+          "id": "log_e98af053b66d",
+          "timestamp": "2026-11-13T18:07:16.489Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie"
+        }
       ]
     },
     {
-      "id": "sop_ppwr",
-      "name": "Audyt wag i kodów PPWR/EUDR",
-      "steps": [
-        "Pobranie indeksów asortymentowych z ERP",
-        "Weryfikacja kart charakterystyki dostawców",
-        "Walidacja mas jednostkowych netto/brutto",
-        "Wprowadzenie korekt do bazy ERP i notatka audytowa"
+      "id": "tsk_3ef481da2e48",
+      "title": "JiPP",
+      "requesterPersonId": "per_grzegorz",
+      "categoryId": "cat_erp",
+      "urgencyTag": "NORMAL",
+      "dueDate": null,
+      "originalDueDate": null,
+      "importance": "HIGH",
+      "estimatedMinutes": 25,
+      "recurrence": "NONE",
+      "recurrenceRule": null,
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": true,
+      "myDayOrder": 1,
+      "notesAndContext": "",
+      "milestones": [
+        {
+          "id": "m_a88fd1aac2c9",
+          "title": "propozycja rozwiązania",
+          "isDone": false
+        },
+        {
+          "id": "m_7c4d1627b602",
+          "title": "budowa architektury zgodnie z C4",
+          "isDone": false
+        },
+        {
+          "id": "m_94b51daaada1",
+          "title": "gra na klocki",
+          "isDone": false
+        },
+        {
+          "id": "m_2351885cff92",
+          "title": "backend",
+          "isDone": false
+        }
+      ],
+      "createdAt": "2026-11-13T18:01:27.389Z",
+      "auditLog": [
+        {
+          "id": "log_d1abf5a330e1",
+          "timestamp": "2026-11-13T18:01:27.389Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie"
+        }
       ]
     }
   ],
-  "tasks": [],
   "timeLogs": []
 }

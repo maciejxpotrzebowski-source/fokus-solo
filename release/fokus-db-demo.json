@@ -1,9 +1,9 @@
 {
   "schemaVersion": "4.2-bento-solo",
-  "theme": "LIGHT",
+  "theme": "DARK",
   "logoAccentColor": "#10B981",
-  "pageThemeColor": "NEUTRAL",
-  "customPageThemeColor": "#3B82F6",
+  "pageThemeColor": "BLUE",
+  "customPageThemeColor": "#6f9be2",
   "activeView": "DAY",
   "selectedTaskId": "tsk_ed32fa821369",
   "card1Tab": "STEPS",
@@ -125,44 +125,11 @@
       "colorHex": "#ff0000"
     }
   ],
-  "sopTemplates": [
-    {
-      "id": "sop_rfq",
-      "name": "Analiza ofert RFQ (TCO)",
-      "steps": [
-        "Weryfikacja kompletności ofert handlowych",
-        "Sprowadzenie cen do wspólnej bazy (Incoterms DDP)",
-        "Budowa matrycy porównawczej TCO w Excelu",
-        "Rekomendacja wyboru dostawcy i omówienie z kupcem"
-      ]
-    },
-    {
-      "id": "sop_raport",
-      "name": "Raport Miesięczny / Zamknięcie",
-      "steps": [
-        "Eksport transakcji z Business Central do CSV",
-        "Oczyszczenie anomalii i pustych rekordów",
-        "Aktualizacja modelu danych w Power BI",
-        "Komentarz do odchyleń m/m i y/y oraz wysyłka"
-      ]
-    },
-    {
-      "id": "sop_ppwr",
-      "name": "Audyt wag i kodów PPWR/EUDR",
-      "steps": [
-        "Pobranie indeksów asortymentowych z ERP",
-        "Weryfikacja kart charakterystyki dostawców",
-        "Walidacja mas jednostkowych netto/brutto",
-        "Wprowadzenie korekt do bazy ERP i notatka audytowa"
-      ]
-    }
-  ],
   "tasks": [
     {
       "id": "tsk_ed32fa821369",
       "title": "JIPP zadania",
       "requesterPersonId": "per_grzegorz",
-      "personId": "per_grzegorz",
       "categoryId": "cat_aec9525dbeac",
       "urgencyTag": "NORMAL",
       "dueDate": null,
@@ -177,33 +144,9 @@
       "waitingSince": null,
       "waitingFor": null,
       "inMyDay": true,
-      "isMyDay": true,
       "myDayOrder": 4,
       "notesAndContext": "",
-      "contextNotes": "",
       "milestones": [
-        {
-          "id": "m_760d4bec8ff6",
-          "title": "propozycja rozwiązania",
-          "isDone": false
-        },
-        {
-          "id": "m_f789484ffa7c",
-          "title": "budowa architektury zgodnie z C4",
-          "isDone": false
-        },
-        {
-          "id": "m_59d091cf86e6",
-          "title": "gra na klocki",
-          "isDone": false
-        },
-        {
-          "id": "m_b5a76d1c794f",
-          "title": "backend",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "m_760d4bec8ff6",
           "title": "propozycja rozwiązania",
@@ -226,8 +169,19 @@
         }
       ],
       "createdAt": "2026-11-13T17:11:39.761Z",
-      "createdAtISO": "2026-11-13T17:11:39.761Z",
       "auditLog": [
+        {
+          "id": "log_69c36d911c82",
+          "timestamp": "2026-11-13T17:58:39.157Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Cofnięto krok: gra na klocki"
+        },
+        {
+          "id": "log_cc42f2349b43",
+          "timestamp": "2026-11-13T17:58:38.240Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Ukończono krok: gra na klocki"
+        },
         {
           "id": "log_6ef98c1cef99",
           "timestamp": "2026-11-13T17:51:54.388Z",
@@ -247,36 +201,12 @@
       "title": "Walidacja wag opakowań w Business Central pod raport PPWR",
       "categoryId": "cat_erp",
       "requesterPersonId": "per_grzegorz",
-      "personId": "per_grzegorz",
       "urgencyTag": "ASAP",
       "dueDate": "2026-11-10",
       "originalDueDate": "2026-11-07",
       "importance": "CRITICAL",
       "notesAndContext": "Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.",
-      "contextNotes": "Ścieżka robocza: OneDrive / Analizy_ERP / PPWR_Wagi_2026.xlsx\nSprawdzić szczególnie indeksy kartonów klapowych (grupa 400) oraz folii stretch.",
       "milestones": [
-        {
-          "id": "m_1",
-          "title": "Eksport tabeli indeksów i gramatur z Business Central",
-          "isDone": true
-        },
-        {
-          "id": "m_2",
-          "title": "Skrypt wykrywający zerowe wagi i błędne jednostki miary",
-          "isDone": false
-        },
-        {
-          "id": "m_3",
-          "title": "Przygotowanie pliku korekty masowej dla zespołu zakupów",
-          "isDone": false
-        },
-        {
-          "id": "m_4",
-          "title": "Odświeżenie modelu danych w Power BI i wysyłka do Grzegorza",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "m_1",
           "title": "Eksport tabeli indeksów i gramatur z Business Central",
@@ -300,12 +230,10 @@
       ],
       "status": "IN_PROGRESS",
       "inMyDay": true,
-      "isMyDay": true,
       "myDayOrder": 1,
       "estimatedMinutes": 67,
       "recurrence": "NONE",
       "createdAt": "2026-11-05T08:15:00.000Z",
-      "createdAtISO": "2026-11-05T08:15:00.000Z",
       "auditLog": [
         {
           "id": "log_34846fa0b773",
@@ -386,31 +314,12 @@
       "title": "Porównanie 4 ofert RFQ na taśmy pakowe (matryca TCO)",
       "categoryId": "cat_rfq",
       "requesterPersonId": "per_tomek",
-      "personId": "per_tomek",
       "urgencyTag": "HIGH",
       "dueDate": "2026-11-11",
       "originalDueDate": "2026-11-11",
       "importance": "HIGH",
       "notesAndContext": "Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.",
-      "contextNotes": "Uwzględnić koszt transportu DDP oraz rabat wolumenowy powyżej 20 palet.",
       "milestones": [
-        {
-          "id": "m_21",
-          "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)",
-          "isDone": true
-        },
-        {
-          "id": "m_22",
-          "title": "Model oszczędności rocznych w Excelu",
-          "isDone": false
-        },
-        {
-          "id": "m_23",
-          "title": "Rekomendacja na spotkanie z Tomkiem",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "m_21",
           "title": "Sprowadzenie cen do wspólnej jednostki (PLN / m2)",
@@ -429,12 +338,10 @@
       ],
       "status": "TODO",
       "inMyDay": true,
-      "isMyDay": true,
       "myDayOrder": 2,
       "estimatedMinutes": 45,
       "recurrence": "NONE",
       "createdAt": "2026-11-07T09:00:00.000Z",
-      "createdAtISO": "2026-11-07T09:00:00.000Z",
       "auditLog": [
         {
           "id": "log_20",
@@ -449,31 +356,12 @@
       "title": "Raport miesięczny Spend Analysis i odchyleń cenowych",
       "categoryId": "cat_raporty",
       "requesterPersonId": "per_grzegorz",
-      "personId": "per_grzegorz",
       "urgencyTag": "NORMAL",
       "dueDate": "2026-11-13",
       "originalDueDate": "2026-11-13",
       "importance": "HIGH",
       "notesAndContext": "Standardowa procedura zamknięcia miesiąca zakupowego.",
-      "contextNotes": "Standardowa procedura zamknięcia miesiąca zakupowego.",
       "milestones": [
-        {
-          "id": "m_31",
-          "title": "Pobranie zrzutu faktur kosztowych z ERP",
-          "isDone": true
-        },
-        {
-          "id": "m_32",
-          "title": "Mapowanie brakujących kategorii zakupowych",
-          "isDone": false
-        },
-        {
-          "id": "m_33",
-          "title": "Komentarz do odchyleń MoM / YoY",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "m_31",
           "title": "Pobranie zrzutu faktur kosztowych z ERP",
@@ -492,12 +380,10 @@
       ],
       "status": "TODO",
       "inMyDay": true,
-      "isMyDay": true,
       "myDayOrder": 3,
       "estimatedMinutes": 60,
       "recurrence": "MONTHLY",
       "createdAt": "2026-11-03T10:00:00.000Z",
-      "createdAtISO": "2026-11-03T10:00:00.000Z",
       "auditLog": [
         {
           "id": "log_30",
@@ -512,21 +398,12 @@
       "title": "Weryfikacja poprawności kodów CN dla importu folii",
       "categoryId": "cat_ppwr",
       "requesterPersonId": "per_ola",
-      "personId": "per_ola",
       "urgencyTag": "HIGH",
       "dueDate": "2026-11-12",
       "originalDueDate": "2026-11-12",
       "importance": "NORMAL",
       "notesAndContext": "Potrzebne do zgłoszenia celnego na granicy.",
-      "contextNotes": "Potrzebne do zgłoszenia celnego na granicy.",
       "milestones": [
-        {
-          "id": "m_41",
-          "title": "Sprawdzenie specyfikacji od dostawcy",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "m_41",
           "title": "Sprawdzenie specyfikacji od dostawcy",
@@ -535,12 +412,10 @@
       ],
       "status": "TODO",
       "inMyDay": false,
-      "isMyDay": false,
       "myDayOrder": null,
       "estimatedMinutes": 30,
       "recurrence": "NONE",
       "createdAt": "2026-11-06T12:00:00.000Z",
-      "createdAtISO": "2026-11-06T12:00:00.000Z",
       "auditLog": [],
       "recurrenceRule": null
     },
@@ -549,23 +424,18 @@
       "title": "Uporządkowanie archiwum cenników archiwalnych 2024",
       "categoryId": "cat_wlasne",
       "requesterPersonId": "per_wlasne",
-      "personId": "per_wlasne",
       "urgencyTag": "LAST",
       "dueDate": "2026-11-27",
       "originalDueDate": "2026-11-27",
       "importance": "LOW",
       "notesAndContext": "Zadanie porządkowe na spokojniejszy piątek.",
-      "contextNotes": "Zadanie porządkowe na spokojniejszy piątek.",
       "milestones": [],
-      "checklist": [],
       "status": "TODO",
       "inMyDay": false,
-      "isMyDay": false,
       "myDayOrder": null,
       "estimatedMinutes": 40,
       "recurrence": "NONE",
       "createdAt": "2026-11-02T15:00:00.000Z",
-      "createdAtISO": "2026-11-02T15:00:00.000Z",
       "auditLog": []
     },
     {
@@ -573,7 +443,6 @@
       "title": "Aktualizacja cennika palet EPAL na Q1",
       "categoryId": "cat_rfq",
       "requesterPersonId": "per_tomek",
-      "personId": "per_tomek",
       "waitingForPersonId": "per_ola",
       "waitingForReason": "Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji",
       "waitingSince": "2026-11-06T10:00:00.000Z",
@@ -587,20 +456,7 @@
       "originalDueDate": "2026-11-10",
       "importance": "HIGH",
       "notesAndContext": "Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.",
-      "contextNotes": "Gdy Ola przyśle wolumeny, przeliczyć wariant z dostawą bezpośrednią.",
       "milestones": [
-        {
-          "id": "mw_1",
-          "title": "Zebranie cenników bazowych od 3 dostawców",
-          "isDone": true
-        },
-        {
-          "id": "mw_2",
-          "title": "Podstawienie wolumenów Q1",
-          "isDone": false
-        }
-      ],
-      "checklist": [
         {
           "id": "mw_1",
           "title": "Zebranie cenników bazowych od 3 dostawców",
@@ -614,12 +470,10 @@
       ],
       "status": "DONE",
       "inMyDay": false,
-      "isMyDay": false,
       "myDayOrder": null,
       "estimatedMinutes": 35,
       "recurrence": "NONE",
       "createdAt": "2026-11-04T08:30:00.000Z",
-      "createdAtISO": "2026-11-04T08:30:00.000Z",
       "auditLog": [
         {
           "id": "log_b13dd19759a0",
@@ -642,34 +496,19 @@
           "reasonComment": "Oczekiwanie na potwierdzenie wolumenów kwartalnych z produkcji"
         }
       ],
-      "completedAt": "2026-11-12T19:02:36.857Z",
-      "completedAtISO": "2026-11-12T19:02:36.857Z"
+      "completedAt": "2026-11-12T19:02:36.857Z"
     },
     {
       "id": "tsk_done_1",
       "title": "Zestawienie wolumenów drewna i papieru pod raport EUDR",
       "categoryId": "cat_ppwr",
       "requesterPersonId": "per_grzegorz",
-      "personId": "per_grzegorz",
       "urgencyTag": "ASAP",
       "dueDate": "2026-11-09",
       "originalDueDate": "2026-11-09",
       "importance": "CRITICAL",
       "notesAndContext": "Wysłane na zarząd i zaakceptowane.",
-      "contextNotes": "Wysłane na zarząd i zaakceptowane.",
       "milestones": [
-        {
-          "id": "md_1",
-          "title": "Zrzut danych z ERP",
-          "isDone": true
-        },
-        {
-          "id": "md_2",
-          "title": "Weryfikacja dostawców spoza UE",
-          "isDone": true
-        }
-      ],
-      "checklist": [
         {
           "id": "md_1",
           "title": "Zrzut danych z ERP",
@@ -683,236 +522,15 @@
       ],
       "status": "DONE",
       "inMyDay": false,
-      "isMyDay": false,
       "myDayOrder": null,
       "estimatedMinutes": 60,
       "recurrence": "NONE",
       "createdAt": "2026-11-07T07:45:00.000Z",
-      "createdAtISO": "2026-11-07T07:45:00.000Z",
       "completedAt": "2026-11-08T15:30:00.000Z",
-      "completedAtISO": "2026-11-08T15:30:00.000Z",
       "auditLog": []
     }
   ],
   "timeLogs": [
-    {
-      "id": "ses_3a9c162e6276",
-      "taskId": "tsk_ed32fa821369",
-      "date": "2026-11-13",
-      "dateISO": "2026-11-13",
-      "startedAt": "2026-11-13T17:51:52.855Z",
-      "startedAtISO": "2026-11-13T17:51:52.855Z",
-      "plannedMinutes": 60,
-      "targetMinutes": 60,
-      "overtimeMinutes": 0,
-      "totalMinutes": 1,
-      "durationMinutes": 1,
-      "entryType": "POMODORO",
-      "note": "Sesja Pomodoro (1m)"
-    },
-    {
-      "id": "ses_df81ed87231f",
-      "taskId": "tsk_1",
-      "date": "2026-11-12",
-      "dateISO": "2026-11-12",
-      "startedAt": "2026-11-12T18:58:13.939Z",
-      "startedAtISO": "2026-11-12T18:58:13.939Z",
-      "plannedMinutes": 0,
-      "targetMinutes": 30,
-      "overtimeMinutes": 0,
-      "totalMinutes": 30,
-      "durationMinutes": 30,
-      "entryType": "MANUAL",
-      "note": "Wpis ręczny (z palca)"
-    },
-    {
-      "id": "ses_74283de2f3c9",
-      "taskId": "tsk_1",
-      "date": "2026-11-12",
-      "dateISO": "2026-11-12",
-      "startedAt": "2026-11-12T18:50:40.675Z",
-      "startedAtISO": "2026-11-12T18:50:40.675Z",
-      "plannedMinutes": 25,
-      "targetMinutes": 25,
-      "overtimeMinutes": 0,
-      "totalMinutes": 1,
-      "durationMinutes": 1,
-      "entryType": "POMODORO",
-      "note": "Sesja Pomodoro (1m)"
-    },
-    {
-      "id": "ses_fae6c978848d",
-      "taskId": "tsk_1",
-      "date": "2026-11-12",
-      "dateISO": "2026-11-12",
-      "startedAt": "2026-11-12T18:50:29.592Z",
-      "startedAtISO": "2026-11-12T18:50:29.592Z",
-      "plannedMinutes": 25,
-      "targetMinutes": 25,
-      "overtimeMinutes": 0,
-      "totalMinutes": 1,
-      "durationMinutes": 1,
-      "entryType": "POMODORO",
-      "note": "Sesja Pomodoro (1m)"
-    },
-    {
-      "id": "ses_1",
-      "taskId": "tsk_1",
-      "date": "2026-11-09",
-      "dateISO": "2026-11-09",
-      "startedAt": "2026-11-09T08:30:00.000Z",
-      "startedAtISO": "2026-11-09T08:30:00.000Z",
-      "plannedMinutes": 25,
-      "targetMinutes": 25,
-      "overtimeMinutes": 7,
-      "totalMinutes": 32,
-      "durationMinutes": 32,
-      "entryType": "POMODORO",
-      "note": "Eksport i czyszczenie tabeli BC"
-    },
-    {
-      "id": "ses_2",
-      "taskId": "tsk_1",
-      "date": "2026-11-09",
-      "dateISO": "2026-11-09",
-      "startedAt": "2026-11-09T09:15:00.000Z",
-      "startedAtISO": "2026-11-09T09:15:00.000Z",
-      "plannedMinutes": 25,
-      "targetMinutes": 25,
-      "overtimeMinutes": 0,
-      "totalMinutes": 25,
-      "durationMinutes": 25,
-      "entryType": "POMODORO",
-      "note": "Skrypt walidujący wagi jednostkowe"
-    },
-    {
-      "id": "ses_3",
-      "taskId": "tsk_2",
-      "date": "2026-11-09",
-      "dateISO": "2026-11-09",
-      "startedAt": "2026-11-09T10:00:00.000Z",
-      "startedAtISO": "2026-11-09T10:00:00.000Z",
-      "plannedMinutes": 25,
-      "targetMinutes": 25,
-      "overtimeMinutes": 5,
-      "totalMinutes": 30,
-      "durationMinutes": 30,
-      "entryType": "POMODORO",
-      "note": "Porównanie ofert taśm pakowych w TCO"
-    },
-    {
-      "id": "ses_4",
-      "taskId": "tsk_3",
-      "date": "2026-11-08",
-      "dateISO": "2026-11-08",
-      "startedAt": "2026-11-08T11:00:00.000Z",
-      "startedAtISO": "2026-11-08T11:00:00.000Z",
-      "plannedMinutes": 45,
-      "targetMinutes": 45,
-      "overtimeMinutes": 0,
-      "totalMinutes": 45,
-      "durationMinutes": 45,
-      "entryType": "MANUAL",
-      "note": "Zrzut faktur kosztowych z Business Central"
-    },
-    {
-      "id": "ses_5",
-      "taskId": "tsk_done_1",
-      "date": "2026-11-08",
-      "dateISO": "2026-11-08",
-      "startedAt": "2026-11-08T13:00:00.000Z",
-      "startedAtISO": "2026-11-08T13:00:00.000Z",
-      "plannedMinutes": 60,
-      "targetMinutes": 60,
-      "overtimeMinutes": 12,
-      "totalMinutes": 72,
-      "durationMinutes": 72,
-      "entryType": "POMODORO",
-      "note": "Pilny raport EUDR dla Grzegorza"
-    }
-  ],
-  "peopleDictionary": [
-    {
-      "id": "per_tomek",
-      "canonicalName": "Tomek",
-      "roleOrDept": "Zakupy Opakowań",
-      "aliases": [
-        "tk",
-        "tomasz",
-        "opakowania"
-      ],
-      "active": true
-    },
-    {
-      "id": "per_grzegorz",
-      "canonicalName": "Grzegorz",
-      "roleOrDept": "Szef / Dyrektor",
-      "aliases": [
-        "grzesiek",
-        "gp",
-        "szef",
-        "prezes",
-        "dyrektor"
-      ],
-      "active": true
-    },
-    {
-      "id": "per_ola",
-      "canonicalName": "Ola",
-      "roleOrDept": "Zakupy Surowców",
-      "aliases": [
-        "ok",
-        "aleksandra",
-        "surowce"
-      ],
-      "active": true
-    },
-    {
-      "id": "per_wlasne",
-      "canonicalName": "Praca własna",
-      "roleOrDept": "Rozwój / Systemy",
-      "aliases": [
-        "ja",
-        "wlasne",
-        "analizy",
-        "bi"
-      ],
-      "active": true
-    }
-  ],
-  "categoryDictionary": [
-    {
-      "id": "cat_erp",
-      "name": "ERP / Dane BC",
-      "colorHex": "#3B82F6"
-    },
-    {
-      "id": "cat_rfq",
-      "name": "Zakupy / RFQ",
-      "colorHex": "#F59E0B"
-    },
-    {
-      "id": "cat_raporty",
-      "name": "Raporty / Power BI",
-      "colorHex": "#10B981"
-    },
-    {
-      "id": "cat_ppwr",
-      "name": "Regulacje / PPWR",
-      "colorHex": "#8B5CF6"
-    },
-    {
-      "id": "cat_wlasne",
-      "name": "Praca własna / Organizacja",
-      "colorHex": "#64748B"
-    },
-    {
-      "id": "cat_aec9525dbeac",
-      "name": "JiPP",
-      "colorHex": "#ff0000"
-    }
-  ],
-  "timeSessions": [
     {
       "id": "ses_3a9c162e6276",
       "taskId": "tsk_ed32fa821369",

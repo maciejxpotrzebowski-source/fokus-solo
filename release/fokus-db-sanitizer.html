@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fokus DB Sanitizer — Oczyszczanie Bazy Danych</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] p-6 sm:p-12 flex flex-col items-center justify-center">
+
+  <div class="max-w-xl w-full bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-black/[0.05] space-y-6">
+    
+    <!-- Nagłówek -->
+    <div class="space-y-1">
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-xl font-bold text-emerald-600">&gt;</span>
+        <h1 class="text-2xl font-bold tracking-tight">Fokus DB Sanitizer</h1>
+      </div>
+      <p class="text-xs text-zinc-500">
+        Narzędzie jednorazowej transformacji: usuwa zduplikowane klucze (<code class="font-mono text-[11px] bg-zinc-100 px-1 py-0.5 rounded">contextNotes</code>, <code class="font-mono text-[11px] bg-zinc-100 px-1 py-0.5 rounded">isMyDay</code>, <code class="font-mono text-[11px] bg-zinc-100 px-1 py-0.5 rounded">checklist</code>, <code class="font-mono text-[11px] bg-zinc-100 px-1 py-0.5 rounded">sopTemplates</code>) i odchudza bazę danych.
+      </p>
+    </div>
+
+    <!-- Strefa upuszczania / wyboru pliku -->
+    <div id="dropZone" onclick="document.getElementById('fileInput').click()"
+      class="border-2 border-dashed border-zinc-200 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer transition bg-[#F5F5F7]/50 hover:bg-emerald-500/[0.02]">
+      <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileSelect(event)" />
+      <div class="text-3xl mb-2">📂</div>
+      <p class="text-xs font-semibold text-zinc-800">Kliknij lub przeciągnij tutaj plik <span class="font-mono text-emerald-600">fokus-db.json</span></p>
+      <p class="text-[11px] text-zinc-400 mt-1">Plik zostanie przetworzony w 100% lokalnie w Twojej przeglądarce</p>
+    </div>
+
+    <!-- Podsumowanie i raport zmian -->
+    <div id="reportBox" class="hidden space-y-4 pt-2 border-t border-black/5">
+      <div class="flex items-center justify-between text-xs">
+        <span class="font-semibold text-zinc-700">Raport oczyszczania:</span>
+        <span id="statSavings" class="font-mono font-bold text-emerald-600"></span>
+      </div>
+
+      <div class="bg-[#F5F5F7] rounded-2xl p-4 space-y-2 text-xs font-mono text-zinc-600">
+        <div class="flex justify-between">
+          <span>Liczba zadań:</span>
+          <strong id="statTasksCount" class="text-zinc-800">0</strong>
+        </div>
+        <div class="flex justify-between">
+          <span>Usunięte klucze duplikatów:</span>
+          <strong id="statRemovedKeys" class="text-emerald-600">0</strong>
+        </div>
+        <div class="flex justify-between">
+          <span>Usunięto sekcję sopTemplates:</span>
+          <strong id="statSopRemoved" class="text-zinc-800">Nie</strong>
+        </div>
+        <div class="flex justify-between">
+          <span>Rozmiar przed:</span>
+          <span id="statSizeBefore">0 KB</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Rozmiar po:</span>
+          <strong id="statSizeAfter" class="text-emerald-600">0 KB</strong>
+        </div>
+      </div>
+
+      <button id="downloadBtn" onclick="downloadCleanedDb()"
+        class="w-full py-3 px-4 rounded-2xl bg-[#1D1D1F] text-white text-xs font-semibold hover:opacity-90 active:scale-95 transition shadow-sm flex items-center justify-center gap-2">
+        <span>⬇</span>
+        <span>Pobierz oczyszczony fokus-db.json</span>
+      </button>
+
+      <p class="text-[11px] text-zinc-400 text-center">
+        Po pobraniu podmień plik w swoim folderze roboczym / OneDrive, a ten plik HTML możesz bezpiecznie skasować.
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    let cleanedData = null;
+    let originalFileName = 'fokus-db.json';
+
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-emerald-500'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-emerald-500'); });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-emerald-500');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        processFile(e.target.files[0]);
+      }
+    }
+
+    function processFile(file) {
+      originalFileName = file.name || 'fokus-db.json';
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const raw = e.target.result;
+          const parsed = JSON.parse(raw);
+          sanitizeDatabase(parsed, raw.length);
+        } catch (err) {
+          alert('Błąd wczytywania pliku JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function sanitizeDatabase(rawDb, originalBytes) {
+      let removedKeysCount = 0;
+      let sopRemoved = false;
+
+      // 1. Sprawdzenie sopTemplates na poziomie bazy
+      if ('sopTemplates' in rawDb) {
+        delete rawDb.sopTemplates;
+        sopRemoved = true;
+      }
+      if ('peopleDictionary' in rawDb) { delete rawDb.peopleDictionary; removedKeysCount++; }
+      if ('categoryDictionary' in rawDb) { delete rawDb.categoryDictionary; removedKeysCount++; }
+      if ('timeSessions' in rawDb) { delete rawDb.timeSessions; removedKeysCount++; }
+
+      // 2. Normalizacja i czyszczenie zadań
+      const tasks = Array.isArray(rawDb.tasks) ? rawDb.tasks : [];
+      const cleanTasks = tasks.map(t => {
+        const clean = {
+          id: t.id,
+          title: t.title || '',
+          requesterPersonId: t.requesterPersonId || t.personId || 'per_wlasne',
+          categoryId: t.categoryId || 'cat_wlasne',
+          urgencyTag: t.urgencyTag || 'NORMAL',
+          dueDate: t.dueDate || null,
+          originalDueDate: t.originalDueDate || t.dueDate || null,
+          importance: t.importance || 'NORMAL',
+          estimatedMinutes: parseInt(t.estimatedMinutes, 10) || 25,
+          recurrence: t.recurrence || 'NONE',
+          recurrenceRule: t.recurrenceRule || null,
+          status: t.status || 'TODO',
+          waitingForPersonId: t.waitingForPersonId || (t.waitingFor && t.waitingFor.personId) || null,
+          waitingForReason: t.waitingForReason || (t.waitingFor && t.waitingFor.reason) || null,
+          waitingSince: t.waitingSince || (t.waitingFor && t.waitingFor.sinceISO) || null,
+          waitingFor: t.waitingFor || null,
+          inMyDay: Boolean(t.inMyDay || t.isMyDay),
+          myDayOrder: typeof t.myDayOrder === 'number' ? t.myDayOrder : 99,
+          notesAndContext: t.notesAndContext || t.contextNotes || '',
+          milestones: (t.milestones || t.checklist || []).map(m => ({
+            id: m.id,
+            title: m.title || '',
+            isDone: Boolean(m.isDone)
+          })),
+          createdAt: t.createdAt || t.createdAtISO || new Date().toISOString(),
+          completedAt: t.completedAt || t.completedAtISO || null,
+          auditLog: Array.isArray(t.auditLog) ? t.auditLog : []
+        };
+
+        // Zliczanie usuniętych pól duplikatów
+        const redundantFields = ['personId', 'isMyDay', 'contextNotes', 'checklist', 'createdAtISO', 'completedAtISO'];
+        redundantFields.forEach(f => {
+          if (f in t) removedKeysCount++;
+        });
+
+        return clean;
+      });
+
+      rawDb.tasks = cleanTasks;
+
+      // 3. Zapis wyniku do pamięci
+      cleanedData = rawDb;
+      const jsonStr = JSON.stringify(cleanedData, null, 2);
+      const newBytes = new Blob([jsonStr]).size;
+      const savingsPct = Math.max(0, Math.round((1 - (newBytes / originalBytes)) * 100));
+
+      // 4. Prezentacja raportu
+      document.getElementById('statTasksCount').textContent = cleanTasks.length;
+      document.getElementById('statRemovedKeys').textContent = removedKeysCount;
+      document.getElementById('statSopRemoved').textContent = sopRemoved ? 'Tak (usunięto zbędną sekcję)' : 'Brak';
+      document.getElementById('statSizeBefore').textContent = `${(originalBytes / 1024).toFixed(1)} KB`;
+      document.getElementById('statSizeAfter').textContent = `${(newBytes / 1024).toFixed(1)} KB`;
+      document.getElementById('statSavings').textContent = `-${savingsPct}% mniejszy plik`;
+
+      document.getElementById('reportBox').classList.remove('hidden');
+    }
+
+    function downloadCleanedDb() {
+      if (!cleanedData) return;
+      const jsonStr = JSON.stringify(cleanedData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalFileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

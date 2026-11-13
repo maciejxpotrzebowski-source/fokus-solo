@@ -615,11 +615,14 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes("'cat_wlasne'"), 'Brak kategorii cat_wlasne w słowniku domyślnym');
     });
 
-    test('Fokus.html zawiera kompatybilność sopTemplates w schemacie oraz sortowanie słowników', () => {
+    test('Fokus.html zawiera uporządkowane słowniki (movePerson, moveCategory, moveMyDayTask) oraz usunięty martwy kod SOP', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
-      assert.ok(content.includes('sopTemplates'), 'Brak sekcji sopTemplates w DEFAULT_DB');
+      assert.ok(!content.includes('applySopPreset'), 'Pozostałość po usuniętej funkcji applySopPreset w kodzie');
+      assert.ok(!content.includes('applySopTemplate'), 'Pozostałość po usuniętej funkcji applySopTemplate w kodzie');
+      assert.ok(!content.includes('addSopTemplateFromDictionary'), 'Pozostałość po usuniętej funkcji addSopTemplateFromDictionary w kodzie');
       assert.ok(content.includes('movePerson'), 'Brak funkcji movePerson do przesuwania osób w słowniku');
       assert.ok(content.includes('moveCategory'), 'Brak funkcji moveCategory do przesuwania kategorii w słowniku');
+      assert.ok(content.includes('moveMyDayTask'), 'Brak funkcji moveMyDayTask do sortowania kolejki na dziś');
     });
 
     test('Fokus.html posiada obsługę kopii zapasowej dziennej', () => {
@@ -890,6 +893,90 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('THEME_PALETTES'), 'Brak słownika THEME_PALETTES');
       assert.ok(content.includes('id="dbFileDot"'), 'Brak kropki statusu bazy');
       assert.ok(content.includes('id="dbFileTooltip"'), 'Brak dymka tooltip dla statusu bazy');
+    });
+
+    test('Obsługa porzucania zadań (dropTask, restoreDroppedTask, DROPPED status) i filtry w tabeli', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('function dropTask('), 'Brak funkcji dropTask');
+      assert.ok(content.includes('function restoreDroppedTask('), 'Brak funkcji restoreDroppedTask');
+      assert.ok(content.includes('function dropTaskFromModal('), 'Brak funkcji dropTaskFromModal');
+      assert.ok(content.includes('id="tmDropBtn"'), 'Brak przycisku tmDropBtn w taskModal');
+      assert.ok(content.includes('Status: Po terminie ⚠️'), 'Brak opcji filtra Po terminie w tabeli');
+      assert.ok(content.includes('Status: Porzucone'), 'Brak opcji filtra Porzucone w tabeli');
+      assert.ok(content.includes("value=\"OVERDUE\""), 'Brak wartości OVERDUE w select filtra');
+      assert.ok(content.includes("value=\"DROPPED\""), 'Brak wartości DROPPED w select filtra');
+    });
+
+    test('Pływający stoper Always-on-Top / Picture-in-Picture z interaktywnymi krokami milowymi', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('function toggleTimerPiP('), 'Brak funkcji toggleTimerPiP');
+      assert.ok(content.includes('function renderPiPContent('), 'Brak funkcji renderPiPContent');
+      assert.ok(content.includes('function updatePiPWindow('), 'Brak funkcji updatePiPWindow');
+      assert.ok(content.includes('pip-milestone-row'), 'Brak renderowania kroków milowych w PiP');
+      assert.ok(content.includes('toggleMilestone'), 'Brak interaktywnego przełączania kroków w PiP');
+      assert.ok(content.includes('id="settingsDesktopNotificationsToggle"'), 'Brak przełącznika powiadomień w settingsModal');
+      assert.ok(content.includes('id="settingsTitleTimerToggle"'), 'Brak przełącznika zegara w karcie w settingsModal');
+      assert.ok(content.includes('id="settingsPiPToggle"'), 'Brak przełącznika PiP w settingsModal');
+    });
+
+    test('Przełącznik zagęszczenia wierszy (Density Toggle F3) w tabeli Wszystkich Zadań', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('toggleAllTasksDensity'), 'Brak funkcji toggleAllTasksDensity');
+      assert.ok(content.includes('density:'), 'Brak pola density w allTasksState');
+      assert.ok(content.includes('Kompaktowy'), 'Brak etykiety Kompaktowy');
+      assert.ok(content.includes('Komfortowy'), 'Brak etykiety Komfortowy');
+    });
+
+    test('Przenumerowanie skrótów klawiszowych 1-8 dla wszystkich widoków oraz obsługa Esc', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes("e.key === '1'") && content.includes("switchView('DAY')"), 'Brak skrótu 1 dla DAY');
+      assert.ok(content.includes("e.key === '2'") && content.includes("switchView('MATRIX')"), 'Brak skrótu 2 dla MATRIX');
+      assert.ok(content.includes("e.key === '3'") && content.includes("switchView('ALL_TASKS')"), 'Brak skrótu 3 dla ALL_TASKS');
+      assert.ok(content.includes("e.key === '4'") && content.includes("switchView('CALENDAR')"), 'Brak skrótu 4 dla CALENDAR');
+      assert.ok(content.includes("e.key === '5'") && content.includes("switchView('WAITING')"), 'Brak skrótu 5 dla WAITING');
+      assert.ok(content.includes("e.key === '6'") && content.includes("switchView('REPORTS')"), 'Brak skrótu 6 dla REPORTS');
+      assert.ok(content.includes("e.key === '7'") && content.includes("switchView('DICTIONARIES')"), 'Brak skrótu 7 dla DICTIONARIES');
+      assert.ok(content.includes("e.key === '8'") && content.includes("switchView('GUIDE')"), 'Brak skrótu 8 dla GUIDE');
+      assert.ok(content.includes("title=\"Mój Dzień (Skrót: 1)\""), 'Brak tooltipu ze skrótem 1');
+      assert.ok(content.includes("title=\"Wszystkie zadania (Skrót: 3)\""), 'Brak tooltipu ze skrótem 3');
+      assert.ok(content.includes("title=\"Instrukcja (Skrót: 8)\"") || content.includes("Skrót: 8"), 'Brak tooltipu ze skrótem 8');
+    });
+
+    test('Sortowanie dat z terminami pustymi zawsze na końcu listy (asc i desc)', () => {
+      const sample = [
+        { id: '1', dueDate: '2026-11-20' },
+        { id: '2', dueDate: null },
+        { id: '3', dueDate: '2026-11-10' },
+        { id: '4', dueDate: '' },
+        { id: '5', dueDate: '2026-11-15' }
+      ];
+
+      function sortDueDates(list, dir = 'asc') {
+        return [...list].sort((a, b) => {
+          const hasA = Boolean(a.dueDate);
+          const hasB = Boolean(b.dueDate);
+          if (!hasA && !hasB) return 0;
+          if (!hasA) return 1;
+          if (!hasB) return -1;
+          const timeA = new Date(a.dueDate).getTime();
+          const timeB = new Date(b.dueDate).getTime();
+          return dir === 'asc' ? timeA - timeB : timeB - timeA;
+        });
+      }
+
+      const asc = sortDueDates(sample, 'asc');
+      assert.equal(asc[0].id, '3', 'Najwcześniejsza data powinna być pierwsza w asc');
+      assert.equal(asc[1].id, '5');
+      assert.equal(asc[2].id, '1');
+      assert.ok(!asc[3].dueDate, 'Pusta data na końcu');
+      assert.ok(!asc[4].dueDate, 'Pusta data na końcu');
+
+      const desc = sortDueDates(sample, 'desc');
+      assert.equal(desc[0].id, '1', 'Najpóźniejsza data powinna być pierwsza w desc');
+      assert.equal(desc[1].id, '5');
+      assert.equal(desc[2].id, '3');
+      assert.ok(!desc[3].dueDate, 'Pusta data na końcu w desc');
+      assert.ok(!desc[4].dueDate, 'Pusta data na końcu w desc');
     });
 
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
