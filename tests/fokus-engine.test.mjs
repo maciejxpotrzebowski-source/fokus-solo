@@ -876,13 +876,18 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(!content.includes('System Skupienia'), 'Logo nie powinno zawierać tekstu System Skupienia');
     });
 
-    test('Menu zębatki, modal ustawień wyglądu oraz kropka statusu bazy danych', () => {
+    test('Menu zębatki, przełącznik motywu w nagłówku, modal ustawień motywu całej strony oraz kropka bazy', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('id="headerGearBtn"'), 'Brak przycisku zębatki w nagłówku');
       assert.ok(content.includes('id="settingsMenuDropdown"'), 'Brak rozwijanego menu zębatki');
       assert.ok(content.includes('id="settingsModal"'), 'Brak modala ustawień settingsModal');
+      assert.ok(content.includes('id="themeBtn"'), 'Brak przycisku przełączania motywu w nagłówku');
+      assert.ok(content.includes('id="themeIcon"'), 'Brak ikonki słońca/księżyca w przycisku motywu');
       assert.ok(content.includes('setLogoAccentColor'), 'Brak funkcji zmiany koloru akcentu logo');
       assert.ok(content.includes('setAppTheme'), 'Brak funkcji zmiany motywu strony');
+      assert.ok(content.includes('setPageThemeColor'), 'Brak funkcji zmiany motywu kolorystycznego całej strony');
+      assert.ok(content.includes('applyAppPalette'), 'Brak funkcji applyAppPalette');
+      assert.ok(content.includes('THEME_PALETTES'), 'Brak słownika THEME_PALETTES');
       assert.ok(content.includes('id="dbFileDot"'), 'Brak kropki statusu bazy');
       assert.ok(content.includes('id="dbFileTooltip"'), 'Brak dymka tooltip dla statusu bazy');
     });

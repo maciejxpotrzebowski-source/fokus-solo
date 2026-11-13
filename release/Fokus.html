@@ -45,6 +45,62 @@
     ::-webkit-scrollbar-thumb { background: rgba(142, 142, 147, 0.25); border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(142, 142, 147, 0.45); }
 
+    /* Dynamiczny motyw kolorystyczny całej strony (Apple Soft Bento) */
+    :root {
+      --theme-accent: #1D1D1F;
+      --theme-accent-contrast: #FFFFFF;
+      --theme-accent-subtle: rgba(29, 29, 31, 0.06);
+      --theme-accent-border: rgba(29, 29, 31, 0.12);
+      --theme-bg-tint: transparent;
+      --theme-glow: rgba(0, 0, 0, 0.035);
+    }
+    .dark {
+      --theme-accent: #FFFFFF;
+      --theme-accent-contrast: #1D1D1F;
+      --theme-accent-subtle: rgba(255, 255, 255, 0.08);
+      --theme-accent-border: rgba(255, 255, 255, 0.15);
+      --theme-bg-tint: transparent;
+      --theme-glow: rgba(0, 0, 0, 0.45);
+    }
+
+    body {
+      background-image: radial-gradient(circle at 50% 0%, var(--theme-bg-tint) 0%, transparent 65%);
+      background-attachment: fixed;
+    }
+
+    /* Klasy akcentu motywu kolorystycznego strony i jego pochodnych */
+    .theme-accent-btn {
+      background-color: var(--theme-accent) !important;
+      color: var(--theme-accent-contrast) !important;
+      transition: all 0.2s ease;
+    }
+    .theme-accent-btn:hover {
+      opacity: 0.92;
+    }
+    .theme-accent-subtle {
+      background-color: var(--theme-accent-subtle) !important;
+      color: var(--theme-accent) !important;
+    }
+    .theme-accent-border {
+      border-color: var(--theme-accent-border) !important;
+    }
+    .theme-accent-text {
+      color: var(--theme-accent) !important;
+    }
+    .theme-accent-fill {
+      background-color: var(--theme-accent) !important;
+    }
+
+    /* Zabarwienie obramowania i delikatnego cienia kart w wybranym motywie */
+    body[data-tinted-theme="true"] .bento-card {
+      border: 1px solid var(--theme-accent-border);
+      box-shadow: 0 8px 30px var(--theme-glow), 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+    body[data-tinted-theme="true"] .theme-accent-tab {
+      border: 1px solid var(--theme-accent-border);
+      color: var(--theme-accent) !important;
+    }
+
     /* Karta Soft Bento */
     .bento-card {
       background-color: #FFFFFF;
@@ -129,7 +185,7 @@
 
         <!-- Wyróżniony centralny przycisk dodawania zadania (N) -->
         <button onclick="openTaskModal()" title="Dodaj nowe zadanie (Skrót klawiszowy: N)"
-          class="px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer">
+          class="theme-accent-btn px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer">
           <span class="text-sm font-bold leading-none">+</span>
           <span class="hidden sm:inline">Nowe zadanie</span>
           <span class="sm:hidden">Zadanie</span>
@@ -137,7 +193,7 @@
         </button>
       </div>
 
-      <!-- Prawe akcje narzędziowe: Kropka statusu bazy danych + Zębatka z rozwijanym menu -->
+      <!-- Prawe akcje narzędziowe: Kropka statusu bazy danych + Zębatka z rozwijanym menu + Przełącznik trybu ciemnego/jasnego -->
       <div class="flex items-center justify-end gap-2 shrink-0 relative">
         
         <!-- Kolorowa kropka statusu bazy danych z dymkiem tooltip po najechaniu i kliknięciem do zmiany -->
@@ -182,6 +238,12 @@
             </button>
           </div>
         </div>
+
+        <!-- Przełącznik trybu ciemnego / jasnego -->
+        <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw Jasny / Ciemny"
+          class="w-9 h-9 rounded-full bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-[#2C2C2E] flex items-center justify-center text-xs hover:opacity-80 active:scale-95 transition shadow-sm cursor-pointer">
+          <span id="themeIcon">🌙</span>
+        </button>
 
       </div>
 
@@ -435,7 +497,7 @@
         <button type="button" id="tmDeleteBtn" onclick="deleteTaskFromModal()" class="hidden text-xs text-rose-500 hover:underline">Usuń zadanie</button>
         <div class="flex items-center gap-2 ml-auto">
           <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-full text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">Anuluj</button>
-          <button type="button" onclick="saveTaskFromModal()" class="px-5 py-2 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
+          <button type="button" onclick="saveTaskFromModal()" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
             Zapisz zadanie
           </button>
         </div>
@@ -593,7 +655,7 @@
 
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeManualTimeModal()" class="px-3.5 py-2 rounded-full text-xs text-zinc-400 hover:text-zinc-600">Anuluj</button>
-        <button onclick="saveManualTimeModal()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">
+        <button onclick="saveManualTimeModal()" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
           Dodaj sesję
         </button>
       </div>
@@ -836,7 +898,7 @@
           <button type="button" onclick="closeModal('confirmPomodoroSessionModal')" class="px-3.5 py-2 rounded-full text-xs text-zinc-400 hover:text-zinc-600">
             Anuluj
           </button>
-          <button type="button" onclick="saveConfirmedPomodoroSession()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 shadow-sm transition">
+          <button type="button" onclick="saveConfirmedPomodoroSession()" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 shadow-sm transition">
             Zapisz sesję
           </button>
         </div>
@@ -933,36 +995,107 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 11: USTAWIENIA (MOTYW KOLORYSTYCZNY + KOLOR AKCENTU LOGO)           -->
+  <!-- MODAL 11: USTAWIENIA (TRYB WYŚWIETLANIA + MOTYW STRONY + AKCENT LOGO)      -->
   <!-- ========================================================================= -->
   <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
-    <div class="bento-card max-w-md w-full space-y-6 fade-in bg-white dark:bg-[#1C1C1E]">
+    <div class="bento-card max-w-lg w-full space-y-5 fade-in bg-white dark:bg-[#1C1C1E] max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
         <div class="flex items-center gap-2">
           <span class="text-base">🎨</span>
-          <span class="text-sm font-semibold tracking-tight">Ustawienia Wyglądu</span>
+          <span class="text-sm font-semibold tracking-tight">Ustawienia Wyglądu i Motywu</span>
         </div>
         <button onclick="closeModal('settingsModal')" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Zamknij (Esc)</button>
       </div>
 
-      <!-- 1. MOTYW KOLORYSTYCZNY STRONY -->
-      <div class="space-y-3">
-        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Motyw kolorystyczny całej strony</label>
+      <!-- 1. TRYB WYŚWIETLANIA (JASNY / CIEMNY) -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Tryb wyświetlania</label>
         <div class="grid grid-cols-2 gap-3">
           <button type="button" onclick="setAppTheme('LIGHT')" id="themeSelectLight"
-            class="flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-black/30">
+            class="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-black/30 cursor-pointer">
             <span class="text-base">☀️</span>
             <span>Motyw Jasny</span>
           </button>
           <button type="button" onclick="setAppTheme('DARK')" id="themeSelectDark"
-            class="flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-white/30">
+            class="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-white/30 cursor-pointer">
             <span class="text-base">🌙</span>
             <span>Motyw Ciemny</span>
           </button>
         </div>
       </div>
 
-      <!-- 2. KOLOR ELEMENTÓW W LOGO (> i _) -->
+      <!-- 2. MOTYW KOLORYSTYCZNY CAŁEJ STRONY (AKCENTY I POCHODNE) -->
+      <div class="space-y-3 pt-3 border-t border-black/5 dark:border-white/5">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Motyw kolorystyczny całej strony</label>
+            <p class="text-[11px] text-zinc-400 mt-0.5">Nadaje akcenty przyciskom, pigułkom i poświacie tła</p>
+          </div>
+          <span id="currentPageThemeName" class="text-xs font-medium text-zinc-500 font-mono">Neutralny</span>
+        </div>
+
+        <!-- Paleta wyboru motywu całej strony -->
+        <div class="grid grid-cols-4 gap-2">
+          <button type="button" onclick="setPageThemeColor('NEUTRAL')" id="themePalBtn-NEUTRAL"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-zinc-400 dark:bg-zinc-600 block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Neutralny</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('EMERALD')" id="themePalBtn-EMERALD"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#10B981] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Szmaragd</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('BLUE')" id="themePalBtn-BLUE"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#3B82F6] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Błękit</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('INDIGO')" id="themePalBtn-INDIGO"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#6366F1] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Indygo</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('AMBER')" id="themePalBtn-AMBER"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#F59E0B] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Bursztyn</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('ROSE')" id="themePalBtn-ROSE"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#F43F5E] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Karmazyn</span>
+          </button>
+
+          <button type="button" onclick="setPageThemeColor('TEAL')" id="themePalBtn-TEAL"
+            class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-[#0D9488] block shadow-inner"></span>
+            <span class="text-[10px] font-medium leading-tight">Turkus</span>
+          </button>
+
+          <!-- Własny kolor motywu z próbnika -->
+          <label id="themePalBtn-CUSTOM" class="flex flex-col items-center gap-1.5 p-2 rounded-xl border transition text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer relative">
+            <input type="color" id="settingsCustomPageColorInput" onchange="setPageThemeColor('CUSTOM', this.value)" class="w-6 h-6 rounded-full bg-transparent border-0 cursor-pointer p-0" />
+            <span class="text-[10px] font-medium leading-tight">Własny...</span>
+          </label>
+        </div>
+
+        <!-- Podgląd na żywo wybranego motywu i jego pochodnych -->
+        <div id="themePreviewBox" class="p-3 rounded-2xl border transition flex items-center justify-between gap-3 text-xs" style="background-color: var(--theme-accent-subtle); border-color: var(--theme-accent-border);">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--theme-accent);"></span>
+            <span class="font-medium" style="color: var(--theme-accent);">Akcent i pochodne motywu</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-sm" style="background-color: var(--theme-accent); color: var(--theme-accent-contrast);">Przycisk</span>
+        </div>
+      </div>
+
+      <!-- 3. KOLOR ELEMENTÓW W LOGO (> i _) -->
       <div class="space-y-3 pt-3 border-t border-black/5 dark:border-white/5">
         <div class="flex items-center justify-between">
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Kolor elementów w logo (&gt; oraz kursor _)</label>
@@ -970,7 +1103,7 @@
         </div>
 
         <!-- Mini podgląd logo na żywo w modalu -->
-        <div class="h-16 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] flex items-center justify-center px-4">
+        <div class="h-14 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] flex items-center justify-center px-4">
           <div class="flex items-center font-mono text-2xl font-black tracking-tight select-none">
             <span id="settingsPreviewPrompt" class="mr-1.5 font-bold" style="color: #10B981">&gt;</span>
             <span>fokus</span>
@@ -978,25 +1111,26 @@
           </div>
         </div>
 
-        <!-- Paleta gotowych kolorów akcentowych -->
-        <div class="flex flex-wrap items-center gap-2.5 pt-1">
-          <button type="button" onclick="setLogoAccentColor('#10B981')" class="w-8 h-8 rounded-full bg-[#10B981] hover:scale-110 transition shadow-sm cursor-pointer" title="Szmaragd (Terminal)"></button>
-          <button type="button" onclick="setLogoAccentColor('#3B82F6')" class="w-8 h-8 rounded-full bg-[#3B82F6] hover:scale-110 transition shadow-sm cursor-pointer" title="Błękit (Apple Pro)"></button>
-          <button type="button" onclick="setLogoAccentColor('#F59E0B')" class="w-8 h-8 rounded-full bg-[#F59E0B] hover:scale-110 transition shadow-sm cursor-pointer" title="Bursztyn (ALPEN)"></button>
-          <button type="button" onclick="setLogoAccentColor('#8B5CF6')" class="w-8 h-8 rounded-full bg-[#8B5CF6] hover:scale-110 transition shadow-sm cursor-pointer" title="Fiolet"></button>
-          <button type="button" onclick="setLogoAccentColor('#F43F5E')" class="w-8 h-8 rounded-full bg-[#F43F5E] hover:scale-110 transition shadow-sm cursor-pointer" title="Różany (Laser)"></button>
-          <button type="button" onclick="setLogoAccentColor('#71717A')" class="w-8 h-8 rounded-full bg-[#71717A] hover:scale-110 transition shadow-sm cursor-pointer" title="Grafit (Neutralny)"></button>
+        <!-- Paleta kolorów logo -->
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <button type="button" onclick="setLogoAccentColor('#10B981')" class="w-7 h-7 rounded-full bg-[#10B981] hover:scale-110 transition shadow-sm cursor-pointer" title="Szmaragd (Terminal)"></button>
+          <button type="button" onclick="setLogoAccentColor('#3B82F6')" class="w-7 h-7 rounded-full bg-[#3B82F6] hover:scale-110 transition shadow-sm cursor-pointer" title="Błękit (Apple Pro)"></button>
+          <button type="button" onclick="setLogoAccentColor('#6366F1')" class="w-7 h-7 rounded-full bg-[#6366F1] hover:scale-110 transition shadow-sm cursor-pointer" title="Indygo"></button>
+          <button type="button" onclick="setLogoAccentColor('#F59E0B')" class="w-7 h-7 rounded-full bg-[#F59E0B] hover:scale-110 transition shadow-sm cursor-pointer" title="Bursztyn (ALPEN)"></button>
+          <button type="button" onclick="setLogoAccentColor('#F43F5E')" class="w-7 h-7 rounded-full bg-[#F43F5E] hover:scale-110 transition shadow-sm cursor-pointer" title="Karmazyn"></button>
+          <button type="button" onclick="setLogoAccentColor('#0D9488')" class="w-7 h-7 rounded-full bg-[#0D9488] hover:scale-110 transition shadow-sm cursor-pointer" title="Turkus"></button>
+          <button type="button" onclick="setLogoAccentColor('#71717A')" class="w-7 h-7 rounded-full bg-[#71717A] hover:scale-110 transition shadow-sm cursor-pointer" title="Grafit (Neutralny)"></button>
           
-          <!-- Własny kolor z próbnika -->
-          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] cursor-pointer hover:opacity-80 transition text-xs text-zinc-500">
-            <input type="color" id="settingsCustomColorInput" onchange="setLogoAccentColor(this.value)" class="w-5 h-5 rounded-full bg-transparent border-0 cursor-pointer p-0" />
-            <span class="text-[11px]">Własny...</span>
+          <!-- Własny kolor logo z próbnika -->
+          <label class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] cursor-pointer hover:opacity-80 transition text-xs text-zinc-500">
+            <input type="color" id="settingsCustomColorInput" onchange="setLogoAccentColor(this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 cursor-pointer p-0" />
+            <span class="text-[10px]">Własny...</span>
           </label>
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-        <button type="button" onclick="closeModal('settingsModal')" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
+        <button type="button" onclick="closeModal('settingsModal')" class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 transition">
           Gotowe
         </button>
       </div>
@@ -1034,6 +1168,8 @@
       schemaVersion: '4.2-bento-solo',
       theme: 'LIGHT',
       logoAccentColor: '#10B981',
+      pageThemeColor: 'NEUTRAL',
+      customPageThemeColor: '#3B82F6',
       activeView: 'DAY',          // 'DAY' | 'MATRIX' | 'CALENDAR' | 'WAITING' | 'REPORTS' | 'DICTIONARIES' | 'GUIDE'
       selectedTaskId: null,
       card1Tab: 'STEPS',          // 'STEPS' | 'HISTORY'
@@ -1262,6 +1398,8 @@
       if (!data.categories) data.categories = DEFAULT_DB.categories;
       if (!data.timeLogs) data.timeLogs = DEFAULT_DB.timeLogs;
       if (!data.logoAccentColor) data.logoAccentColor = '#10B981';
+      if (!data.pageThemeColor) data.pageThemeColor = 'NEUTRAL';
+      if (!data.customPageThemeColor) data.customPageThemeColor = '#3B82F6';
       if (!data.sopTemplates || !Array.isArray(data.sopTemplates) || data.sopTemplates.length === 0) {
         data.sopTemplates = DEFAULT_DB.sopTemplates;
       }
@@ -2388,8 +2526,120 @@
     }
 
     // =========================================================================
-    // WIDOK GŁÓWNY I PRZEŁĄCZANIE ZAKŁADEK
+    // WIDOK GŁÓWNY I PRZEŁĄCZANIE ZAKŁADEK / MOTYWÓW
     // =========================================================================
+    const THEME_PALETTES = {
+      NEUTRAL: { name: 'Neutralny (Szarości Apple)', hex: null },
+      EMERALD: { name: 'Szmaragdowy', hex: '#10B981' },
+      BLUE: { name: 'Błękitny', hex: '#3B82F6' },
+      INDIGO: { name: 'Fiolet / Indygo', hex: '#6366F1' },
+      AMBER: { name: 'Ciepły Bursztyn', hex: '#F59E0B' },
+      ROSE: { name: 'Karmazynowy', hex: '#F43F5E' },
+      TEAL: { name: 'Morski Turkus', hex: '#0D9488' }
+    };
+
+    function hexToRgba(hex, alpha) {
+      if (!hex) return `rgba(29, 29, 31, ${alpha})`;
+      let c = hex.replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return `rgba(29, 29, 31, ${alpha})`;
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function getContrastColor(hex) {
+      if (!hex) return '#FFFFFF';
+      let c = hex.replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return '#FFFFFF';
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 165 ? '#1D1D1F' : '#FFFFFF';
+    }
+
+    function applyAppPalette() {
+      const paletteKey = db.pageThemeColor || 'NEUTRAL';
+      const isDark = db.theme === 'DARK';
+      const root = document.documentElement;
+
+      let hex = null;
+      if (paletteKey === 'CUSTOM') {
+        hex = db.customPageThemeColor || '#3B82F6';
+      } else if (THEME_PALETTES[paletteKey] && THEME_PALETTES[paletteKey].hex) {
+        hex = THEME_PALETTES[paletteKey].hex;
+      }
+
+      if (!hex) {
+        document.body.removeAttribute('data-tinted-theme');
+        if (isDark) {
+          root.style.setProperty('--theme-accent', '#FFFFFF');
+          root.style.setProperty('--theme-accent-contrast', '#1D1D1F');
+          root.style.setProperty('--theme-accent-subtle', 'rgba(255, 255, 255, 0.08)');
+          root.style.setProperty('--theme-accent-border', 'rgba(255, 255, 255, 0.12)');
+          root.style.setProperty('--theme-bg-tint', 'transparent');
+          root.style.setProperty('--theme-glow', 'rgba(0, 0, 0, 0.45)');
+        } else {
+          root.style.setProperty('--theme-accent', '#1D1D1F');
+          root.style.setProperty('--theme-accent-contrast', '#FFFFFF');
+          root.style.setProperty('--theme-accent-subtle', 'rgba(29, 29, 31, 0.06)');
+          root.style.setProperty('--theme-accent-border', 'rgba(29, 29, 31, 0.12)');
+          root.style.setProperty('--theme-bg-tint', 'transparent');
+          root.style.setProperty('--theme-glow', 'rgba(0, 0, 0, 0.035)');
+        }
+      } else {
+        document.body.setAttribute('data-tinted-theme', 'true');
+        const contrast = getContrastColor(hex);
+        root.style.setProperty('--theme-accent', hex);
+        root.style.setProperty('--theme-accent-contrast', contrast);
+        root.style.setProperty('--theme-accent-subtle', hexToRgba(hex, isDark ? 0.18 : 0.12));
+        root.style.setProperty('--theme-accent-border', hexToRgba(hex, isDark ? 0.32 : 0.22));
+        root.style.setProperty('--theme-bg-tint', hexToRgba(hex, isDark ? 0.06 : 0.04));
+        root.style.setProperty('--theme-glow', hexToRgba(hex, isDark ? 0.22 : 0.08));
+      }
+
+      updateSettingsModalPaletteUI();
+    }
+
+    function setPageThemeColor(paletteKey, customHex) {
+      db.pageThemeColor = paletteKey;
+      if (customHex) db.customPageThemeColor = customHex;
+      applyAppPalette();
+      saveDatabase();
+      const name = paletteKey === 'CUSTOM' ? `Własny (${db.customPageThemeColor})` : (THEME_PALETTES[paletteKey] ? THEME_PALETTES[paletteKey].name : 'Neutralny');
+      showToast(`Zmieniono motyw strony: ${name}`);
+    }
+
+    function updateSettingsModalPaletteUI() {
+      const currentKey = db.pageThemeColor || 'NEUTRAL';
+      const label = document.getElementById('currentPageThemeName');
+      if (label) {
+        label.textContent = currentKey === 'CUSTOM' ? `Własny (${db.customPageThemeColor || '#3B82F6'})` : (THEME_PALETTES[currentKey] ? THEME_PALETTES[currentKey].name : 'Neutralny');
+      }
+
+      const keys = ['NEUTRAL', 'EMERALD', 'BLUE', 'INDIGO', 'AMBER', 'ROSE', 'TEAL', 'CUSTOM'];
+      keys.forEach(k => {
+        const btn = document.getElementById('themePalBtn-' + k);
+        if (!btn) return;
+        const isSelected = currentKey === k;
+        if (isSelected) {
+          btn.className = 'flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 border-blue-500 bg-blue-500/10 transition text-center shadow-sm cursor-pointer';
+        } else {
+          btn.className = 'flex flex-col items-center gap-1.5 p-2 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition text-center cursor-pointer';
+        }
+      });
+
+      const customInp = document.getElementById('settingsCustomPageColorInput');
+      if (customInp && db.customPageThemeColor) {
+        customInp.value = db.customPageThemeColor;
+      }
+    }
+
     function applyTheme() {
       const root = document.documentElement;
       const icon = document.getElementById('themeIcon');
@@ -2400,6 +2650,7 @@
         root.classList.remove('dark');
         if (icon) icon.textContent = '🌙';
       }
+      applyAppPalette();
       applyLogoAccent(db.logoAccentColor || '#10B981');
     }
 
@@ -2407,6 +2658,8 @@
       db.theme = db.theme === 'DARK' ? 'LIGHT' : 'DARK';
       applyTheme();
       saveDatabase();
+      updateSettingsModalThemeUI();
+      showToast(`Przełączono motyw na: ${db.theme === 'DARK' ? 'Ciemny' : 'Jasny'}`);
     }
 
     function toggleSettingsMenu(e) {
@@ -2423,6 +2676,7 @@
     function openSettingsModal() {
       closeSettingsMenu();
       updateSettingsModalThemeUI();
+      applyAppPalette();
       applyLogoAccent(db.logoAccentColor || '#10B981');
       openModal('settingsModal');
     }
@@ -2439,6 +2693,7 @@
         lightBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-semibold bg-white border-blue-500 text-[#1D1D1F] shadow-sm cursor-pointer';
         darkBtn.className = 'flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 transition text-xs font-medium bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 border-black/10 dark:border-white/10 hover:border-white/30 text-zinc-500 cursor-pointer';
       }
+      updateSettingsModalPaletteUI();
     }
 
     function setAppTheme(theme) {
@@ -2504,7 +2759,7 @@
         const btn = document.getElementById('navBtn-' + v);
         if (!btn) return;
         if (db.activeView === v) {
-          btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-sm transition-all whitespace-nowrap';
+          btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-sm transition-all whitespace-nowrap theme-accent-tab';
         } else {
           btn.className = 'px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all whitespace-nowrap';
         }
@@ -2824,7 +3079,7 @@
               <!-- Przyciski sterowania stoperem -->
               <div class="flex items-center gap-1.5">
                 <button id="bentoTimerStartBtn" onclick="togglePomodoro('${t.id}')"
-                  class="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition">
+                  class="theme-accent-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition">
                   ${timer.running ? 'Pauza' : 'Start'}
                 </button>
                 <button id="bentoTimerFinishBtn" onclick="finishAndSavePomodoroSession()"
@@ -2912,7 +3167,7 @@
           </div>
 
           <button onclick="completeTask('${t.id}')"
-            class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm">
+            class="theme-accent-btn px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm">
             ✓ Ukończ zadanie
           </button>
         </div>
@@ -2925,7 +3180,7 @@
         <div class="space-y-5 fade-in">
           <!-- Subtelny pasek postępu Goal-Gradient -->
           <div class="w-full h-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] overflow-hidden">
-            <div class="h-full bg-[#1D1D1F] dark:bg-white rounded-full transition-all duration-300" style="width: ${progressPct}%"></div>
+            <div class="h-full bg-[#1D1D1F] dark:bg-white theme-accent-fill rounded-full transition-all duration-300" style="width: ${progressPct}%"></div>
           </div>
 
           <!-- Checklista Kroków Milowych -->

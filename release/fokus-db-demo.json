@@ -2,7 +2,9 @@
   "schemaVersion": "4.2-bento-solo",
   "theme": "LIGHT",
   "logoAccentColor": "#10B981",
-  "activeView": "ALL_TASKS",
+  "pageThemeColor": "NEUTRAL",
+  "customPageThemeColor": "#3B82F6",
+  "activeView": "DAY",
   "selectedTaskId": "tsk_ed32fa821369",
   "card1Tab": "STEPS",
   "reportPeriod": "MONTH",
@@ -44,6 +46,17 @@
   ],
   "people": [
     {
+      "id": "per_tomek",
+      "canonicalName": "Tomek",
+      "roleOrDept": "Zakupy Opakowań",
+      "aliases": [
+        "tk",
+        "tomasz",
+        "opakowania"
+      ],
+      "active": true
+    },
+    {
       "id": "per_grzegorz",
       "canonicalName": "Grzegorz",
       "roleOrDept": "Szef / Dyrektor",
@@ -53,17 +66,6 @@
         "szef",
         "prezes",
         "dyrektor"
-      ],
-      "active": true
-    },
-    {
-      "id": "per_tomek",
-      "canonicalName": "Tomek",
-      "roleOrDept": "Zakupy Opakowań",
-      "aliases": [
-        "tk",
-        "tomasz",
-        "opakowania"
       ],
       "active": true
     },
@@ -161,7 +163,7 @@
       "title": "JIPP zadania",
       "requesterPersonId": "per_grzegorz",
       "personId": "per_grzegorz",
-      "categoryId": "cat_erp",
+      "categoryId": "cat_aec9525dbeac",
       "urgencyTag": "NORMAL",
       "dueDate": null,
       "originalDueDate": null,
@@ -226,6 +228,12 @@
       "createdAt": "2026-11-13T17:11:39.761Z",
       "createdAtISO": "2026-11-13T17:11:39.761Z",
       "auditLog": [
+        {
+          "id": "log_6ef98c1cef99",
+          "timestamp": "2026-11-13T17:51:54.388Z",
+          "changeType": "STATUS_CHANGED",
+          "reasonComment": "Zapisano sesję skupienia: 1 min"
+        },
         {
           "id": "log_7476110dea27",
           "timestamp": "2026-11-13T17:11:39.761Z",
@@ -533,7 +541,8 @@
       "recurrence": "NONE",
       "createdAt": "2026-11-06T12:00:00.000Z",
       "createdAtISO": "2026-11-06T12:00:00.000Z",
-      "auditLog": []
+      "auditLog": [],
+      "recurrenceRule": null
     },
     {
       "id": "tsk_5",
@@ -687,6 +696,21 @@
   ],
   "timeLogs": [
     {
+      "id": "ses_3a9c162e6276",
+      "taskId": "tsk_ed32fa821369",
+      "date": "2026-11-13",
+      "dateISO": "2026-11-13",
+      "startedAt": "2026-11-13T17:51:52.855Z",
+      "startedAtISO": "2026-11-13T17:51:52.855Z",
+      "plannedMinutes": 60,
+      "targetMinutes": 60,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
+    {
       "id": "ses_df81ed87231f",
       "taskId": "tsk_1",
       "date": "2026-11-12",
@@ -809,6 +833,17 @@
   ],
   "peopleDictionary": [
     {
+      "id": "per_tomek",
+      "canonicalName": "Tomek",
+      "roleOrDept": "Zakupy Opakowań",
+      "aliases": [
+        "tk",
+        "tomasz",
+        "opakowania"
+      ],
+      "active": true
+    },
+    {
       "id": "per_grzegorz",
       "canonicalName": "Grzegorz",
       "roleOrDept": "Szef / Dyrektor",
@@ -818,17 +853,6 @@
         "szef",
         "prezes",
         "dyrektor"
-      ],
-      "active": true
-    },
-    {
-      "id": "per_tomek",
-      "canonicalName": "Tomek",
-      "roleOrDept": "Zakupy Opakowań",
-      "aliases": [
-        "tk",
-        "tomasz",
-        "opakowania"
       ],
       "active": true
     },
@@ -889,6 +913,21 @@
     }
   ],
   "timeSessions": [
+    {
+      "id": "ses_3a9c162e6276",
+      "taskId": "tsk_ed32fa821369",
+      "date": "2026-11-13",
+      "dateISO": "2026-11-13",
+      "startedAt": "2026-11-13T17:51:52.855Z",
+      "startedAtISO": "2026-11-13T17:51:52.855Z",
+      "plannedMinutes": 60,
+      "targetMinutes": 60,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
     {
       "id": "ses_df81ed87231f",
       "taskId": "tsk_1",
