@@ -248,23 +248,18 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
         <div>
           <label class="block text-[11px] text-zinc-400 font-medium mb-1.5">Estymacja czasu</label>
-          <div class="flex gap-2">
-            <select id="tmEstMinutesPreset" onchange="onEstMinutesPresetChange(this.value)"
-              class="flex-1 text-xs px-3 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none">
-              <option value="15">15 min</option>
-              <option value="25" selected>25 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60">60 min (1h)</option>
-              <option value="90">90 min (1.5h)</option>
-              <option value="120">120 min (2h)</option>
-              <option value="CUSTOM">Inny czas (wpisz)...</option>
-            </select>
-            <div id="tmEstCustomWrapper" class="hidden w-20">
-              <input id="tmEstMinutes" type="number" min="5" step="5" value="25" placeholder="min"
-                class="w-full text-xs px-2.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none font-mono text-center" />
-            </div>
-          </div>
+          <select id="tmEstMinutesPreset" onchange="onEstMinutesPresetChange(this.value)"
+            class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none">
+            <option value="15">15 min</option>
+            <option value="25" selected>25 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min (1h)</option>
+            <option value="90">90 min (1.5h)</option>
+            <option value="120">120 min (2h)</option>
+            <option value="CUSTOM">Inny czas (wpisz)...</option>
+          </select>
+          <input id="tmEstMinutes" type="hidden" value="25" />
         </div>
 
         <div>
@@ -398,10 +393,10 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] text-zinc-400 font-medium">5. Kroki milowe (po jednym w linii)</label>
-            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">+</code> na początku linii = zrobione (zamieni się na ✓)</span>
+            <span class="text-[10px] text-zinc-400">Wpisz <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">+</code> = zrobione (✓), <code class="font-mono font-semibold text-zinc-600 dark:text-zinc-300">-</code> = do zrobienia (-)</span>
           </div>
           <textarea id="tmMilestonesText" rows="3" onblur="normalizeMilestonesTextarea()"
-            placeholder="+ Eksport tabeli z ERP (ukończony)&#10;Walidacja rekordów (do zrobienia)&#10;Wysłanie podsumowania"
+            placeholder="+ Eksport tabeli z ERP (ukończony)&#10;- Walidacja rekordów (do zrobienia)&#10;- Wysłanie podsumowania"
             class="w-full text-xs px-3.5 py-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none leading-relaxed mt-1 font-mono"></textarea>
         </div>
 
@@ -887,6 +882,28 @@
       <div class="flex items-center justify-end gap-2 pt-1">
         <button type="button" onclick="closeModal('customTimerModal')" class="px-3 py-1.5 rounded-full text-xs text-zinc-400">Anuluj</button>
         <button type="button" onclick="applyCustomTimerMinutes()" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">Ustaw czas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 10: WŁASNA ESTYMACJA CZASU ZADANIA (DIALOG)                         -->
+  <!-- ========================================================================= -->
+  <div id="customEstimateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 dark:bg-black/70 backdrop-blur-sm p-4">
+    <div class="bento-card max-w-xs w-full space-y-4 fade-in">
+      <div class="flex items-center justify-between">
+        <span class="text-xs uppercase tracking-widest text-zinc-400 font-medium">Własna estymacja zadania</span>
+        <button type="button" onclick="closeCustomEstimateModal()" class="text-xs text-zinc-400 hover:text-zinc-700">Zamknij</button>
+      </div>
+      <p class="text-xs text-zinc-500">Wpisz ile minut przewidujesz na realizację tego zadania:</p>
+      <div>
+        <input id="customEstMinutesInput" type="number" min="1" max="1440" step="1" value="" placeholder="np. 40"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();applyCustomEstimateMinutes();}"
+          class="w-full text-2xl font-bold font-mono text-center px-4 py-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button type="button" onclick="closeCustomEstimateModal()" class="px-3 py-1.5 rounded-full text-xs text-zinc-400">Anuluj</button>
+        <button type="button" onclick="applyCustomEstimateMinutes()" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]">Ustaw czas</button>
       </div>
     </div>
   </div>
@@ -1457,8 +1474,7 @@
       // 1. Znak wykonania zadania:
       // - '+' na początku linii (niezależnie czy ze spacją: "+ zadanie" czy bez: "+zadanie")
       // - '✓' lub '✔' na początku linii (ze spacją lub bez: "✓ zadanie", "✓zadanie")
-      // - 'v ' lub 'V ' (litera v ze spacją)
-      // Uwaga: rezygnujemy ze znaków x oraz [x]
+      // Uwaga: rezygnujemy ze znaków x, [x], oraz v (v traktowane jako zwykły tekst)
       if (line.startsWith('+')) {
         const title = line.slice(1).trim();
         if (!title) return null;
@@ -1466,11 +1482,6 @@
       }
       if (line.startsWith('✓') || line.startsWith('✔')) {
         const title = line.replace(/^[\u2713\u2714]\s*/, '').trim();
-        if (!title) return null;
-        return { title, isDone: true };
-      }
-      if (/^[vV]\s+/.test(line)) {
-        const title = line.replace(/^[vV]\s+/, '').trim();
         if (!title) return null;
         return { title, isDone: true };
       }
@@ -1497,7 +1508,7 @@
       if (!Array.isArray(milestones)) return '';
       return milestones.map(m => {
         const title = (m && m.title ? m.title : '').trim();
-        return m && m.isDone ? `✓ ${title}` : title;
+        return m && m.isDone ? `✓ ${title}` : `- ${title}`;
       }).join('\n');
     }
 
@@ -1510,7 +1521,7 @@
         if (!trimmed) return line;
         const parsed = parseMilestoneLine(trimmed);
         if (!parsed) return line;
-        return parsed.isDone ? `✓ ${parsed.title}` : parsed.title;
+        return parsed.isDone ? `✓ ${parsed.title}` : `- ${parsed.title}`;
       }).join('\n');
       if (normalized !== area.value) {
         area.value = normalized;
@@ -5454,15 +5465,70 @@
     // =========================================================================
     // MODAL DODAWANIA / EDYCJI ZADANIA
     // =========================================================================
+    let previousEstPresetValue = '25';
+
+    function openCustomEstimateModal() {
+      const inp = document.getElementById('customEstMinutesInput');
+      if (inp) {
+        inp.value = '';
+        inp.placeholder = 'np. 40';
+      }
+      openModal('customEstimateModal');
+      setTimeout(() => { if (inp) inp.focus(); }, 50);
+    }
+
+    function closeCustomEstimateModal() {
+      closeModal('customEstimateModal');
+      const presetSelect = document.getElementById('tmEstMinutesPreset');
+      if (presetSelect) {
+        presetSelect.value = previousEstPresetValue || '25';
+      }
+    }
+
+    function applyCustomEstimateMinutes() {
+      const inp = document.getElementById('customEstMinutesInput');
+      const val = inp ? parseInt(inp.value, 10) : NaN;
+      if (!val || isNaN(val) || val <= 0) {
+        showToast('Wpisz poprawną liczbę minut');
+        return;
+      }
+      const hiddenInput = document.getElementById('tmEstMinutes');
+      if (hiddenInput) hiddenInput.value = val;
+
+      const presetSelect = document.getElementById('tmEstMinutesPreset');
+      if (presetSelect) {
+        const existingCustomOpt = presetSelect.querySelector('option[data-custom-est="true"]');
+        if (existingCustomOpt) existingCustomOpt.remove();
+
+        const standardValues = ['15', '25', '30', '45', '60', '90', '120'];
+        const valStr = String(val);
+        if (standardValues.includes(valStr)) {
+          presetSelect.value = valStr;
+        } else {
+          const opt = document.createElement('option');
+          opt.value = valStr;
+          opt.setAttribute('data-custom-est', 'true');
+          opt.textContent = `${val} min (własny)`;
+          const customOpt = presetSelect.querySelector('option[value="CUSTOM"]');
+          if (customOpt) {
+            presetSelect.insertBefore(opt, customOpt);
+          } else {
+            presetSelect.appendChild(opt);
+          }
+          presetSelect.value = valStr;
+        }
+        previousEstPresetValue = valStr;
+      }
+      closeModal('customEstimateModal');
+    }
+
     function onEstMinutesPresetChange(val) {
-      const customWrapper = document.getElementById('tmEstCustomWrapper');
-      const input = document.getElementById('tmEstMinutes');
       if (val === 'CUSTOM') {
-        customWrapper.classList.remove('hidden');
-        setTimeout(() => input.focus(), 50);
+        openCustomEstimateModal();
       } else {
-        customWrapper.classList.add('hidden');
-        input.value = parseInt(val, 10) || 25;
+        previousEstPresetValue = val;
+        const hiddenInput = document.getElementById('tmEstMinutes');
+        if (hiddenInput) hiddenInput.value = parseInt(val, 10) || 25;
       }
     }
 
@@ -5585,12 +5651,29 @@
         // Estymacja
         const est = parseInt(t.estimatedMinutes, 10) || 25;
         document.getElementById('tmEstMinutes').value = est;
-        if ([15, 25, 30, 45, 60, 90, 120].includes(est)) {
-          document.getElementById('tmEstMinutesPreset').value = String(est);
-          document.getElementById('tmEstCustomWrapper').classList.add('hidden');
-        } else {
-          document.getElementById('tmEstMinutesPreset').value = 'CUSTOM';
-          document.getElementById('tmEstCustomWrapper').classList.remove('hidden');
+        const presetSelect = document.getElementById('tmEstMinutesPreset');
+        if (presetSelect) {
+          const existingCustomOpt = presetSelect.querySelector('option[data-custom-est="true"]');
+          if (existingCustomOpt) existingCustomOpt.remove();
+
+          const estStr = String(est);
+          const standardValues = ['15', '25', '30', '45', '60', '90', '120'];
+          if (standardValues.includes(estStr)) {
+            presetSelect.value = estStr;
+          } else {
+            const opt = document.createElement('option');
+            opt.value = estStr;
+            opt.setAttribute('data-custom-est', 'true');
+            opt.textContent = `${est} min (własny)`;
+            const customOpt = presetSelect.querySelector('option[value="CUSTOM"]');
+            if (customOpt) {
+              presetSelect.insertBefore(opt, customOpt);
+            } else {
+              presetSelect.appendChild(opt);
+            }
+            presetSelect.value = estStr;
+          }
+          previousEstPresetValue = estStr;
         }
 
         // Cykliczność
@@ -5649,9 +5732,14 @@
         document.getElementById('tmImportance').value = 'HIGH';
 
         // Estymacja - czysty start
-        document.getElementById('tmEstMinutesPreset').value = '25';
         document.getElementById('tmEstMinutes').value = 25;
-        document.getElementById('tmEstCustomWrapper').classList.add('hidden');
+        const presetSelect = document.getElementById('tmEstMinutesPreset');
+        if (presetSelect) {
+          const existingCustomOpt = presetSelect.querySelector('option[data-custom-est="true"]');
+          if (existingCustomOpt) existingCustomOpt.remove();
+          presetSelect.value = '25';
+          previousEstPresetValue = '25';
+        }
 
         // Cykliczność - czysty start
         document.getElementById('tmRecurrence').value = 'NONE';
@@ -6940,7 +7028,11 @@
         closePomodoroMenu();
         if (activeModalsStack.length > 0) {
           const topModalId = activeModalsStack[activeModalsStack.length - 1];
-          closeModal(topModalId);
+          if (topModalId === 'customEstimateModal') {
+            closeCustomEstimateModal();
+          } else {
+            closeModal(topModalId);
+          }
         } else {
           closeTaskModal();
           closeDupochronModal();
@@ -6951,6 +7043,7 @@
           closeModal('confirmPomodoroSessionModal');
           closeModal('editTimeLogModal');
           closeModal('customTimerModal');
+          closeCustomEstimateModal();
         }
       } else if (!isTyping) {
         if (e.key === 'n' || e.key === 'N') {

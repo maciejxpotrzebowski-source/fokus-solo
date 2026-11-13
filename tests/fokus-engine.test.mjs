@@ -778,7 +778,7 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.equal(getFirstWorkdayOfMonth(2027, 0), '2027-01-04');
     });
 
-    test('Parser i formatowanie kroków milowych: + ze spacją lub bez i ✓ oznaczają wykonanie, - i brak znaku oznaczają brak wykonania (rezygnacja z x i [x])', () => {
+    test('Parser i formatowanie kroków milowych: + ze spacją lub bez i ✓ oznaczają wykonanie, - i brak znaku oznaczają brak wykonania (domyślny prefiks - dla niewykonanych, rezygnacja z v, x i [x])', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('parseMilestoneLine'), 'Brak funkcji parseMilestoneLine');
       assert.ok(content.includes('formatMilestonesForTextarea'), 'Brak funkcji formatMilestonesForTextarea');
@@ -795,11 +795,6 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         }
         if (line.startsWith('✓') || line.startsWith('✔')) {
           const title = line.replace(/^[\u2713\u2714]\s*/, '').trim();
-          if (!title) return null;
-          return { title, isDone: true };
-        }
-        if (/^[vV]\s+/.test(line)) {
-          const title = line.replace(/^[vV]\s+/, '').trim();
           if (!title) return null;
           return { title, isDone: true };
         }
@@ -822,7 +817,7 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
         if (!Array.isArray(milestones)) return '';
         return milestones.map(m => {
           const title = (m && m.title ? m.title : '').trim();
-          return m && m.isDone ? `✓ ${title}` : title;
+          return m && m.isDone ? `✓ ${title}` : `- ${title}`;
         }).join('\n');
       }
 
@@ -841,16 +836,26 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       // Brak znaku na początku -> isDone: false
       assert.deepEqual(parseMilestoneLine('Eksport bazy'), { title: 'Eksport bazy', isDone: false });
 
-      // Rezygnacja z x oraz [x] -> nie są traktowane jako wykonane
+      // Rezygnacja z v, x oraz [x] -> są traktowane jak zwykły tekst (niewykonane)
+      assert.deepEqual(parseMilestoneLine('v Eksport bazy'), { title: 'v Eksport bazy', isDone: false });
       assert.deepEqual(parseMilestoneLine('x Eksport bazy'), { title: 'x Eksport bazy', isDone: false });
       assert.deepEqual(parseMilestoneLine('[x] Eksport bazy'), { title: '[x] Eksport bazy', isDone: false });
 
-      // Formatowanie: zrobione otrzymują ✓ , niezrobione nie mają prefiksu
+      // Formatowanie: zrobione otrzymują ✓ , niezrobione otrzymują domyślny myślnik - 
       const formatted = formatMilestonesForTextarea([
         { title: 'Krok 1', isDone: true },
         { title: 'Krok 2', isDone: false }
       ]);
-      assert.equal(formatted, '✓ Krok 1\nKrok 2');
+      assert.equal(formatted, '✓ Krok 1\n- Krok 2');
+    });
+
+    test('Modal dialog dla własnej estymacji czasu (customEstimateModal) z czystym polem', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="customEstimateModal"'), 'Brak modala customEstimateModal');
+      assert.ok(content.includes('id="customEstMinutesInput"'), 'Brak inputu customEstMinutesInput');
+      assert.ok(content.includes('function openCustomEstimateModal'), 'Brak funkcji openCustomEstimateModal');
+      assert.ok(content.includes('function applyCustomEstimateMinutes'), 'Brak funkcji applyCustomEstimateMinutes');
+      assert.ok(content.includes('function closeCustomEstimateModal'), 'Brak funkcji closeCustomEstimateModal');
     });
 
     test('Dwuklik na zadaniu w sekcji Czekam na otwiera edycję zadania', () => {
