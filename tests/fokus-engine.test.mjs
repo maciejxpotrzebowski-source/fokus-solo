@@ -979,6 +979,34 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(!desc[4].dueDate, 'Pusta data na końcu w desc');
     });
 
+    test('Brak stopera obok logo w nagłówku (usunięcie headerMiniTimer)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(!content.includes('id="headerMiniTimer"'), 'Element headerMiniTimer nie powinien istnieć w nagłówku obok logo');
+    });
+
+    test('Możliwość manualnej korekty czasu trwania sesji (bentoTimerAdjustBtn, openAdjustPomodoroSessionModal, cpsQuickPresets)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="bentoTimerAdjustBtn"'), 'Brak przycisku bentoTimerAdjustBtn w Kafelku 01');
+      assert.ok(content.includes('openAdjustPomodoroSessionModal'), 'Brak funkcji openAdjustPomodoroSessionModal');
+      assert.ok(content.includes('id="cpsQuickPresets"'), 'Brak kontenera szybkich presetów cpsQuickPresets w modalu sesji');
+      assert.ok(content.includes('setSessionModalMinutes'), 'Brak funkcji setSessionModalMinutes');
+      assert.ok(content.includes('pipAdjustBtn'), 'Brak przycisku korekty w PiP');
+    });
+
+    test('Usprawniony wyrazisty dźwięk zakończenia Pomodoro (3-nutowy Apple Bell Chime oraz test w ustawieniach)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('587.33') && content.includes('880.00') && content.includes('1174.66'), 'Brak akordu 3-nutowego Apple Bell w playGentleChime');
+      assert.ok(content.includes('🔔 Odtwórz') && content.includes('playGentleChime()'), 'Brak przycisku odsłuchu dźwięku w ustawieniach');
+    });
+
+    test('Pływający stoper Always-on-Top ponad Excel (bentoTimerPiPBtn, Document PiP + Video Canvas fallback dla Safari)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="bentoTimerPiPBtn"'), 'Brak przycisku bentoTimerPiPBtn w Kafelku 01');
+      assert.ok(content.includes('id="pipCanvas"'), 'Brak elementu pipCanvas dla Canvas Video PiP fallback');
+      assert.ok(content.includes('id="pipVideo"'), 'Brak elementu pipVideo dla Canvas Video PiP fallback');
+      assert.ok(content.includes('drawCanvasPiP'), 'Brak funkcji renderującej stoper na canvas drawCanvasPiP');
+    });
+
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       const scriptMatches = [...content.matchAll(/<script[\s\S]*?>([\s\S]*?)<\/script>/gi)];
