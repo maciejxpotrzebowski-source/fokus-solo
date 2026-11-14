@@ -1142,15 +1142,27 @@
         <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Powiadomienia i Pływający Stoper</label>
         
         <div class="space-y-2">
-          <!-- Dźwięk zakończenia sesji z odsłuchem -->
-          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/40">
-            <div class="space-y-0.5 pr-2">
-              <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Dźwięk zakończenia sesji (Apple Bell Chime)</div>
-              <div class="text-[11px] text-zinc-400">Wyraźny, melodyjny 3-tonowy dzwonek po wybiciu 00:00</div>
+          <!-- Dźwięk zakończenia sesji z suwakiem głośności (0 - 100%) i odsłuchem -->
+          <div class="p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E]/40 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="space-y-0.5 pr-2">
+                <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Dźwięk zakończenia sesji (Apple Bell Chime)</div>
+                <div class="text-[11px] text-zinc-400">Wyraźny, melodyjny 3-tonowy dzwonek po wybiciu 00:00</div>
+              </div>
+              <button type="button" onclick="playGentleChime()" class="px-3 py-1 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm shrink-0">
+                🔔 Odtwórz
+              </button>
             </div>
-            <button type="button" onclick="playGentleChime()" class="px-3 py-1 rounded-full text-xs font-medium bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] hover:opacity-90 active:scale-95 transition shadow-sm shrink-0">
-              🔔 Odtwórz
-            </button>
+            <div class="pt-1 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center gap-3">
+              <span class="text-xs text-zinc-400 select-none">🔈</span>
+              <input type="range" id="settingsChimeVolumeSlider" min="0" max="100" step="1" value="80"
+                oninput="onChimeVolumeInput(this.value)"
+                onchange="onChimeVolumeChange(this.value)"
+                class="w-full accent-blue-600 cursor-pointer h-1.5 bg-black/10 dark:bg-white/20 rounded-lg"
+                title="Głośność dzwonka powiadomienia (0% - 100%)" />
+              <span class="text-xs text-zinc-400 select-none">🔊</span>
+              <span id="settingsChimeVolumeLabel" class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-200 w-12 text-right shrink-0 select-none">80%</span>
+            </div>
           </div>
 
           <!-- Przełącznik 1: Powiadomienia systemowe (Desktop Notifications) -->
@@ -1227,6 +1239,7 @@
       logoAccentColor: '#10B981',
       pageThemeColor: 'NEUTRAL',
       customPageThemeColor: '#3B82F6',
+      chimeVolume: 80,            // Głośność powiadomienia dźwiękowego (0 - 100%)
       activeView: 'DAY',          // 'DAY' | 'MATRIX' | 'CALENDAR' | 'WAITING' | 'REPORTS' | 'DICTIONARIES' | 'GUIDE'
       selectedTaskId: null,
       card1Tab: 'STEPS',          // 'STEPS' | 'HISTORY'
@@ -1425,6 +1438,7 @@
       if (!data.logoAccentColor) data.logoAccentColor = '#10B981';
       if (!data.pageThemeColor) data.pageThemeColor = 'NEUTRAL';
       if (!data.customPageThemeColor) data.customPageThemeColor = '#3B82F6';
+      if (typeof data.chimeVolume !== 'number') data.chimeVolume = 80;
 
       if (!data.categories.some(c => c.id === 'cat_wlasne')) {
         data.categories.push({ id: 'cat_wlasne', name: 'Praca własna / Organizacja', colorHex: '#64748B' });
@@ -1450,6 +1464,7 @@
           if (prefs.activeView) db.activeView = prefs.activeView;
           if (prefs.card1Tab) db.card1Tab = prefs.card1Tab;
           if (prefs.reportPeriod) db.reportPeriod = prefs.reportPeriod;
+          if (typeof prefs.chimeVolume === 'number') db.chimeVolume = prefs.chimeVolume;
           if (prefs.matrixFilter) matrixFilter = { ...matrixFilter, ...prefs.matrixFilter };
           if (prefs.waitingFilter) waitingFilter = { ...waitingFilter, ...prefs.waitingFilter };
         }
@@ -1465,6 +1480,7 @@
           activeView: db.activeView,
           card1Tab: db.card1Tab,
           reportPeriod: db.reportPeriod,
+          chimeVolume: typeof db.chimeVolume === 'number' ? db.chimeVolume : 80,
           matrixFilter: {
             personId: matrixFilter.personId,
             categoryId: matrixFilter.categoryId,
@@ -2061,7 +2077,7 @@
     // =========================================================================
     // STOPER POMODORO + TRYB OVERTIME (BEZ PRZERYWANIA PRACY)
     // =========================================================================
-    function playGentleChime() {
+    function playGentleChime(customVolPct = null) {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
@@ -2070,12 +2086,22 @@
           ctx.resume();
         }
 
+        // Głośność powiadomienia (0 - 100%)
+        const volPct = typeof customVolPct === 'number'
+          ? customVolPct
+          : (typeof db.chimeVolume === 'number' ? db.chimeVolume : 80);
+
+        if (volPct <= 0) return; // Całkowite wyciszenie
+
+        // Współczynnik głośności od 0.0 do 1.0 (skalowanie liniowo-percepcyjne)
+        const volMultiplier = Math.max(0, Math.min(100, volPct)) / 100;
+
         // Melodyjny, wyrazisty akord Apple Bell / Marimba (D5 -> A5 -> D6)
         // D5 = 587.33 Hz, A5 = 880.00 Hz, D6 = 1174.66 Hz
         const notes = [
-          { freq: 587.33, start: 0.00, dur: 0.75, gain: 0.30 },
-          { freq: 880.00, start: 0.14, dur: 0.90, gain: 0.35 },
-          { freq: 1174.66, start: 0.28, dur: 1.35, gain: 0.40 }
+          { freq: 587.33, start: 0.00, dur: 0.75, gain: 0.35 * volMultiplier },
+          { freq: 880.00, start: 0.14, dur: 0.90, gain: 0.40 * volMultiplier },
+          { freq: 1174.66, start: 0.28, dur: 1.35, gain: 0.45 * volMultiplier }
         ];
 
         notes.forEach(n => {
@@ -2086,7 +2112,7 @@
           osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.start);
 
           gainNode.gain.setValueAtTime(0.0001, ctx.currentTime + n.start);
-          gainNode.gain.exponentialRampToValueAtTime(n.gain, ctx.currentTime + n.start + 0.02);
+          gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, n.gain), ctx.currentTime + n.start + 0.02);
           gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.start + n.dur);
 
           osc.connect(gainNode);
@@ -3117,7 +3143,33 @@
       if (titleChk) titleChk.checked = db.titleTimerEnabled !== false;
       const pipChk = document.getElementById('settingsPiPToggle');
       if (pipChk) pipChk.checked = db.pipEnabled !== false;
+
+      const vol = typeof db.chimeVolume === 'number' ? db.chimeVolume : 80;
+      const volSlider = document.getElementById('settingsChimeVolumeSlider');
+      if (volSlider) volSlider.value = vol;
+      const volLabel = document.getElementById('settingsChimeVolumeLabel');
+      if (volLabel) volLabel.textContent = vol === 0 ? '0% (Mute)' : `${vol}%`;
+
       openModal('settingsModal');
+    }
+
+    function onChimeVolumeInput(val) {
+      const num = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
+      const volLabel = document.getElementById('settingsChimeVolumeLabel');
+      if (volLabel) {
+        volLabel.textContent = num === 0 ? '0% (Mute)' : `${num}%`;
+      }
+    }
+
+    function onChimeVolumeChange(val) {
+      const num = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
+      db.chimeVolume = num;
+      saveUiPreferences();
+      saveDatabase();
+      if (num > 0) {
+        playGentleChime(num);
+      }
+      showToast(num === 0 ? 'Dźwięk wyciszony (0%)' : `Głośność powiadomienia: ${num}%`);
     }
 
     function toggleDesktopNotificationsSetting(enabled) {

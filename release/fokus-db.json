@@ -208,6 +208,12 @@
       "createdAt": "2026-11-13T18:01:27.389Z",
       "auditLog": [
         {
+          "id": "log_5d07490b37ae",
+          "timestamp": "2026-11-14T09:06:59.574Z",
+          "changeType": "STATUS_CHANGED",
+          "reasonComment": "Zapisano sesję skupienia: 1 min"
+        },
+        {
           "id": "log_2c63686e1727",
           "timestamp": "2026-11-14T08:55:07.193Z",
           "changeType": "STATUS_CHANGED",
@@ -285,6 +291,21 @@
     }
   ],
   "timeLogs": [
+    {
+      "id": "ses_325aa5b6be08",
+      "taskId": "tsk_3ef481da2e48",
+      "date": "2026-11-14",
+      "dateISO": "2026-11-14",
+      "startedAt": "2026-11-14T09:05:53.342Z",
+      "startedAtISO": "2026-11-14T09:05:53.342Z",
+      "plannedMinutes": 1,
+      "targetMinutes": 1,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
     {
       "id": "ses_eb1aa1c9135d",
       "taskId": "tsk_3ef481da2e48",
@@ -425,6 +446,21 @@
     }
   ],
   "timeSessions": [
+    {
+      "id": "ses_325aa5b6be08",
+      "taskId": "tsk_3ef481da2e48",
+      "date": "2026-11-14",
+      "dateISO": "2026-11-14",
+      "startedAt": "2026-11-14T09:05:53.342Z",
+      "startedAtISO": "2026-11-14T09:05:53.342Z",
+      "plannedMinutes": 1,
+      "targetMinutes": 1,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
     {
       "id": "ses_eb1aa1c9135d",
       "taskId": "tsk_3ef481da2e48",

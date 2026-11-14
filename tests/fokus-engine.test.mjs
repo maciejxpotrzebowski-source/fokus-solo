@@ -999,6 +999,15 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('🔔 Odtwórz') && content.includes('playGentleChime()'), 'Brak przycisku odsłuchu dźwięku w ustawieniach');
     });
 
+    test('Regulacja głośności powiadomienia dźwiękowego suwakiem 0 - 100% w Ustawieniach', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      assert.ok(content.includes('id="settingsChimeVolumeSlider"'), 'Brak suwaka settingsChimeVolumeSlider');
+      assert.ok(content.includes('id="settingsChimeVolumeLabel"'), 'Brak etykiety settingsChimeVolumeLabel');
+      assert.ok(content.includes('onChimeVolumeInput'), 'Brak obsługi onChimeVolumeInput');
+      assert.ok(content.includes('onChimeVolumeChange'), 'Brak obsługi onChimeVolumeChange');
+      assert.ok(content.includes('chimeVolume:'), 'Brak pola chimeVolume w DEFAULT_DB');
+    });
+
     test('Pływający stoper Always-on-Top ponad Excel (bentoTimerPiPBtn, Document PiP + Video Canvas fallback dla Safari)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       assert.ok(content.includes('id="bentoTimerPiPBtn"'), 'Brak przycisku bentoTimerPiPBtn w Kafelku 01');
