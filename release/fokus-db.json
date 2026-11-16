@@ -4,8 +4,9 @@
   "logoAccentColor": "#10B981",
   "pageThemeColor": "INDIGO",
   "customPageThemeColor": "#3B82F6",
+  "chimeVolume": 80,
   "activeView": "DAY",
-  "selectedTaskId": "tsk_3ef481da2e48",
+  "selectedTaskId": "tsk_b1b1c8ebf719",
   "card1Tab": "STEPS",
   "reportPeriod": "MONTH",
   "lastBackupDate": null,
@@ -44,6 +45,78 @@
     }
   ],
   "tasks": [
+    {
+      "id": "tsk_976344f13a95",
+      "title": "Zadanie AiDP",
+      "requesterPersonId": "per_grzegorz",
+      "personId": "per_grzegorz",
+      "categoryId": "cat_erp",
+      "urgencyTag": "HIGH",
+      "dueDate": null,
+      "originalDueDate": null,
+      "importance": "HIGH",
+      "estimatedMinutes": 25,
+      "recurrence": "NONE",
+      "recurrenceRule": null,
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": true,
+      "isMyDay": true,
+      "myDayOrder": 4,
+      "notesAndContext": "",
+      "contextNotes": "",
+      "milestones": [],
+      "checklist": [],
+      "createdAt": "2026-11-15T18:54:02.245Z",
+      "createdAtISO": "2026-11-15T18:54:02.245Z",
+      "auditLog": [
+        {
+          "id": "log_9d699a6b0629",
+          "timestamp": "2026-11-15T18:54:02.245Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie"
+        }
+      ]
+    },
+    {
+      "id": "tsk_9b93c2d3b77e",
+      "title": "referat TiMUM",
+      "requesterPersonId": "per_grzegorz",
+      "personId": "per_grzegorz",
+      "categoryId": "cat_erp",
+      "urgencyTag": "HIGH",
+      "dueDate": null,
+      "originalDueDate": null,
+      "importance": "HIGH",
+      "estimatedMinutes": 25,
+      "recurrence": "NONE",
+      "recurrenceRule": null,
+      "status": "TODO",
+      "waitingForPersonId": null,
+      "waitingForReason": null,
+      "waitingSince": null,
+      "waitingFor": null,
+      "inMyDay": true,
+      "isMyDay": true,
+      "myDayOrder": 3,
+      "notesAndContext": "",
+      "contextNotes": "",
+      "milestones": [],
+      "checklist": [],
+      "createdAt": "2026-11-15T18:52:58.050Z",
+      "createdAtISO": "2026-11-15T18:52:58.050Z",
+      "auditLog": [
+        {
+          "id": "log_9300ac4ab530",
+          "timestamp": "2026-11-15T18:52:58.050Z",
+          "changeType": "CREATED",
+          "reasonComment": "Utworzono zadanie"
+        }
+      ]
+    },
     {
       "id": "tsk_46bd25065b88",
       "title": "Czynsz za garaż",
@@ -129,6 +202,18 @@
       ],
       "createdAt": "2026-11-13T18:07:16.489Z",
       "auditLog": [
+        {
+          "id": "log_2aac0d83ce5e",
+          "timestamp": "2026-11-15T19:36:11.108Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Cofnięto krok: zadanie 2 (23.10-20.11)"
+        },
+        {
+          "id": "log_a561a2d0f413",
+          "timestamp": "2026-11-15T19:36:10.475Z",
+          "changeType": "MILESTONE_DONE",
+          "reasonComment": "Ukończono krok: zadanie 2 (23.10-20.11)"
+        },
         {
           "id": "log_e98af053b66d",
           "timestamp": "2026-11-13T18:07:16.489Z",

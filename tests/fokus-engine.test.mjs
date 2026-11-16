@@ -1016,6 +1016,35 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('drawCanvasPiP'), 'Brak funkcji renderującej stoper na canvas drawCanvasPiP');
     });
 
+    test('Pełny kontroler w pływającym oknie PiP Always-on-Top (auto-open, in-window adjust, task select, presets, tab switcher, quick-add)', () => {
+      const content = fs.readFileSync(htmlPath, 'utf-8');
+      // Auto-open i funkcja szybkiego tworzenia
+      assert.ok(content.includes('pipAutoOpen: true'), 'Brak domyślnego pipAutoOpen: true w DEFAULT_DB');
+      assert.ok(content.includes('toggleTimerPiP(true)'), 'Brak automatycznego wywołania toggleTimerPiP(true)');
+      assert.ok(content.includes('function quickCreateTask('), 'Brak funkcji quickCreateTask w Fokus.html');
+
+      // Obsługa korekty czasu bezpośrednio w oknie PiP
+      assert.ok(content.includes("pipState.view = 'ADJUST'"), 'Brak przełączania do widoku ADJUST w PiP');
+      assert.ok(content.includes('id="pipAdjustMinutesInput"'), 'Brak pola pipAdjustMinutesInput w widoku ADJUST');
+      assert.ok(content.includes('id="pipAdjustMinus5Btn"'), 'Brak przycisku -5m w widoku ADJUST');
+      assert.ok(content.includes('id="pipAdjustPlus5Btn"'), 'Brak przycisku +5m w widoku ADJUST');
+      assert.ok(content.includes('id="pipAdjustSaveBtn"'), 'Brak przycisku pipAdjustSaveBtn w widoku ADJUST');
+      assert.ok(content.includes('id="pipAdjustDiscardBtn"'), 'Brak przycisku pipAdjustDiscardBtn w widoku ADJUST');
+
+      // Przełącznik zadania na dziś
+      assert.ok(content.includes('id="pipTaskSelect"'), 'Brak listy rozwijanej pipTaskSelect w PiP');
+
+      // Szybkie dodawanie zadania w oknie PiP
+      assert.ok(content.includes('id="pipToggleQuickAddBtn"'), 'Brak przycisku pipToggleQuickAddBtn w PiP');
+      assert.ok(content.includes('id="pipQuickTaskInput"'), 'Brak pola tekstowego pipQuickTaskInput w PiP');
+      assert.ok(content.includes('id="pipSubmitQuickTaskBtn"'), 'Brak przycisku pipSubmitQuickTaskBtn w PiP');
+
+      // Podgląd opisu i kroków milowych w oknie PiP
+      assert.ok(content.includes('id="pipTabStepsBtn"'), 'Brak przycisku pipTabStepsBtn w PiP');
+      assert.ok(content.includes('id="pipTabDescBtn"'), 'Brak przycisku pipTabDescBtn w PiP');
+      assert.ok(content.includes('pip-preset-choice-btn'), 'Brak przycisków presetów wyboru kolejnej sesji w PiP');
+    });
+
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {
       const content = fs.readFileSync(htmlPath, 'utf-8');
       const scriptMatches = [...content.matchAll(/<script[\s\S]*?>([\s\S]*?)<\/script>/gi)];

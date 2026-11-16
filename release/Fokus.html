@@ -1240,6 +1240,10 @@
       pageThemeColor: 'NEUTRAL',
       customPageThemeColor: '#3B82F6',
       chimeVolume: 80,            // Głośność powiadomienia dźwiękowego (0 - 100%)
+      notificationsEnabled: true, // Powiadomienia systemowe Chrome/OS
+      titleTimerEnabled: true,    // Zegar w tytule karty przeglądarki
+      pipEnabled: true,           // Pływające okno Always-on-Top (PiP)
+      pipAutoOpen: true,          // Automatyczne otwieranie PiP po kliknięciu Start
       activeView: 'DAY',          // 'DAY' | 'MATRIX' | 'CALENDAR' | 'WAITING' | 'REPORTS' | 'DICTIONARIES' | 'GUIDE'
       selectedTaskId: null,
       card1Tab: 'STEPS',          // 'STEPS' | 'HISTORY'
@@ -1439,6 +1443,10 @@
       if (!data.pageThemeColor) data.pageThemeColor = 'NEUTRAL';
       if (!data.customPageThemeColor) data.customPageThemeColor = '#3B82F6';
       if (typeof data.chimeVolume !== 'number') data.chimeVolume = 80;
+      if (typeof data.notificationsEnabled !== 'boolean') data.notificationsEnabled = true;
+      if (typeof data.titleTimerEnabled !== 'boolean') data.titleTimerEnabled = true;
+      if (typeof data.pipEnabled !== 'boolean') data.pipEnabled = true;
+      if (typeof data.pipAutoOpen !== 'boolean') data.pipAutoOpen = data.pipEnabled !== false;
 
       if (!data.categories.some(c => c.id === 'cat_wlasne')) {
         data.categories.push({ id: 'cat_wlasne', name: 'Praca własna / Organizacja', colorHex: '#64748B' });
@@ -1465,6 +1473,8 @@
           if (prefs.card1Tab) db.card1Tab = prefs.card1Tab;
           if (prefs.reportPeriod) db.reportPeriod = prefs.reportPeriod;
           if (typeof prefs.chimeVolume === 'number') db.chimeVolume = prefs.chimeVolume;
+          if (typeof prefs.pipEnabled === 'boolean') db.pipEnabled = prefs.pipEnabled;
+          if (typeof prefs.pipAutoOpen === 'boolean') db.pipAutoOpen = prefs.pipAutoOpen;
           if (prefs.matrixFilter) matrixFilter = { ...matrixFilter, ...prefs.matrixFilter };
           if (prefs.waitingFilter) waitingFilter = { ...waitingFilter, ...prefs.waitingFilter };
         }
@@ -1481,6 +1491,8 @@
           card1Tab: db.card1Tab,
           reportPeriod: db.reportPeriod,
           chimeVolume: typeof db.chimeVolume === 'number' ? db.chimeVolume : 80,
+          pipEnabled: db.pipEnabled !== false,
+          pipAutoOpen: db.pipAutoOpen !== false,
           matrixFilter: {
             personId: matrixFilter.personId,
             categoryId: matrixFilter.categoryId,
@@ -2371,6 +2383,12 @@
         timer.targetEndTimestamp = Date.now() - (timer.overtimeSeconds * 1000);
       }
 
+      // Automatyczne otwarcie pływającego okna stopera Always-on-Top jeśli włączone w ustawieniach
+      // (wywołujemy natychmiast na początku, aby zachować transient user activation w Chromium)
+      if (db.pipAutoOpen !== false && db.pipEnabled !== false && (!pipWindow || pipWindow.closed) && !document.pictureInPictureElement) {
+        toggleTimerPiP(true);
+      }
+
       // Zapytaj o powiadomienia tylko jeśli włączone w ustawieniach i tylko raz na sesję przeglądarki
       if (db.notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
         try {
@@ -2384,11 +2402,6 @@
             });
           }
         } catch (e) {}
-      }
-
-      // Automatyczne otwarcie pływającego okna stopera Always-on-Top jeśli włączone w ustawieniach
-      if (db.pipEnabled && (!pipWindow || pipWindow.closed) && !document.pictureInPictureElement) {
-        toggleTimerPiP(true);
       }
 
       timer.running = true;
@@ -2688,6 +2701,27 @@
     // =========================================================================
     let pipWindow = null;
     let isVideoPiPActive = false;
+    let pipLastTaskId = null;
+
+    const pipState = {
+      view: 'TIMER',       // 'TIMER' | 'ADJUST'
+      activeTab: 'STEPS',  // 'STEPS' | 'DESC'
+      quickAddOpen: false,
+      adjustInfo: null,
+      notice: null,
+      noticeTimeout: null
+    };
+
+    function showPiPNotice(text) {
+      pipState.notice = text;
+      if (pipState.noticeTimeout) clearTimeout(pipState.noticeTimeout);
+      pipState.noticeTimeout = setTimeout(() => {
+        pipState.notice = null;
+        if (pipWindow && !pipWindow.closed && pipState.view === 'TIMER') {
+          renderPiPContent();
+        }
+      }, 3500);
+    }
 
     async function toggleTimerPiP(autoOpen = false) {
       // 1. Jeśli otwarte jest okno Document PiP - zamknij je (chyba że to autoOpen)
@@ -2710,8 +2744,8 @@
       if ('documentPictureInPicture' in window) {
         try {
           pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 380,
-            height: 520
+            width: 400,
+            height: 560
           });
 
           // Wstrzyknij skrypt Tailwind i czcionki
@@ -2730,8 +2764,21 @@
             pipWindow.document.head.appendChild(copy);
           });
 
+          const customStyle = pipWindow.document.createElement('style');
+          customStyle.textContent = `
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: rgba(120, 120, 128, 0.25); border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 128, 0.45); }
+          `;
+          pipWindow.document.head.appendChild(customStyle);
+
           pipWindow.addEventListener('pagehide', () => {
             pipWindow = null;
+            pipState.view = 'TIMER';
+            pipState.quickAddOpen = false;
           });
 
           renderPiPContent();
@@ -2771,9 +2818,9 @@
 
       // 5. Fallback ostateczny: okno popup Always-on-Top
       try {
-        const left = Math.max(10, window.screen.width - 400);
+        const left = Math.max(10, window.screen.width - 420);
         const top = 60;
-        pipWindow = window.open('', 'FokusMiniTimer', `width=380,height=520,top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes`);
+        pipWindow = window.open('', 'FokusMiniTimer', `width=400,height=560,top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes`);
         if (pipWindow) {
           const twScript = pipWindow.document.createElement('script');
           twScript.src = 'https://cdn.tailwindcss.com';
@@ -2783,8 +2830,20 @@
             copy.textContent = st.textContent;
             pipWindow.document.head.appendChild(copy);
           });
+          const customStyle = pipWindow.document.createElement('style');
+          customStyle.textContent = `
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: rgba(120, 120, 128, 0.25); border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 128, 0.45); }
+          `;
+          pipWindow.document.head.appendChild(customStyle);
           pipWindow.addEventListener('beforeunload', () => {
             pipWindow = null;
+            pipState.view = 'TIMER';
+            pipState.quickAddOpen = false;
           });
           renderPiPContent();
         }
@@ -2853,77 +2912,359 @@
       const doc = pipWindow.document;
       const isDark = db.theme === 'DARK';
 
-      doc.title = 'Fokus · Stoper i Kroki';
-      doc.body.className = `${isDark ? 'dark bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'} p-4 select-none min-h-screen flex flex-col justify-between`;
+      doc.title = 'Fokus · Stoper i Zadania';
+      doc.body.className = `${isDark ? 'dark bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'} p-3.5 select-none min-h-screen flex flex-col justify-between overflow-x-hidden`;
 
       const activeTask = getActiveMyDayTask();
+      const activeTaskId = activeTask ? activeTask.id : null;
+      pipLastTaskId = activeTaskId;
+
+      // =======================================================================
+      // WIDOK KOREKTY I ZAPISU SESJI W OKNIE PIP (IN-WINDOW SESSION ADJUSTMENT)
+      // =======================================================================
+      if (pipState.view === 'ADJUST') {
+        const info = pipState.adjustInfo || {
+          plannedMinutes: timer.plannedMinutes,
+          overtimeMinutes: Math.round(timer.overtimeSeconds / 60),
+          totalMinutes: timer.isOvertime ? (timer.plannedMinutes + Math.round(timer.overtimeSeconds / 60)) : Math.max(1, Math.round(((timer.plannedMinutes * 60) - timer.remainingSeconds) / 60)),
+          currentMinutes: timer.isOvertime ? (timer.plannedMinutes + Math.round(timer.overtimeSeconds / 60)) : Math.max(1, Math.round(((timer.plannedMinutes * 60) - timer.remainingSeconds) / 60)),
+          startedAtIso: timer.sessionStartedAt || new Date().toISOString()
+        };
+
+        const taskTitle = activeTask ? activeTask.title : 'Sesja skupienia';
+
+        doc.body.innerHTML = `
+          <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7]">
+            <!-- Nagłówek korekty -->
+            <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
+              <div class="flex items-center gap-1.5 font-semibold text-xs">
+                <span class="text-emerald-500 font-mono text-sm">⏱</span>
+                <span>Korekta i zapis sesji</span>
+              </div>
+              <button type="button" id="pipAdjustBackBtn" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                ← Anuluj
+              </button>
+            </div>
+
+            <!-- Tytuł zadania i statystyki sesji -->
+            <div class="space-y-1">
+              <div class="text-xs font-semibold truncate" title="${escapeHtml(taskTitle)}">${escapeHtml(taskTitle)}</div>
+              <div class="text-[11px] font-mono text-zinc-400 flex flex-wrap items-center gap-x-2">
+                <span>Plan: <strong class="text-zinc-700 dark:text-zinc-200">${info.plannedMinutes}m</strong></span>
+                <span>Overtime: <strong class="${info.overtimeMinutes > 0 ? 'text-amber-500' : 'text-zinc-500'}">+${info.overtimeMinutes}m</strong></span>
+                <span>Zmierzono: <strong class="text-emerald-500">${info.totalMinutes}m</strong></span>
+              </div>
+            </div>
+
+            ${info.overtimeMinutes > 0 ? `
+              <div class="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-300 leading-snug">
+                ⚠️ Sesja przekroczyła planowany czas o +${info.overtimeMinutes} min. Skoryguj rejestrowane minuty poniżej:
+              </div>
+            ` : ''}
+
+            <!-- Licznik minut ze stepperem -5 / +5 -->
+            <div class="p-4 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex flex-col items-center justify-center gap-2.5">
+              <div class="text-[10px] uppercase font-mono tracking-wider text-zinc-400 font-medium">Czas sesji do zapisania w raportach</div>
+              <div class="flex items-center justify-center gap-3">
+                <button type="button" id="pipAdjustMinus5Btn"
+                  class="w-8 h-8 rounded-full border border-black/10 dark:border-white/10 flex items-center justify-center font-mono text-xs hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition">
+                  -5
+                </button>
+                <div class="flex items-baseline gap-1">
+                  <input type="number" id="pipAdjustMinutesInput" min="1" max="720" value="${info.currentMinutes}"
+                    class="w-20 text-center font-mono text-3xl font-bold py-0.5 bg-transparent border-b-2 ${isDark ? 'border-white/20' : 'border-black/20'} outline-none focus:border-emerald-500" />
+                  <span class="text-xs font-mono text-zinc-400">min</span>
+                </div>
+                <button type="button" id="pipAdjustPlus5Btn"
+                  class="w-8 h-8 rounded-full border border-black/10 dark:border-white/10 flex items-center justify-center font-mono text-xs hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition">
+                  +5
+                </button>
+              </div>
+
+              <!-- Szybkie presety minutowe -->
+              <div class="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                <button type="button" class="pip-preset-btn px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition" data-min="${info.plannedMinutes}">
+                  Plan: ${info.plannedMinutes}m
+                </button>
+                <button type="button" class="pip-preset-btn px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition" data-min="${info.totalMinutes}">
+                  Zmierzono: ${info.totalMinutes}m
+                </button>
+                <button type="button" class="pip-preset-btn px-2 py-1 rounded-xl text-[11px] font-mono text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10 transition" data-min="15">15m</button>
+                <button type="button" class="pip-preset-btn px-2 py-1 rounded-xl text-[11px] font-mono text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10 transition" data-min="25">25m</button>
+                <button type="button" class="pip-preset-btn px-2 py-1 rounded-xl text-[11px] font-mono text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10 transition" data-min="45">45m</button>
+                <button type="button" class="pip-preset-btn px-2 py-1 rounded-xl text-[11px] font-mono text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10 transition" data-min="60">60m</button>
+              </div>
+            </div>
+
+            <!-- Przyciski akcji -->
+            <div class="space-y-2 pt-1">
+              <button type="button" id="pipAdjustSaveBtn" class="w-full py-2.5 px-4 rounded-2xl text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition shadow-sm flex items-center justify-center gap-1.5">
+                <span>✓</span>
+                <span>Zatwierdź i zapisz w raportach</span>
+              </button>
+
+              <div class="flex items-center justify-between gap-2 pt-1">
+                <button type="button" id="pipAdjustDiscardBtn" class="px-2.5 py-1.5 rounded-xl text-[11px] text-rose-500 hover:bg-rose-500/10 transition">
+                  ✕ Odrzuć sesję
+                </button>
+                <button type="button" id="pipAdjustResumeBtn" class="px-2.5 py-1.5 rounded-xl text-[11px] text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10 transition">
+                  Kontynuuj stoper
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const inp = doc.getElementById('pipAdjustMinutesInput');
+        const minusBtn = doc.getElementById('pipAdjustMinus5Btn');
+        const plusBtn = doc.getElementById('pipAdjustPlus5Btn');
+        const saveBtn = doc.getElementById('pipAdjustSaveBtn');
+        const backBtn = doc.getElementById('pipAdjustBackBtn');
+        const discardBtn = doc.getElementById('pipAdjustDiscardBtn');
+        const resumeBtn = doc.getElementById('pipAdjustResumeBtn');
+
+        if (minusBtn && inp) {
+          minusBtn.onclick = () => {
+            let v = Math.max(1, (parseInt(inp.value, 10) || info.currentMinutes) - 5);
+            inp.value = v;
+            info.currentMinutes = v;
+          };
+        }
+        if (plusBtn && inp) {
+          plusBtn.onclick = () => {
+            let v = Math.min(720, (parseInt(inp.value, 10) || info.currentMinutes) + 5);
+            inp.value = v;
+            info.currentMinutes = v;
+          };
+        }
+        doc.querySelectorAll('.pip-preset-btn').forEach(btn => {
+          btn.onclick = () => {
+            const m = parseInt(btn.getAttribute('data-min'), 10);
+            if (m && inp) {
+              inp.value = m;
+              info.currentMinutes = m;
+            }
+          };
+        });
+
+        if (backBtn) {
+          backBtn.onclick = () => {
+            pipState.view = 'TIMER';
+            renderPiPContent();
+          };
+        }
+        if (resumeBtn) {
+          resumeBtn.onclick = () => {
+            pipState.view = 'TIMER';
+            renderPiPContent();
+          };
+        }
+        if (discardBtn) {
+          discardBtn.onclick = () => {
+            if (confirm('Czy na pewno chcesz odrzucić tę sesję bez zapisywania w historii?')) {
+              clearInterval(timer.intervalId);
+              timer.running = false;
+              timer.remainingSeconds = timer.plannedMinutes * 60;
+              timer.isOvertime = false;
+              timer.overtimeSeconds = 0;
+              timer.chimePlayed = false;
+              timer.sessionStartedAt = null;
+              timer.targetEndTimestamp = null;
+              try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
+              savePomodoroState();
+              saveDatabase();
+              renderApp();
+              pipState.view = 'TIMER';
+              showPiPNotice('Sesja została odrzucona');
+              renderPiPContent();
+            }
+          };
+        }
+        if (saveBtn && inp) {
+          saveBtn.onclick = () => {
+            const finalMin = Math.max(1, parseInt(inp.value, 10) || info.currentMinutes);
+            savePomodoroSessionDirect(finalMin, info.plannedMinutes, info.overtimeMinutes, info.startedAtIso);
+            pipState.view = 'TIMER';
+            showPiPNotice(`Zapisano sesję: ${finalMin} min`);
+            renderPiPContent();
+          };
+        }
+        return;
+      }
+
+      // =======================================================================
+      // WIDOK GŁÓWNY W OKNIE PIP: STOPER, PRZEŁĄCZNIK ZADAŃ, KROKI / OPIS
+      // =======================================================================
+      const myDayTasks = getMyDayTasks();
       const title = activeTask ? activeTask.title : 'Brak aktywnego zadania';
       const person = activeTask ? getPerson(activeTask.requesterPersonId || activeTask.personId) : null;
       const milestones = activeTask ? (activeTask.milestones || activeTask.checklist || []) : [];
+      const doneCount = milestones.filter(m => m.isDone).length;
       const displayStr = timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds);
       const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
+      const notes = activeTask ? (activeTask.notesAndContext || activeTask.contextNotes || '').trim() : '';
 
       doc.body.innerHTML = `
-        <div class="space-y-3 flex-1 flex flex-col min-h-0">
+        <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <!-- Pasek górny: logo, status i przycisk szybkiego zadania -->
           <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
             <div class="flex items-center gap-1.5 font-mono text-sm font-bold">
               <span style="color: ${db.logoAccentColor || '#10B981'}">&gt;</span>
               <span>fokus</span>
             </div>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${timer.isOvertime ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse' : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')}">
-              ${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}
-            </span>
-          </div>
-
-          <div>
-            <div class="text-xs font-semibold truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
-            ${person ? `<div class="text-[10px] text-zinc-400 truncate">${escapeHtml(person.canonicalName)}</div>` : ''}
-          </div>
-
-          <div class="py-2.5 px-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex items-center justify-between gap-2">
-            <span id="pipClockDisplay" class="font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500' : ''}">
-              ${displayStr}
-            </span>
-            <div class="flex items-center gap-1">
-              <button id="pipStartBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-white text-black' : 'bg-[#1D1D1F] text-white'} hover:opacity-90 transition">
-                ${timer.running ? 'Pauza' : 'Start'}
-              </button>
-              <button id="pipAdjustBtn" title="Skoryguj czas sesji" class="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-black/5 dark:bg-white/10 text-zinc-700 dark:text-zinc-200 hover:opacity-90 transition ${hasProgress ? '' : 'hidden'}">
-                ⏱ Skoryguj
-              </button>
-              <button id="pipFinishBtn" class="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 transition ${hasProgress ? '' : 'hidden'}">
-                ✓ Zapisz
+            <div class="flex items-center gap-2">
+              <span id="pipStateBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                timer.isOvertime
+                  ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse'
+                  : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')
+              }">
+                ${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}
+              </span>
+              <button type="button" id="pipToggleQuickAddBtn" title="Dodaj szybkie zadanie"
+                class="px-2 py-0.5 rounded-full text-[11px] font-medium ${pipState.quickAddOpen ? 'bg-emerald-500 text-white' : 'bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/20'} transition">
+                ${pipState.quickAddOpen ? '✕ Anuluj' : '＋ Zadanie'}
               </button>
             </div>
           </div>
 
-          <div class="flex-1 min-h-0 flex flex-col pt-1">
-            <div class="text-[11px] font-medium text-zinc-400 pb-1.5 flex items-center justify-between">
-              <span>Kroki milowe</span>
-              <span class="font-mono text-[10px]">${milestones.filter(m => m.isDone).length}/${milestones.length}</span>
+          <!-- Formularz szybkiego dodawania zadania na dziś -->
+          ${pipState.quickAddOpen ? `
+            <div id="pipQuickAddBox" class="p-2.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/80' : 'bg-white shadow-sm border border-black/5'} space-y-2">
+              <div class="text-[10px] uppercase font-mono tracking-wider text-zinc-400 font-medium">Szybkie zadanie do Mój Dzień</div>
+              <div class="flex items-center gap-1.5">
+                <input type="text" id="pipQuickTaskInput" placeholder="Co jest do zrobienia? (Enter)"
+                  class="flex-1 text-xs py-1.5 px-2.5 rounded-xl border ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-[#F5F5F7] border-black/10 text-[#1D1D1F]'} outline-none focus:border-blue-500" />
+                <button type="button" id="pipSubmitQuickTaskBtn"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition">
+                  Dodaj
+                </button>
+              </div>
             </div>
-            <div id="pipMilestonesList" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
-              ${milestones.length === 0 ? `
-                <div class="text-center py-4 text-xs text-zinc-400">Brak kroków milowych dla tego zadania.</div>
-              ` : milestones.map(m => `
-                <div data-m-id="${m.id}" class="pip-milestone-row group flex items-center gap-2.5 py-1.5 px-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition">
-                  <span class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${
-                    m.isDone
-                      ? (isDark ? 'bg-white border-white text-black' : 'bg-[#1D1D1F] border-[#1D1D1F] text-white')
-                      : 'border-zinc-400'
-                  }">
-                    ${m.isDone ? '✓' : ''}
-                  </span>
-                  <span class="text-xs truncate ${m.isDone ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
-                    ${escapeHtml(m.title)}
-                  </span>
-                </div>
+          ` : ''}
+
+          <!-- Przełącznik zadania (Lista rozwijana z zadań na dziś) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+              <span>Zadanie (${myDayTasks.length}/6 w Mój Dzień)</span>
+              ${person ? `<span class="truncate max-w-[130px] font-sans font-normal text-zinc-400">${escapeHtml(person.canonicalName)}</span>` : ''}
+            </div>
+            <select id="pipTaskSelect" class="w-full text-xs font-semibold py-1.5 px-2.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none focus:ring-1 focus:ring-blue-500 truncate cursor-pointer">
+              ${myDayTasks.length === 0 ? '<option value="">(Brak zadań w Mój Dzień)</option>' : myDayTasks.map((t, idx) => `
+                <option value="${t.id}" ${t.id === activeTaskId ? 'selected' : ''}>
+                  #${idx + 1}${idx === 0 ? ' 🐸' : ''} ${escapeHtml(t.title)} (${t.estimatedMinutes || 25}m)
+                </option>
               `).join('')}
+            </select>
+          </div>
+
+          <!-- Powiadomienie informacyjne / toast w PiP -->
+          ${pipState.notice ? `
+            <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+              <span>${escapeHtml(pipState.notice)}</span>
+              <button type="button" id="pipDismissNoticeBtn" class="text-xs opacity-60 hover:opacity-100">✕</button>
             </div>
+          ` : ''}
+
+          <!-- Karta Zegara i Kontroli Sesji -->
+          <div class="py-2.5 px-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-2">
+              <span id="pipClockDisplay" class="font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}">
+                ${displayStr}
+              </span>
+              <div class="flex items-center gap-1">
+                <button type="button" id="pipStartBtn" class="px-3.5 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-white text-black' : 'bg-[#1D1D1F] text-white'} hover:opacity-90 active:scale-95 transition">
+                  ${timer.running ? 'Pauza' : 'Start'}
+                </button>
+                <button type="button" id="pipAdjustBtn" title="Skoryguj czas sesji" class="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-black/5 dark:bg-white/10 text-zinc-700 dark:text-zinc-200 hover:opacity-90 transition ${hasProgress ? '' : 'hidden'}">
+                  ⏱ Skoryguj
+                </button>
+                <button type="button" id="pipFinishBtn" class="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 transition ${hasProgress ? '' : 'hidden'}">
+                  ✓ Zapisz
+                </button>
+              </div>
+            </div>
+
+            <!-- Presety Pomodoro dla kolejnej sesji (gdy stoper nie działa lub jest bez postępu) -->
+            ${!timer.running && !timer.isOvertime && timer.remainingSeconds === timer.plannedMinutes * 60 ? `
+              <div class="flex items-center gap-1 pt-1.5 border-t ${isDark ? 'border-white/5' : 'border-black/5'}">
+                <span class="text-[10px] font-mono text-zinc-400 mr-1">Sesja:</span>
+                ${[15, 25, 45, 60, 90].map(m => `
+                  <button type="button" class="pip-preset-choice-btn px-2 py-0.5 rounded-lg text-[10px] font-mono ${
+                    timer.plannedMinutes === m
+                      ? (isDark ? 'bg-white text-black font-bold' : 'bg-[#1D1D1F] text-white font-bold')
+                      : 'bg-black/5 dark:bg-white/10 text-zinc-500 hover:bg-black/10 dark:hover:bg-white/20'
+                  } transition" data-minutes="${m}">
+                    ${m}m
+                  </button>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Przełącznik zakładek: Kroki milowe vs Opis zadania -->
+          <div class="flex-1 min-h-0 flex flex-col pt-0.5">
+            <div class="flex items-center justify-between pb-1.5 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
+              <div class="flex items-center gap-2">
+                <button type="button" id="pipTabStepsBtn"
+                  class="text-[11px] font-semibold pb-0.5 transition ${
+                    pipState.activeTab === 'STEPS'
+                      ? 'border-b-2 border-emerald-500 text-emerald-500'
+                      : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+                  }">
+                  ✓ Kroki (${doneCount}/${milestones.length})
+                </button>
+                <button type="button" id="pipTabDescBtn"
+                  class="text-[11px] font-semibold pb-0.5 transition ${
+                    pipState.activeTab === 'DESC'
+                      ? 'border-b-2 border-emerald-500 text-emerald-500'
+                      : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+                  }">
+                  📝 Opis zadania
+                </button>
+              </div>
+            </div>
+
+            <!-- Zawartość zakładki 1: Kroki milowe -->
+            ${pipState.activeTab === 'STEPS' ? `
+              <div id="pipMilestonesList" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 pt-2 pr-1">
+                ${milestones.length === 0 ? `
+                  <div class="text-center py-6 text-xs text-zinc-400">
+                    Brak kroków milowych dla tego zadania.
+                  </div>
+                ` : milestones.map(m => `
+                  <div data-m-id="${m.id}" class="pip-milestone-row group flex items-center gap-2.5 py-1.5 px-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition">
+                    <span class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${
+                      m.isDone
+                        ? (isDark ? 'bg-white border-white text-black font-bold' : 'bg-[#1D1D1F] border-[#1D1D1F] text-white font-bold')
+                        : 'border-zinc-400'
+                    }">
+                      ${m.isDone ? '✓' : ''}
+                    </span>
+                    <span class="text-xs truncate ${m.isDone ? 'line-through text-zinc-400 dark:text-zinc-500' : ''}">
+                      ${escapeHtml(m.title)}
+                    </span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <!-- Zawartość zakładki 2: Opis zadania -->
+              <div class="flex-1 min-h-0 overflow-y-auto pt-2 pr-1">
+                ${notes ? `
+                  <div class="p-3 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/40' : 'bg-white shadow-sm'} text-xs leading-relaxed whitespace-pre-wrap select-text text-zinc-700 dark:text-zinc-200">
+                    ${escapeHtml(notes)}
+                  </div>
+                ` : `
+                  <div class="text-center py-6 text-xs text-zinc-400">
+                    Brak dodatkowego opisu dla tego zadania.
+                  </div>
+                `}
+              </div>
+            `}
           </div>
         </div>
       `;
 
+      // Obsługa przycisków i zdarzeń w widoku głównym PiP
       const pipStartBtn = doc.getElementById('pipStartBtn');
       if (pipStartBtn && activeTask) {
         pipStartBtn.onclick = () => {
@@ -2935,19 +3276,178 @@
       const pipAdjustBtn = doc.getElementById('pipAdjustBtn');
       if (pipAdjustBtn) {
         pipAdjustBtn.onclick = () => {
-          window.focus();
-          openAdjustPomodoroSessionModal();
+          clearInterval(timer.intervalId);
+          timer.running = false;
+          savePomodoroState();
+          updateTimerUI();
+
+          const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+          const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+          const otMin = Math.round(timer.overtimeSeconds / 60);
+          const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+
+          pipState.adjustInfo = {
+            plannedMinutes: timer.plannedMinutes,
+            overtimeMinutes: otMin,
+            totalMinutes: totalMin,
+            currentMinutes: totalMin,
+            startedAtIso: timer.sessionStartedAt || new Date().toISOString()
+          };
+          pipState.view = 'ADJUST';
+          renderPiPContent();
         };
       }
 
       const pipFinishBtn = doc.getElementById('pipFinishBtn');
       if (pipFinishBtn) {
         pipFinishBtn.onclick = () => {
-          finishAndSavePomodoroSession();
+          clearInterval(timer.intervalId);
+          timer.running = false;
+          savePomodoroState();
+          updateTimerUI();
+
+          const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+          const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+          const otMin = Math.round(timer.overtimeSeconds / 60);
+          const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+          const startedAtIso = timer.sessionStartedAt || new Date().toISOString();
+
+          // Jeśli overtime >= 5 minut: przełącz bezpośrednio w widok korekty w oknie PiP
+          if (timer.isOvertime && otMin >= 5) {
+            pipState.adjustInfo = {
+              plannedMinutes: timer.plannedMinutes,
+              overtimeMinutes: otMin,
+              totalMinutes: totalMin,
+              currentMinutes: totalMin,
+              startedAtIso
+            };
+            pipState.view = 'ADJUST';
+            renderPiPContent();
+          } else {
+            savePomodoroSessionDirect(totalMin, timer.plannedMinutes, otMin, startedAtIso);
+            showPiPNotice(`Zapisano sesję (${totalMin} min)`);
+            renderPiPContent();
+          }
+        };
+      }
+
+      // Presety wyboru czasu kolejnej sesji
+      doc.querySelectorAll('.pip-preset-choice-btn').forEach(btn => {
+        btn.onclick = () => {
+          const m = parseInt(btn.getAttribute('data-minutes'), 10);
+          if (m && !timer.running) {
+            timer.plannedMinutes = m;
+            timer.remainingSeconds = m * 60;
+            savePomodoroState();
+            renderApp();
+            renderPiPContent();
+          }
+        };
+      });
+
+      // Przełącznik zadania na dziś
+      const pipTaskSelect = doc.getElementById('pipTaskSelect');
+      if (pipTaskSelect) {
+        pipTaskSelect.onchange = () => {
+          const newId = pipTaskSelect.value;
+          if (!newId || newId === activeTaskId) return;
+
+          const hasWork = timer.running || timer.remainingSeconds < timer.plannedMinutes * 60 || timer.isOvertime;
+          if (hasWork && timer.taskId && timer.taskId !== newId) {
+            const saveOld = confirm('Trwa sesja Pomodoro dla obecnego zadania. Czy chcesz zapisać zmierzony czas przed zmianą zadania?');
+            if (saveOld) {
+              const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+              const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+              const otMin = Math.round(timer.overtimeSeconds / 60);
+              const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+              savePomodoroSessionDirect(totalMin, timer.plannedMinutes, otMin, timer.sessionStartedAt || new Date().toISOString());
+            }
+          }
+
+          selectTaskForCard01(newId);
+          timer.taskId = newId;
+          pipLastTaskId = newId;
           renderPiPContent();
         };
       }
 
+      // Szybkie dodawanie zadania
+      const pipToggleQuickAddBtn = doc.getElementById('pipToggleQuickAddBtn');
+      if (pipToggleQuickAddBtn) {
+        pipToggleQuickAddBtn.onclick = () => {
+          pipState.quickAddOpen = !pipState.quickAddOpen;
+          renderPiPContent();
+          if (pipState.quickAddOpen) {
+            setTimeout(() => {
+              const inp = doc.getElementById('pipQuickTaskInput');
+              if (inp) inp.focus();
+            }, 50);
+          }
+        };
+      }
+
+      const submitQuickAdd = () => {
+        const inp = doc.getElementById('pipQuickTaskInput');
+        if (!inp) return;
+        const rawTitle = inp.value.trim();
+        if (!rawTitle) return;
+
+        const res = quickCreateTask(rawTitle, true);
+        if (res && res.task) {
+          pipState.quickAddOpen = false;
+          pipLastTaskId = res.task.id;
+          if (res.limitExceeded) {
+            showPiPNotice(`Zadanie dodano do Backlogu (limit 6): ${rawTitle}`);
+          } else {
+            showPiPNotice(`Dodano do Mój Dzień: ${rawTitle}`);
+          }
+          renderPiPContent();
+        }
+      };
+
+      const pipSubmitQuickTaskBtn = doc.getElementById('pipSubmitQuickTaskBtn');
+      if (pipSubmitQuickTaskBtn) {
+        pipSubmitQuickTaskBtn.onclick = submitQuickAdd;
+      }
+      const pipQuickTaskInput = doc.getElementById('pipQuickTaskInput');
+      if (pipQuickTaskInput) {
+        pipQuickTaskInput.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submitQuickAdd();
+          } else if (e.key === 'Escape') {
+            pipState.quickAddOpen = false;
+            renderPiPContent();
+          }
+        };
+      }
+
+      // Powiadomienie toast w PiP
+      const pipDismissNoticeBtn = doc.getElementById('pipDismissNoticeBtn');
+      if (pipDismissNoticeBtn) {
+        pipDismissNoticeBtn.onclick = () => {
+          pipState.notice = null;
+          renderPiPContent();
+        };
+      }
+
+      // Przełącznik zakładek (Kroki vs Opis)
+      const tabSteps = doc.getElementById('pipTabStepsBtn');
+      const tabDesc = doc.getElementById('pipTabDescBtn');
+      if (tabSteps) {
+        tabSteps.onclick = () => {
+          pipState.activeTab = 'STEPS';
+          renderPiPContent();
+        };
+      }
+      if (tabDesc) {
+        tabDesc.onclick = () => {
+          pipState.activeTab = 'DESC';
+          renderPiPContent();
+        };
+      }
+
+      // Zaznaczanie kroków milowych
       const rows = doc.querySelectorAll('.pip-milestone-row');
       rows.forEach(r => {
         r.onclick = () => {
@@ -2962,15 +3462,37 @@
 
     function updatePiPWindow() {
       if (pipWindow && !pipWindow.closed) {
+        if (pipState.view === 'ADJUST') {
+          // Nie nadpisuj DOM gdy użytkownik edytuje minuty sesji w oknie PiP
+          return;
+        }
+
+        const activeTask = getActiveMyDayTask();
+        const activeTaskId = activeTask ? activeTask.id : null;
+        if (activeTaskId !== pipLastTaskId) {
+          pipLastTaskId = activeTaskId;
+          renderPiPContent();
+          return;
+        }
+
         const clock = pipWindow.document.getElementById('pipClockDisplay');
         const btn = pipWindow.document.getElementById('pipStartBtn');
         const finishBtn = pipWindow.document.getElementById('pipFinishBtn');
         const adjustBtn = pipWindow.document.getElementById('pipAdjustBtn');
+        const badge = pipWindow.document.getElementById('pipStateBadge');
         if (clock && btn) {
           const displayStr = timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds);
           clock.textContent = displayStr;
-          clock.className = `font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500' : ''}`;
+          clock.className = `font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}`;
           btn.textContent = timer.running ? 'Pauza' : 'Start';
+          if (badge) {
+            badge.textContent = timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY');
+            badge.className = `text-[10px] font-mono px-2 py-0.5 rounded-full ${
+              timer.isOvertime
+                ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse'
+                : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')
+            }`;
+          }
           const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
           if (finishBtn) finishBtn.classList.toggle('hidden', !hasProgress);
           if (adjustBtn) adjustBtn.classList.toggle('hidden', !hasProgress);
@@ -3142,7 +3664,7 @@
       const titleChk = document.getElementById('settingsTitleTimerToggle');
       if (titleChk) titleChk.checked = db.titleTimerEnabled !== false;
       const pipChk = document.getElementById('settingsPiPToggle');
-      if (pipChk) pipChk.checked = db.pipEnabled !== false;
+      if (pipChk) pipChk.checked = (db.pipAutoOpen !== false && db.pipEnabled !== false);
 
       const vol = typeof db.chimeVolume === 'number' ? db.chimeVolume : 80;
       const volSlider = document.getElementById('settingsChimeVolumeSlider');
@@ -3201,8 +3723,10 @@
 
     function togglePiPSetting(enabled) {
       db.pipEnabled = !!enabled;
+      db.pipAutoOpen = !!enabled;
+      saveUiPreferences();
       saveDatabase();
-      showToast(enabled ? 'Włączono stoper Always-on-Top' : 'Wyłączono stoper Always-on-Top');
+      showToast(enabled ? 'Włączono autostart stopera Always-on-Top' : 'Wyłączono autostart stopera Always-on-Top');
     }
 
     function updateSettingsModalThemeUI() {
@@ -6032,6 +6556,85 @@
       });
       saveDatabase();
       renderApp();
+    }
+
+    function quickCreateTask(title, addToMyDay = true) {
+      if (!requireDb()) return null;
+      const cleanTitle = (title || '').trim();
+      if (!cleanTitle) return null;
+
+      const currentMyDay = getMyDayTasks();
+      let willAddInMyDay = addToMyDay;
+      let limitExceededNotice = false;
+
+      if (willAddInMyDay && currentMyDay.length >= 6) {
+        willAddInMyDay = false;
+        limitExceededNotice = true;
+      }
+
+      const defaultPerson = (db.people && db.people[0]) ? db.people[0].id : 'per_wlasne';
+      const defaultCategory = (db.categories && db.categories[0]) ? db.categories[0].id : 'cat_wlasne';
+      const today = getTodayISO();
+      const newId = generateId('tsk');
+      const nowIso = new Date().toISOString();
+
+      const newTask = {
+        id: newId,
+        title: cleanTitle,
+        requesterPersonId: defaultPerson,
+        personId: defaultPerson,
+        categoryId: defaultCategory,
+        urgencyTag: 'HIGH',
+        dueDate: today,
+        originalDueDate: today,
+        importance: 'HIGH',
+        estimatedMinutes: 25,
+        recurrence: 'NONE',
+        recurrenceRule: null,
+        status: 'TODO',
+        waitingForPersonId: null,
+        waitingForReason: null,
+        waitingSince: null,
+        waitingFor: null,
+        inMyDay: willAddInMyDay,
+        isMyDay: willAddInMyDay,
+        myDayOrder: willAddInMyDay ? (currentMyDay.length + 1) : 999,
+        notesAndContext: '',
+        contextNotes: '',
+        milestones: [],
+        checklist: [],
+        createdAt: nowIso,
+        createdAtISO: nowIso,
+        auditLog: [
+          {
+            id: generateId('log'),
+            timestamp: nowIso,
+            changeType: 'CREATED',
+            reasonComment: 'Szybkie zadanie utworzone z pływającego okna PiP'
+          }
+        ]
+      };
+
+      db.tasks.push(newTask);
+      if (willAddInMyDay) {
+        db.selectedTaskId = newId;
+        timer.taskId = newId;
+        timer.plannedMinutes = 25;
+        timer.remainingSeconds = 25 * 60;
+        timer.isOvertime = false;
+        timer.overtimeSeconds = 0;
+      }
+
+      saveDatabase();
+      renderApp();
+
+      if (limitExceededNotice) {
+        showToast('Limit Ivy Lee (6 zadań) osiągnięty — zadanie dodano do kolejki ogólnej');
+      } else {
+        showToast(`Dodano zadanie do Mój Dzień: ${cleanTitle}`);
+      }
+
+      return { task: newTask, limitExceeded: limitExceededNotice };
     }
 
     function toggleTaskMyDay(taskId) {
