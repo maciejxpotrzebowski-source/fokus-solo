@@ -1043,6 +1043,35 @@ describe('FOKUS SOLO — KOMPLEKSOWY PAKIET TESTÓW LOGIKI I ARCHITEKTURY', () =
       assert.ok(content.includes('id="pipTabStepsBtn"'), 'Brak przycisku pipTabStepsBtn w PiP');
       assert.ok(content.includes('id="pipTabDescBtn"'), 'Brak przycisku pipTabDescBtn w PiP');
       assert.ok(content.includes('pip-preset-choice-btn'), 'Brak przycisków presetów wyboru kolejnej sesji w PiP');
+
+      // Dropdown stopera Pomodoro w oknie PiP (dokładnie ten sam mechanizm co w aplikacji głównej)
+      assert.ok(content.includes('id="pipTimerTriggerBtn"'), 'Brak interaktywnego przycisku zegara pipTimerTriggerBtn w PiP');
+      assert.ok(content.includes('id="pipTimerChevron"'), 'Brak chevronu pipTimerChevron w PiP');
+      assert.ok(content.includes('id="pipPomodoroDropdown"'), 'Brak dropdownu wyboru czasu pipPomodoroDropdown w PiP');
+      assert.ok(content.includes('id="pipCustomTimerBtn"'), 'Brak przycisku własnego czasu pipCustomTimerBtn w PiP');
+
+      // Przyciski akcji na zadaniu w oknie PiP: Ukończ zadanie oraz Czekam na kogoś
+      assert.ok(content.includes('id="pipCompleteTaskBtn"'), 'Brak przycisku pipCompleteTaskBtn w PiP');
+      assert.ok(content.includes('id="pipWaitingForBtn"'), 'Brak przycisku pipWaitingForBtn w PiP');
+      assert.ok(content.includes('completeActiveTaskFromPiP'), 'Brak funkcji completeActiveTaskFromPiP w PiP');
+      assert.ok(content.includes('switchActiveTaskToWaitingFromPiP'), 'Brak funkcji switchActiveTaskToWaitingFromPiP w PiP');
+      assert.ok(content.includes("pipState.view = 'WAITING_MODAL'"), 'Brak widoku WAITING_MODAL w PiP');
+      assert.ok(content.includes('id="pipConfirmWaitingBtn"'), 'Brak przycisku pipConfirmWaitingBtn w PiP');
+
+      // Pełny formularz tworzenia zadania w PiP (ze wszystkimi polami z głównego modalu)
+      assert.ok(content.includes("pipState.view = 'NEW_TASK'"), 'Brak widoku NEW_TASK w PiP');
+      assert.ok(content.includes('function createTaskFromPiP('), 'Brak funkcji createTaskFromPiP w PiP');
+      assert.ok(content.includes('id="pipNtPersonId"'), 'Brak wyboru osoby pipNtPersonId w PiP');
+      assert.ok(content.includes('id="pipNtCategoryId"'), 'Brak wyboru kategorii pipNtCategoryId w PiP');
+      assert.ok(content.includes('id="pipNtUrgencyTag"'), 'Brak wyboru pilności pipNtUrgencyTag w PiP');
+      assert.ok(content.includes('id="pipNtDueDate"'), 'Brak pola terminu pipNtDueDate w PiP');
+      assert.ok(content.includes('id="pipNtImportance"'), 'Brak wyboru ważności pipNtImportance w PiP');
+      assert.ok(content.includes('id="pipNtEstPreset"'), 'Brak wyboru estymacji pipNtEstPreset w PiP');
+      assert.ok(content.includes('id="pipNtRecurrence"'), 'Brak wyboru cykliczności pipNtRecurrence w PiP');
+      assert.ok(content.includes('id="pipNtInMyDay"'), 'Brak checkboxa pipNtInMyDay w PiP');
+      assert.ok(content.includes('id="pipNtWaitingToggle"'), 'Brak checkboxa pipNtWaitingToggle w PiP');
+      assert.ok(content.includes('id="pipNtMilestonesText"'), 'Brak pola kroków milowych pipNtMilestonesText w PiP');
+      assert.ok(content.includes('id="pipNtNotes"'), 'Brak pola notatek roboczych pipNtNotes w PiP');
     });
 
     test('Wszystkie bloki <script> w Fokus.html kompilują się bez żadnych błędów składni (SyntaxError check)', () => {

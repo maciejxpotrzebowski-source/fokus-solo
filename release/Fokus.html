@@ -2704,10 +2704,12 @@
     let pipLastTaskId = null;
 
     const pipState = {
-      view: 'TIMER',       // 'TIMER' | 'ADJUST'
+      view: 'TIMER',       // 'TIMER' | 'ADJUST' | 'NEW_TASK' | 'WAITING_MODAL'
       activeTab: 'STEPS',  // 'STEPS' | 'DESC'
       quickAddOpen: false,
+      timerMenuOpen: false,
       adjustInfo: null,
+      waitingTask: null,
       notice: null,
       noticeTimeout: null
     };
@@ -2744,8 +2746,8 @@
       if ('documentPictureInPicture' in window) {
         try {
           pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 400,
-            height: 560
+            width: 440,
+            height: 640
           });
 
           // Wstrzyknij skrypt Tailwind i czcionki
@@ -2786,6 +2788,7 @@
             pipWindow = null;
             pipState.view = 'TIMER';
             pipState.quickAddOpen = false;
+            pipState.timerMenuOpen = false;
           });
 
           renderPiPContent();
@@ -2825,9 +2828,9 @@
 
       // 5. Fallback ostateczny: okno popup Always-on-Top
       try {
-        const left = Math.max(10, window.screen.width - 420);
+        const left = Math.max(10, window.screen.width - 460);
         const top = 60;
-        pipWindow = window.open('', 'FokusMiniTimer', `width=400,height=560,top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes`);
+        pipWindow = window.open('', 'FokusMiniTimer', `width=440,height=640,top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes`);
         if (pipWindow) {
           const twScript = pipWindow.document.createElement('script');
           twScript.src = 'https://cdn.tailwindcss.com';
@@ -2858,6 +2861,7 @@
             pipWindow = null;
             pipState.view = 'TIMER';
             pipState.quickAddOpen = false;
+            pipState.timerMenuOpen = false;
           });
           renderPiPContent();
         }
@@ -2921,6 +2925,242 @@
       ctx.fillRect(24, 215, (w - 48) * pct, 8);
     }
 
+    function completeActiveTaskFromPiP() {
+      const activeTask = getActiveMyDayTask();
+      if (!activeTask) return;
+
+      const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
+      if (hasProgress) {
+        const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+        const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+        const otMin = Math.round(timer.overtimeSeconds / 60);
+        const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+        const saveOld = confirm(`Czy chcesz zapisać zmierzony czas sesji Pomodoro (${totalMin} min) dla tego zadania przed jego ukończeniem?`);
+        if (saveOld) {
+          savePomodoroSessionDirect(totalMin, timer.plannedMinutes, otMin, timer.sessionStartedAt || new Date().toISOString());
+        }
+      }
+
+      // Zresetuj stan stopera po ukończeniu zadania
+      clearInterval(timer.intervalId);
+      timer.running = false;
+      timer.isOvertime = false;
+      timer.overtimeSeconds = 0;
+      timer.chimePlayed = false;
+      timer.sessionStartedAt = null;
+      timer.targetEndTimestamp = null;
+      try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
+      savePomodoroState();
+
+      const taskTitle = activeTask.title;
+      completeTask(activeTask.id);
+
+      const remaining = getMyDayTasks();
+      if (remaining.length > 0) {
+        selectTaskForCard01(remaining[0].id);
+        timer.taskId = remaining[0].id;
+        pipLastTaskId = remaining[0].id;
+      } else {
+        timer.taskId = null;
+        pipLastTaskId = null;
+      }
+
+      showPiPNotice(`✓ Ukończono zadanie: ${taskTitle}`);
+      renderPiPContent();
+    }
+
+    function switchActiveTaskToWaitingFromPiP(personId, reason, followUpDate) {
+      const activeTask = getActiveMyDayTask();
+      if (!activeTask) return;
+
+      const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
+      if (hasProgress) {
+        const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+        const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+        const otMin = Math.round(timer.overtimeSeconds / 60);
+        const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+        const saveOld = confirm(`Czy chcesz zapisać zmierzony czas sesji Pomodoro (${totalMin} min) przed przeniesieniem do „Czekam na”?`);
+        if (saveOld) {
+          savePomodoroSessionDirect(totalMin, timer.plannedMinutes, otMin, timer.sessionStartedAt || new Date().toISOString());
+        }
+      }
+
+      clearInterval(timer.intervalId);
+      timer.running = false;
+      timer.isOvertime = false;
+      timer.overtimeSeconds = 0;
+      timer.chimePlayed = false;
+      timer.sessionStartedAt = null;
+      timer.targetEndTimestamp = null;
+      try { localStorage.removeItem(POMODORO_STORAGE_KEY); } catch (e) {}
+      savePomodoroState();
+
+      const pId = personId || activeTask.requesterPersonId || activeTask.personId || (db.people[0] && db.people[0].id) || 'per_wlasne';
+      const blocker = getPerson(pId);
+      const cleanReason = (reason || '').trim() || 'Oczekiwanie na informację / odpowiedź';
+
+      activeTask.status = 'WAITING_FOR';
+      activeTask.inMyDay = false;
+      activeTask.isMyDay = false;
+      activeTask.waitingForPersonId = pId;
+      activeTask.waitingForReason = cleanReason;
+      activeTask.waitingSince = new Date().toISOString();
+      activeTask.waitingFor = {
+        personId: pId,
+        reason: cleanReason,
+        followUpDate: followUpDate || null,
+        sinceISO: activeTask.waitingSince
+      };
+      activeTask.auditLog.unshift({
+        id: generateId('log'),
+        timestamp: new Date().toISOString(),
+        changeType: 'STATUS_CHANGED',
+        fieldChanged: 'Status',
+        oldValue: 'W toku',
+        newValue: `Czekam na: ${blocker ? blocker.canonicalName : pId}`,
+        initiatedByPersonId: pId,
+        reasonCategory: 'WAITING',
+        reasonComment: cleanReason
+      });
+
+      saveDatabase();
+      renderApp();
+
+      const remaining = getMyDayTasks();
+      if (remaining.length > 0) {
+        selectTaskForCard01(remaining[0].id);
+        timer.taskId = remaining[0].id;
+        pipLastTaskId = remaining[0].id;
+      } else {
+        timer.taskId = null;
+        pipLastTaskId = null;
+      }
+
+      pipState.view = 'TIMER';
+      showPiPNotice(`Przeniesiono do „Czekam na”: ${blocker ? blocker.canonicalName : ''}`);
+      renderPiPContent();
+    }
+
+    function createTaskFromPiP(formData) {
+      if (!formData || !formData.title || !formData.title.trim()) {
+        showToast('Wpisz tytuł zadania');
+        return false;
+      }
+      const title = formData.title.trim();
+      const personId = formData.personId || (db.people[0] && db.people[0].id) || 'per_wlasne';
+      const categoryId = formData.categoryId || (db.categories[0] && db.categories[0].id) || 'cat_wlasne';
+      const urgencyTag = formData.urgencyTag || 'NORMAL';
+      let dueDate = formData.dueDate || null;
+      const importance = formData.importance || 'HIGH';
+      const estimatedMinutes = parseInt(formData.estimatedMinutes, 10) || 25;
+      const recurrence = formData.recurrence || 'NONE';
+      let inMyDay = !!formData.inMyDay;
+      const notesAndContext = (formData.notesAndContext || '').trim();
+
+      // Strażnik 1.1: Limit Ivy Lee (max 6 zadań w Mój Dzień)
+      const currentMyDay = getMyDayTasks();
+      let limitExceeded = false;
+      if (inMyDay && currentMyDay.length >= 6) {
+        inMyDay = false;
+        limitExceeded = true;
+      }
+
+      // Opcja Czekam na kogoś
+      const isWaiting = !!formData.isWaiting;
+      let waitingForPersonId = null;
+      let waitingForReason = null;
+      let waitingSince = null;
+      let waitingFor = null;
+
+      if (isWaiting) {
+        waitingForPersonId = formData.waitingPersonId || personId;
+        waitingForReason = (formData.waitingReason || '').trim() || 'Oczekiwanie na informację / akceptację';
+        const followUp = formData.waitingFollowUp || null;
+        waitingSince = new Date().toISOString();
+        waitingFor = {
+          personId: waitingForPersonId,
+          reason: waitingForReason,
+          followUpDate: followUp,
+          sinceISO: waitingSince
+        };
+        inMyDay = false;
+      }
+
+      // Reguła cykliczności SOP
+      let recurrenceRule = null;
+      if (recurrence && recurrence !== 'NONE') {
+        recurrenceRule = {
+          pattern: recurrence === 'MONTHLY' ? 'DAY_OF_MONTH' : (recurrence === 'WEEKLY' ? 'WEEKLY_DAY' : 'STANDARD'),
+          day: 10,
+          weekday: 2,
+          firstDate: dueDate || getTodayISO()
+        };
+      }
+
+      // Rozbicie kroków milowych
+      const rawLines = (formData.milestonesText || '').split('\n').map(s => s.trim()).filter(Boolean);
+      const parsedMilestones = rawLines.map(parseMilestoneLine).filter(Boolean);
+
+      const newTask = {
+        id: generateId('tsk'),
+        title,
+        requesterPersonId: personId,
+        personId,
+        categoryId,
+        urgencyTag,
+        dueDate,
+        originalDueDate: dueDate,
+        importance,
+        estimatedMinutes,
+        recurrence,
+        recurrenceRule,
+        status: isWaiting ? 'WAITING_FOR' : 'TODO',
+        waitingForPersonId: isWaiting ? waitingForPersonId : null,
+        waitingForReason: isWaiting ? waitingForReason : null,
+        waitingSince: isWaiting ? waitingSince : null,
+        waitingFor: isWaiting ? waitingFor : null,
+        inMyDay,
+        isMyDay: inMyDay,
+        myDayOrder: inMyDay ? getMyDayTasks().length + 1 : null,
+        notesAndContext,
+        contextNotes: notesAndContext,
+        milestones: parsedMilestones.map(pm => ({ id: generateId('m'), title: pm.title, isDone: pm.isDone })),
+        checklist: null,
+        createdAt: new Date().toISOString(),
+        createdAtISO: new Date().toISOString(),
+        auditLog: [{
+          id: generateId('log'),
+          timestamp: new Date().toISOString(),
+          changeType: 'CREATED',
+          reasonComment: `Utworzono zadanie${dueDate ? ' (termin: ' + dueDate + ')' : ''}${isWaiting ? ' [Czekam na kogoś]' : ''}`
+        }]
+      };
+      newTask.checklist = newTask.milestones;
+      db.tasks.unshift(newTask);
+
+      if (inMyDay) {
+        selectTaskForCard01(newTask.id);
+        timer.taskId = newTask.id;
+        pipLastTaskId = newTask.id;
+      }
+
+      saveDatabase();
+      renderApp();
+
+      pipState.view = 'TIMER';
+      if (limitExceeded) {
+        showPiPNotice(`Kolejka Mój Dzień pełna (6/6) – zadanie dodano do Backlogu`);
+      } else if (isWaiting) {
+        showPiPNotice(`Dodano zadanie do „Czekam na”`);
+      } else if (inMyDay) {
+        showPiPNotice(`Dodano do Mój Dzień: ${newTask.title}`);
+      } else {
+        showPiPNotice(`Zapisano zadanie: ${newTask.title}`);
+      }
+      renderPiPContent();
+      return true;
+    }
+
     function renderPiPContent() {
       if (!pipWindow || pipWindow.closed) return;
       const doc = pipWindow.document;
@@ -2934,7 +3174,7 @@
       pipLastTaskId = activeTaskId;
 
       // =======================================================================
-      // WIDOK KOREKTY I ZAPISU SESJI W OKNIE PIP (IN-WINDOW SESSION ADJUSTMENT)
+      // WIDOK 1: KOREKTA I ZAPIS SESJI W OKNIE PIP (IN-WINDOW SESSION ADJUSTMENT)
       // =======================================================================
       if (pipState.view === 'ADJUST') {
         const info = pipState.adjustInfo || {
@@ -3109,7 +3349,334 @@
       }
 
       // =======================================================================
-      // WIDOK GŁÓWNY W OKNIE PIP: STOPER, PRZEŁĄCZNIK ZADAŃ, KROKI / OPIS
+      // WIDOK 2: CZEKAM NA KOGOŚ (IN-WINDOW WAITING MODAL DLA ZADANIA)
+      // =======================================================================
+      if (pipState.view === 'WAITING_MODAL') {
+        const taskToWait = activeTask || db.tasks.find(t => t.id === timer.taskId);
+        const taskTitle = taskToWait ? taskToWait.title : 'Zadanie';
+        const defaultPersonId = taskToWait ? (taskToWait.requesterPersonId || taskToWait.personId) : (db.people[0] && db.people[0].id);
+
+        doc.body.innerHTML = `
+          <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7] overflow-y-auto pr-1">
+            <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
+              <div class="flex items-center font-mono text-xs font-semibold select-none">
+                <span style="color: ${db.logoAccentColor || '#10B981'}" class="mr-1 font-bold">&gt;</span>
+                <span class="text-[#1D1D1F] dark:text-white">fokus</span>
+                <span class="w-1.5 h-3 ml-1 inline-block cursor-blink transition-colors" style="background-color: ${db.logoAccentColor || '#10B981'}"></span>
+                <span class="text-zinc-400 font-sans font-normal ml-2">· Czekam na kogoś</span>
+              </div>
+              <button type="button" id="pipCancelWaitingBtn" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                ← Anuluj
+              </button>
+            </div>
+
+            <div class="space-y-1">
+              <div class="text-[10px] uppercase font-mono tracking-wider text-zinc-400">Blokada zadania</div>
+              <div class="text-xs font-semibold truncate" title="${escapeHtml(taskTitle)}">${escapeHtml(taskTitle)}</div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} space-y-3">
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Na kogo czekasz?</label>
+                <select id="pipWfPersonSelect" class="w-full text-xs py-2 px-2.5 rounded-xl border ${isDark ? 'bg-[#1C1C1E] border-white/10 text-white' : 'bg-[#F5F5F7] border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  ${db.people.map(p => `
+                    <option value="${p.id}" ${p.id === defaultPersonId ? 'selected' : ''}>
+                      ${escapeHtml(p.canonicalName)}${p.roleOrDept ? ` (${escapeHtml(p.roleOrDept)})` : ''}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Czego brakuje? (Notatka / Powód)</label>
+                <input type="text" id="pipWfReasonInput" placeholder="np. Czekam na zestawienie od logistyki..."
+                  class="w-full text-xs py-2 px-2.5 rounded-xl border ${isDark ? 'bg-[#1C1C1E] border-white/10 text-white' : 'bg-[#F5F5F7] border-black/10 text-[#1D1D1F]'} focus:outline-none" />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Termin przypomnienia (Follow-up)</label>
+                <input type="date" id="pipWfFollowUpInput"
+                  class="w-full text-xs py-2 px-2.5 rounded-xl border ${isDark ? 'bg-[#1C1C1E] border-white/10 text-white' : 'bg-[#F5F5F7] border-black/10 text-[#1D1D1F]'} font-mono focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-2 mt-auto">
+              <button type="button" id="pipConfirmWaitingBtn" class="w-full py-2.5 px-4 rounded-2xl text-xs font-semibold bg-amber-500 text-white hover:opacity-90 active:scale-95 transition shadow-sm flex items-center justify-center gap-1.5">
+                <span>⏳</span>
+                <span>Przenieś do „Czekam na” i zwolnij slot</span>
+              </button>
+              <button type="button" id="pipCancelWaitingBtn2" class="w-full py-1.5 rounded-2xl text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition">
+                Anuluj
+              </button>
+            </div>
+          </div>
+        `;
+
+        const confirmBtn = doc.getElementById('pipConfirmWaitingBtn');
+        const cancelBtn = doc.getElementById('pipCancelWaitingBtn');
+        const cancelBtn2 = doc.getElementById('pipCancelWaitingBtn2');
+        const cancelHandler = () => {
+          pipState.view = 'TIMER';
+          renderPiPContent();
+        };
+        if (cancelBtn) cancelBtn.onclick = cancelHandler;
+        if (cancelBtn2) cancelBtn2.onclick = cancelHandler;
+
+        if (confirmBtn) {
+          confirmBtn.onclick = () => {
+            const pSel = doc.getElementById('pipWfPersonSelect');
+            const rInp = doc.getElementById('pipWfReasonInput');
+            const fInp = doc.getElementById('pipWfFollowUpInput');
+            const pId = pSel ? pSel.value : null;
+            const reason = rInp ? rInp.value : '';
+            const fDate = fInp ? fInp.value : null;
+            switchActiveTaskToWaitingFromPiP(pId, reason, fDate);
+          };
+        }
+        return;
+      }
+
+      // =======================================================================
+      // WIDOK 3: PEŁNY FORMULARZ NOWEGO ZADANIA W PIP (NOWE ZADANIE / SZYBKIE ZADANIE)
+      // =======================================================================
+      if (pipState.view === 'NEW_TASK') {
+        doc.body.innerHTML = `
+          <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7] overflow-y-auto pr-1">
+            <!-- Pasek górny -->
+            <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'} sticky top-0 bg-[#F5F5F7] dark:bg-[#1C1C1E] z-10">
+              <div class="flex items-center font-mono text-xs font-semibold select-none">
+                <span style="color: ${db.logoAccentColor || '#10B981'}" class="mr-1 font-bold">&gt;</span>
+                <span class="text-[#1D1D1F] dark:text-white">fokus</span>
+                <span class="w-1.5 h-3 ml-1 inline-block cursor-blink transition-colors" style="background-color: ${db.logoAccentColor || '#10B981'}"></span>
+                <span class="text-zinc-400 font-sans font-normal ml-2">· Nowe zadanie</span>
+              </div>
+              <button type="button" id="pipNtBackBtn" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                ← Anuluj
+              </button>
+            </div>
+
+            <!-- 1. Co jest do zrobienia? -->
+            <div class="space-y-1">
+              <label class="block text-[11px] text-zinc-400 font-medium">1. Co jest do zrobienia? (Rezultat) · <span class="font-normal text-zinc-400">Enter = zapis</span></label>
+              <input type="text" id="pipQuickTaskInput" placeholder="np. Walidacja wag opakowań w Business Central"
+                class="w-full text-xs font-medium px-3 py-2 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+
+            <!-- 2. Dla kogo + Kategoria -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">2. Dla kogo?</label>
+                <select id="pipNtPersonId" class="w-full text-xs px-2.5 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  ${db.people.map(p => `
+                    <option value="${p.id}">
+                      ${escapeHtml(p.canonicalName)}${p.roleOrDept ? ` (${escapeHtml(p.roleOrDept)})` : ''}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Kategoria</label>
+                <select id="pipNtCategoryId" class="w-full text-xs px-2.5 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  ${db.categories.map(c => `
+                    <option value="${c.id}">${escapeHtml(c.name)}</option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
+
+            <!-- 3. Pilność + Termin + Ważność -->
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">3. Pilność</label>
+                <select id="pipNtUrgencyTag" class="w-full text-xs px-2 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  <option value="ASAP">● ASAP</option>
+                  <option value="HIGH">● Wysoka</option>
+                  <option value="NORMAL" selected>● Standard</option>
+                  <option value="LAST">○ Last</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Deadline</label>
+                <input type="date" id="pipNtDueDate" class="w-full text-xs px-2 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} font-mono focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">4. Ważność</label>
+                <select id="pipNtImportance" class="w-full text-xs px-2 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  <option value="CRITICAL">Krytyczne</option>
+                  <option value="HIGH" selected>Ważne</option>
+                  <option value="NORMAL">Standard</option>
+                  <option value="LOW">Niskie</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 4. Estymacja + Cykliczność -->
+            <div class="grid grid-cols-2 gap-2 items-center">
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Estymacja</label>
+                <select id="pipNtEstPreset" class="w-full text-xs px-2.5 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  <option value="15">15 min</option>
+                  <option value="25" selected>25 min</option>
+                  <option value="30">30 min</option>
+                  <option value="45">45 min</option>
+                  <option value="60">60 min (1h)</option>
+                  <option value="90">90 min (1.5h)</option>
+                  <option value="120">120 min (2h)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-zinc-400 font-medium mb-1">Cykliczność (SOP)</label>
+                <select id="pipNtRecurrence" class="w-full text-xs px-2.5 py-1.5 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none">
+                  <option value="NONE" selected>Jednorazowe</option>
+                  <option value="WEEKLY">Co tydzień</option>
+                  <option value="MONTHLY">Co miesiąc</option>
+                  <option value="QUARTERLY">Co kwartał</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="flex items-center gap-2 text-xs cursor-pointer select-none text-zinc-700 dark:text-zinc-200">
+                <input type="checkbox" id="pipNtInMyDay" ${getMyDayTasks().length < 6 ? 'checked' : ''} class="w-4 h-4 rounded accent-zinc-900 dark:accent-white" />
+                <span>Dodaj do „Mój Dzień” (max 6)</span>
+              </label>
+            </div>
+
+            <!-- Czekam na kogoś sekcja -->
+            <div class="pt-1 border-t ${isDark ? 'border-white/5' : 'border-black/5'} space-y-2">
+              <label class="flex items-center gap-2 text-xs cursor-pointer select-none text-amber-600 dark:text-amber-400 font-medium">
+                <input type="checkbox" id="pipNtWaitingToggle" class="w-4 h-4 rounded accent-amber-500" />
+                <span>⏳ Czekam na kogoś z tym zadaniem</span>
+              </label>
+              <div id="pipNtWaitingDetails" class="hidden p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                <div>
+                  <label class="block text-[10px] text-amber-700 dark:text-amber-300 font-medium mb-0.5">Na kogo czekasz?</label>
+                  <select id="pipNtWaitingPersonId" class="w-full text-xs py-1.5 px-2 rounded-lg border border-amber-500/30 ${isDark ? 'bg-[#1C1C1E] text-white' : 'bg-white text-[#1D1D1F]'} focus:outline-none">
+                    ${db.people.map(p => `
+                      <option value="${p.id}">${escapeHtml(p.canonicalName)}${p.roleOrDept ? ` (${escapeHtml(p.roleOrDept)})` : ''}</option>
+                    `).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-amber-700 dark:text-amber-300 font-medium mb-0.5">Czego brakuje? (Notatka)</label>
+                  <input type="text" id="pipNtWaitingReason" placeholder="np. Czekam na zestawienie"
+                    class="w-full text-xs py-1.5 px-2 rounded-lg border border-amber-500/30 ${isDark ? 'bg-[#1C1C1E] text-white' : 'bg-white text-[#1D1D1F]'} focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-amber-700 dark:text-amber-300 font-medium mb-0.5">Termin przypomnienia (Follow-up)</label>
+                  <input type="date" id="pipNtWaitingFollowUp"
+                    class="w-full text-xs py-1.5 px-2 rounded-lg border border-amber-500/30 ${isDark ? 'bg-[#1C1C1E] text-white' : 'bg-white text-[#1D1D1F]'} font-mono focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Kroki milowe -->
+            <div class="space-y-1 pt-1 border-t ${isDark ? 'border-white/5' : 'border-black/5'}">
+              <div class="flex items-center justify-between text-[11px] text-zinc-400 font-medium">
+                <span>5. Kroki milowe (po 1 w linii)</span>
+                <span class="text-[10px] font-mono">+ zrobione, - do zrobienia</span>
+              </div>
+              <textarea id="pipNtMilestonesText" rows="3" placeholder="+ Krok 1 ukończony&#10;- Krok 2 do zrobienia&#10;- Krok 3 do zrobienia"
+                class="w-full text-xs px-3 py-2 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} font-mono focus:outline-none leading-relaxed"></textarea>
+            </div>
+
+            <!-- 6. Kontekst i Notatki -->
+            <div class="space-y-1">
+              <label class="block text-[11px] text-zinc-400 font-medium">6. Kontekst i Notatki robocze</label>
+              <textarea id="pipNtNotes" rows="2" placeholder="Ścieżka do pliku, linki, założenia..."
+                class="w-full text-xs px-3 py-2 rounded-xl border ${isDark ? 'bg-[#2C2C2E] border-white/10 text-white' : 'bg-white border-black/10 text-[#1D1D1F]'} focus:outline-none leading-relaxed"></textarea>
+            </div>
+
+            <!-- Przyciski akcji na dole formularza -->
+            <div class="flex items-center justify-between gap-2 pt-2 pb-1 sticky bottom-0 bg-[#F5F5F7] dark:bg-[#1C1C1E]">
+              <button type="button" id="pipNtCancelBtn" class="px-4 py-2 rounded-xl text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                Anuluj
+              </button>
+              <button type="button" id="pipSubmitQuickTaskBtn" class="flex-1 py-2 px-4 rounded-xl text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition shadow-sm flex items-center justify-center gap-1.5">
+                <span>✓</span>
+                <span>Zapisz zadanie</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const titleInp = doc.getElementById('pipQuickTaskInput');
+        if (titleInp) setTimeout(() => titleInp.focus(), 50);
+
+        const cancelBtn = doc.getElementById('pipNtCancelBtn');
+        const backBtn = doc.getElementById('pipNtBackBtn');
+        const cancelHandler = () => {
+          pipState.view = 'TIMER';
+          renderPiPContent();
+        };
+        if (cancelBtn) cancelBtn.onclick = cancelHandler;
+        if (backBtn) backBtn.onclick = cancelHandler;
+
+        const wtToggle = doc.getElementById('pipNtWaitingToggle');
+        const wtDetails = doc.getElementById('pipNtWaitingDetails');
+        if (wtToggle && wtDetails) {
+          wtToggle.onchange = () => {
+            wtDetails.classList.toggle('hidden', !wtToggle.checked);
+          };
+        }
+
+        const handleSaveTask = () => {
+          const title = titleInp ? titleInp.value.trim() : '';
+          if (!title) {
+            titleInp && titleInp.focus();
+            return;
+          }
+          const personId = doc.getElementById('pipNtPersonId')?.value;
+          const categoryId = doc.getElementById('pipNtCategoryId')?.value;
+          const urgencyTag = doc.getElementById('pipNtUrgencyTag')?.value;
+          const dueDate = doc.getElementById('pipNtDueDate')?.value;
+          const importance = doc.getElementById('pipNtImportance')?.value;
+          const estimatedMinutes = doc.getElementById('pipNtEstPreset')?.value;
+          const recurrence = doc.getElementById('pipNtRecurrence')?.value;
+          const inMyDay = doc.getElementById('pipNtInMyDay')?.checked;
+          const isWaiting = doc.getElementById('pipNtWaitingToggle')?.checked;
+          const waitingPersonId = doc.getElementById('pipNtWaitingPersonId')?.value;
+          const waitingReason = doc.getElementById('pipNtWaitingReason')?.value;
+          const waitingFollowUp = doc.getElementById('pipNtWaitingFollowUp')?.value;
+          const milestonesText = doc.getElementById('pipNtMilestonesText')?.value;
+          const notesAndContext = doc.getElementById('pipNtNotes')?.value;
+
+          createTaskFromPiP({
+            title,
+            personId,
+            categoryId,
+            urgencyTag,
+            dueDate,
+            importance,
+            estimatedMinutes,
+            recurrence,
+            inMyDay,
+            isWaiting,
+            waitingPersonId,
+            waitingReason,
+            waitingFollowUp,
+            milestonesText,
+            notesAndContext
+          });
+        };
+
+        const submitBtn = doc.getElementById('pipSubmitQuickTaskBtn');
+        if (submitBtn) submitBtn.onclick = handleSaveTask;
+        if (titleInp) {
+          titleInp.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSaveTask();
+            } else if (e.key === 'Escape') {
+              cancelHandler();
+            }
+          };
+        }
+        return;
+      }
+
+      // =======================================================================
+      // WIDOK 4 (GŁÓWNY): STOPER Z DROPDOWNEM, AKCJE ZADANIA, KROKI / OPIS
       // =======================================================================
       const myDayTasks = getMyDayTasks();
       const title = activeTask ? activeTask.title : 'Brak aktywnego zadania';
@@ -3122,7 +3689,7 @@
 
       doc.body.innerHTML = `
         <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7]">
-          <!-- Pasek górny: logo, status i przycisk szybkiego zadania -->
+          <!-- Pasek górny: logo, status i przycisk nowego zadania -->
           <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
             <div class="flex items-center font-mono text-sm font-bold select-none">
               <span style="color: ${db.logoAccentColor || '#10B981'}" class="mr-1 font-bold">&gt;</span>
@@ -3144,27 +3711,12 @@
                 }"></span>
                 <span>${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}</span>
               </button>
-              <button type="button" id="pipToggleQuickAddBtn" title="Dodaj szybkie zadanie"
-                class="px-2 py-0.5 rounded-full text-[11px] font-medium ${pipState.quickAddOpen ? 'bg-emerald-500 text-white' : 'bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/20'} transition">
-                ${pipState.quickAddOpen ? '✕ Anuluj' : '＋ Zadanie'}
+              <button type="button" id="pipToggleQuickAddBtn" title="Dodaj nowe zadanie ze wszystkimi parametrami"
+                class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/20 transition">
+                ＋ Zadanie
               </button>
             </div>
           </div>
-
-          <!-- Formularz szybkiego dodawania zadania na dziś -->
-          ${pipState.quickAddOpen ? `
-            <div id="pipQuickAddBox" class="p-2.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/80' : 'bg-white shadow-sm border border-black/5'} space-y-2">
-              <div class="text-[10px] uppercase font-mono tracking-wider text-zinc-400 font-medium">Szybkie zadanie do Mój Dzień</div>
-              <div class="flex items-center gap-1.5">
-                <input type="text" id="pipQuickTaskInput" placeholder="Co jest do zrobienia? (Enter)"
-                  class="flex-1 text-xs py-1.5 px-2.5 rounded-xl border ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-[#F5F5F7] border-black/10 text-[#1D1D1F]'} outline-none focus:border-blue-500" />
-                <button type="button" id="pipSubmitQuickTaskBtn"
-                  class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500 text-white hover:opacity-90 active:scale-95 transition">
-                  Dodaj
-                </button>
-              </div>
-            </div>
-          ` : ''}
 
           <!-- Przełącznik zadania (Lista rozwijana z zadań na dziś) -->
           <div class="space-y-1">
@@ -3189,12 +3741,49 @@
             </div>
           ` : ''}
 
-          <!-- Karta Zegara i Kontroli Sesji -->
-          <div class="py-2.5 px-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex flex-col gap-2">
+          <!-- Karta Zegara i Kontroli Sesji (Zegar rozwija menu wyboru czasu dokładnie jak w aplikacji) -->
+          <div class="py-2.5 px-3.5 rounded-2xl ${isDark ? 'bg-[#2C2C2E]/60' : 'bg-white shadow-sm'} flex flex-col gap-2 relative">
             <div class="flex items-center justify-between gap-2">
-              <span id="pipClockDisplay" class="font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}">
-                ${displayStr}
-              </span>
+              <div class="relative">
+                <button type="button" id="pipTimerTriggerBtn" ${timer.running ? 'disabled' : ''}
+                  class="flex items-center gap-1.5 px-2 py-1 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer disabled:cursor-default disabled:hover:bg-transparent select-none"
+                  title="${timer.running ? 'Stoper w toku' : 'Kliknij stoper, aby wybrać czas (15, 25, 45, 60, 90) lub wpisać inny'}">
+                  <span id="pipClockDisplay" class="font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}">
+                    ${displayStr}
+                  </span>
+                  <span id="pipTimerChevron" class="text-xs text-zinc-400 dark:text-zinc-500 font-sans ${timer.running ? 'hidden' : ''}">▾</span>
+                </button>
+
+                <!-- Menu rozwijane opcji stopera: 15, 25, 45, 60, 90 min + Inny czas -->
+                <div id="pipPomodoroDropdown"
+                  class="${pipState.timerMenuOpen && !timer.running ? '' : 'hidden'} absolute left-0 top-full mt-1.5 z-40 min-w-[190px] p-2 rounded-2xl ${isDark ? 'bg-[#252528] border border-white/10 shadow-2xl' : 'bg-white border border-black/10 shadow-xl'} space-y-1">
+                  <div class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Czas sesji
+                  </div>
+                  ${[15, 25, 45, 60, 90].map(m => `
+                    <button type="button" class="pip-preset-choice-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono transition ${
+                      timer.plannedMinutes === m
+                        ? (isDark ? 'font-semibold text-emerald-400 bg-emerald-500/10' : 'font-semibold text-emerald-600 bg-emerald-500/10')
+                        : (isDark ? 'text-zinc-200 hover:bg-white/5' : 'text-zinc-700 hover:bg-black/5')
+                    }" data-minutes="${m}">
+                      <span>⏱ ${m} min</span>
+                      ${timer.plannedMinutes === m ? '<span class="text-xs font-bold">✓</span>' : ''}
+                    </button>
+                  `).join('')}
+                  <div class="h-px ${isDark ? 'bg-white/10' : 'bg-black/5'} my-1"></div>
+                  <button type="button" id="pipCustomTimerBtn"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition ${
+                      ![15, 25, 45, 60, 90].includes(timer.plannedMinutes)
+                        ? (isDark ? 'font-semibold text-emerald-400 bg-emerald-500/10' : 'font-semibold text-emerald-600 bg-emerald-500/10')
+                        : (isDark ? 'text-zinc-200 hover:bg-white/5' : 'text-zinc-700 hover:bg-black/5')
+                    }">
+                    <span>✏️ Inny czas...</span>
+                    ${![15, 25, 45, 60, 90].includes(timer.plannedMinutes) ? `<span class="text-[11px] font-mono font-semibold">(${timer.plannedMinutes}m)</span>` : ''}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Przyciski akcji stopera -->
               <div class="flex items-center gap-1">
                 <button type="button" id="pipStartBtn" class="px-3.5 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-white text-black' : 'bg-[#1D1D1F] text-white'} hover:opacity-90 active:scale-95 transition">
                   ${timer.running ? 'Pauza' : 'Start'}
@@ -3207,23 +3796,23 @@
                 </button>
               </div>
             </div>
-
-            <!-- Presety Pomodoro dla kolejnej sesji (gdy stoper nie działa lub jest bez postępu) -->
-            ${!timer.running && !timer.isOvertime && timer.remainingSeconds === timer.plannedMinutes * 60 ? `
-              <div class="flex items-center gap-1 pt-1.5 border-t ${isDark ? 'border-white/5' : 'border-black/5'}">
-                <span class="text-[10px] font-mono text-zinc-400 mr-1">Sesja:</span>
-                ${[15, 25, 45, 60, 90].map(m => `
-                  <button type="button" class="pip-preset-choice-btn px-2 py-0.5 rounded-lg text-[10px] font-mono ${
-                    timer.plannedMinutes === m
-                      ? (isDark ? 'bg-white text-black font-bold' : 'bg-[#1D1D1F] text-white font-bold')
-                      : 'bg-black/5 dark:bg-white/10 text-zinc-500 hover:bg-black/10 dark:hover:bg-white/20'
-                  } transition" data-minutes="${m}">
-                    ${m}m
-                  </button>
-                `).join('')}
-              </div>
-            ` : ''}
           </div>
+
+          <!-- Pasek akcji zadania: Ukończ zadanie oraz Czekam na kogoś -->
+          ${activeTask ? `
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
+              <button type="button" id="pipCompleteTaskBtn" title="Oznacz zadanie jako ukończone"
+                class="py-1.5 px-3 rounded-xl text-xs font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 active:scale-95 transition flex items-center justify-center gap-1.5 border border-emerald-500/30">
+                <span>✓</span>
+                <span>Ukończ zadanie</span>
+              </button>
+              <button type="button" id="pipWaitingForBtn" title="Przełącz w stan oczekiwania na kogoś"
+                class="py-1.5 px-3 rounded-xl text-xs font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 active:scale-95 transition flex items-center justify-center gap-1.5 border border-amber-500/30">
+                <span>⏳</span>
+                <span>Czekam na kogoś</span>
+              </button>
+            </div>
+          ` : ''}
 
           <!-- Przełącznik zakładek: Kroki milowe vs Opis zadania -->
           <div class="flex-1 min-h-0 flex flex-col pt-0.5">
@@ -3288,7 +3877,89 @@
         </div>
       `;
 
-      // Obsługa przycisków i zdarzeń w widoku głównym PiP
+      // Obsługa dropdownu wyboru czasu w stoperze
+      const timerTriggerBtn = doc.getElementById('pipTimerTriggerBtn');
+      if (timerTriggerBtn) {
+        timerTriggerBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (timer.running) return;
+          pipState.timerMenuOpen = !pipState.timerMenuOpen;
+          renderPiPContent();
+        };
+      }
+
+      // Presety wyboru czasu z dropdownu
+      doc.querySelectorAll('.pip-preset-choice-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const m = parseInt(btn.getAttribute('data-minutes'), 10);
+          if (m && !timer.running) {
+            timer.plannedMinutes = m;
+            timer.remainingSeconds = m * 60;
+            pipState.timerMenuOpen = false;
+            savePomodoroState();
+            renderApp();
+            renderPiPContent();
+          }
+        };
+      });
+
+      // Własny czas w dropdownie stopera
+      const pipCustomTimerBtn = doc.getElementById('pipCustomTimerBtn');
+      if (pipCustomTimerBtn) {
+        pipCustomTimerBtn.onclick = (e) => {
+          e.stopPropagation();
+          const currentM = timer.plannedMinutes || 25;
+          const ans = (pipWindow.prompt || window.prompt)('Podaj czas trwania sesji Pomodoro w minutach (1 - 180):', currentM);
+          if (ans !== null) {
+            const m = parseInt(ans.trim(), 10);
+            if (!isNaN(m) && m >= 1 && m <= 180) {
+              timer.plannedMinutes = m;
+              timer.remainingSeconds = m * 60;
+              pipState.timerMenuOpen = false;
+              savePomodoroState();
+              renderApp();
+              renderPiPContent();
+            } else if (ans.trim() !== '') {
+              showPiPNotice('Wpisz liczbę minut w zakresie od 1 do 180');
+            }
+          }
+        };
+      }
+
+      // Zamknięcie dropdownu przy kliknięciu poza niego
+      doc.addEventListener('click', (e) => {
+        if (pipState.timerMenuOpen) {
+          const trig = doc.getElementById('pipTimerTriggerBtn');
+          const drop = doc.getElementById('pipPomodoroDropdown');
+          if (trig && (trig === e.target || trig.contains(e.target))) {
+            // kliknięcie w trigger
+          } else if (drop && drop.contains(e.target)) {
+            // kliknięcie wewnątrz dropdownu
+          } else {
+            pipState.timerMenuOpen = false;
+            renderPiPContent();
+          }
+        }
+      });
+
+      // Przyciski akcji zadania: Ukończ zadanie oraz Czekam na kogoś
+      const completeTaskBtn = doc.getElementById('pipCompleteTaskBtn');
+      if (completeTaskBtn) {
+        completeTaskBtn.onclick = () => {
+          completeActiveTaskFromPiP();
+        };
+      }
+
+      const waitingForBtn = doc.getElementById('pipWaitingForBtn');
+      if (waitingForBtn) {
+        waitingForBtn.onclick = () => {
+          pipState.view = 'WAITING_MODAL';
+          renderPiPContent();
+        };
+      }
+
+      // Obsługa przycisków start / pauza / korekta / zapisz
       const pipStartBtn = doc.getElementById('pipStartBtn');
       if (pipStartBtn && activeTask) {
         pipStartBtn.onclick = () => {
@@ -3360,7 +4031,6 @@
           const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
           const startedAtIso = timer.sessionStartedAt || new Date().toISOString();
 
-          // Jeśli overtime >= 5 minut: przełącz bezpośrednio w widok korekty w oknie PiP
           if (timer.isOvertime && otMin >= 5) {
             pipState.adjustInfo = {
               plannedMinutes: timer.plannedMinutes,
@@ -3378,20 +4048,6 @@
           }
         };
       }
-
-      // Presety wyboru czasu kolejnej sesji
-      doc.querySelectorAll('.pip-preset-choice-btn').forEach(btn => {
-        btn.onclick = () => {
-          const m = parseInt(btn.getAttribute('data-minutes'), 10);
-          if (m && !timer.running) {
-            timer.plannedMinutes = m;
-            timer.remainingSeconds = m * 60;
-            savePomodoroState();
-            renderApp();
-            renderPiPContent();
-          }
-        };
-      });
 
       // Przełącznik zadania na dziś
       const pipTaskSelect = doc.getElementById('pipTaskSelect');
@@ -3419,54 +4075,12 @@
         };
       }
 
-      // Szybkie dodawanie zadania
+      // Otwarcie pełnego formularza tworzenia zadania w PiP
       const pipToggleQuickAddBtn = doc.getElementById('pipToggleQuickAddBtn');
       if (pipToggleQuickAddBtn) {
         pipToggleQuickAddBtn.onclick = () => {
-          pipState.quickAddOpen = !pipState.quickAddOpen;
+          pipState.view = 'NEW_TASK';
           renderPiPContent();
-          if (pipState.quickAddOpen) {
-            setTimeout(() => {
-              const inp = doc.getElementById('pipQuickTaskInput');
-              if (inp) inp.focus();
-            }, 50);
-          }
-        };
-      }
-
-      const submitQuickAdd = () => {
-        const inp = doc.getElementById('pipQuickTaskInput');
-        if (!inp) return;
-        const rawTitle = inp.value.trim();
-        if (!rawTitle) return;
-
-        const res = quickCreateTask(rawTitle, true);
-        if (res && res.task) {
-          pipState.quickAddOpen = false;
-          pipLastTaskId = res.task.id;
-          if (res.limitExceeded) {
-            showPiPNotice(`Zadanie dodano do Backlogu (limit 6): ${rawTitle}`);
-          } else {
-            showPiPNotice(`Dodano do Mój Dzień: ${rawTitle}`);
-          }
-          renderPiPContent();
-        }
-      };
-
-      const pipSubmitQuickTaskBtn = doc.getElementById('pipSubmitQuickTaskBtn');
-      if (pipSubmitQuickTaskBtn) {
-        pipSubmitQuickTaskBtn.onclick = submitQuickAdd;
-      }
-      const pipQuickTaskInput = doc.getElementById('pipQuickTaskInput');
-      if (pipQuickTaskInput) {
-        pipQuickTaskInput.onkeydown = (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            submitQuickAdd();
-          } else if (e.key === 'Escape') {
-            pipState.quickAddOpen = false;
-            renderPiPContent();
-          }
         };
       }
 
@@ -3510,8 +4124,8 @@
 
     function updatePiPWindow() {
       if (pipWindow && !pipWindow.closed) {
-        if (pipState.view === 'ADJUST') {
-          // Nie nadpisuj DOM gdy użytkownik edytuje minuty sesji w oknie PiP
+        if (pipState.view !== 'TIMER') {
+          // Nie nadpisuj DOM gdy użytkownik edytuje minuty sesji, tworzy zadanie lub wybiera parametry czekam na
           return;
         }
 
@@ -3528,11 +4142,28 @@
         const finishBtn = pipWindow.document.getElementById('pipFinishBtn');
         const adjustBtn = pipWindow.document.getElementById('pipAdjustBtn');
         const badge = pipWindow.document.getElementById('pipStateBadge');
+        const chevron = pipWindow.document.getElementById('pipTimerChevron');
+        const trigger = pipWindow.document.getElementById('pipTimerTriggerBtn');
         if (clock && btn) {
           const displayStr = timer.isOvertime ? `+${formatClock(timer.overtimeSeconds)}` : formatClock(timer.remainingSeconds);
           clock.textContent = displayStr;
           clock.className = `font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}`;
           btn.textContent = timer.running ? 'Pauza' : 'Start';
+          if (chevron) {
+            chevron.classList.toggle('hidden', timer.running);
+          }
+          if (trigger) {
+            if (timer.running) {
+              trigger.setAttribute('disabled', 'true');
+              if (pipState.timerMenuOpen) {
+                pipState.timerMenuOpen = false;
+                const dropdown = pipWindow.document.getElementById('pipPomodoroDropdown');
+                if (dropdown) dropdown.classList.add('hidden');
+              }
+            } else {
+              trigger.removeAttribute('disabled');
+            }
+          }
           if (badge) {
             const badgeLabel = timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY');
             const dotColor = timer.isOvertime ? 'bg-emerald-500' : (timer.running ? 'bg-blue-500' : 'bg-zinc-400');
