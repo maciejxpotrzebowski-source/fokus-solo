@@ -2772,6 +2772,13 @@
             ::-webkit-scrollbar-track { background: transparent; }
             ::-webkit-scrollbar-thumb { background: rgba(120, 120, 128, 0.25); border-radius: 4px; }
             ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 128, 0.45); }
+            @keyframes cursorBlink {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0; }
+            }
+            .cursor-blink {
+              animation: cursorBlink 1s infinite;
+            }
           `;
           pipWindow.document.head.appendChild(customStyle);
 
@@ -2838,6 +2845,13 @@
             ::-webkit-scrollbar-track { background: transparent; }
             ::-webkit-scrollbar-thumb { background: rgba(120, 120, 128, 0.25); border-radius: 4px; }
             ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 128, 0.45); }
+            @keyframes cursorBlink {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0; }
+            }
+            .cursor-blink {
+              animation: cursorBlink 1s infinite;
+            }
           `;
           pipWindow.document.head.appendChild(customStyle);
           pipWindow.addEventListener('beforeunload', () => {
@@ -2937,9 +2951,11 @@
           <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7]">
             <!-- Nagłówek korekty -->
             <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
-              <div class="flex items-center gap-1.5 font-semibold text-xs">
-                <span class="text-emerald-500 font-mono text-sm">⏱</span>
-                <span>Korekta i zapis sesji</span>
+              <div class="flex items-center font-mono text-xs font-semibold select-none">
+                <span style="color: ${db.logoAccentColor || '#10B981'}" class="mr-1 font-bold">&gt;</span>
+                <span class="text-[#1D1D1F] dark:text-white">fokus</span>
+                <span class="w-1.5 h-3 ml-1 inline-block cursor-blink transition-colors" style="background-color: ${db.logoAccentColor || '#10B981'}"></span>
+                <span class="text-zinc-400 font-sans font-normal ml-2">· Korekta sesji</span>
               </div>
               <button type="button" id="pipAdjustBackBtn" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                 ← Anuluj
@@ -3108,18 +3124,26 @@
         <div class="space-y-3 flex-1 flex flex-col min-h-0 text-[#1D1D1F] dark:text-[#F5F5F7]">
           <!-- Pasek górny: logo, status i przycisk szybkiego zadania -->
           <div class="flex items-center justify-between pb-2 border-b ${isDark ? 'border-[#2C2C2E]' : 'border-black/5'}">
-            <div class="flex items-center gap-1.5 font-mono text-sm font-bold">
-              <span style="color: ${db.logoAccentColor || '#10B981'}">&gt;</span>
-              <span>fokus</span>
+            <div class="flex items-center font-mono text-sm font-bold select-none">
+              <span style="color: ${db.logoAccentColor || '#10B981'}" class="mr-1 font-bold">&gt;</span>
+              <span class="text-[#1D1D1F] dark:text-white">fokus</span>
+              <span class="w-1.5 h-3.5 ml-1 inline-block cursor-blink transition-colors" style="background-color: ${db.logoAccentColor || '#10B981'}"></span>
             </div>
             <div class="flex items-center gap-2">
-              <span id="pipStateBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full ${
+              <button type="button" id="pipStateBadge" title="${
+                timer.isOvertime
+                  ? 'Status: Overtime (kliknij, aby skorygować i zapisać)'
+                  : (timer.running ? 'Status: W skupieniu (kliknij, aby wstrzymać)' : 'Status: Gotowy do startu (kliknij, aby rozpocząć)')
+              }" class="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 active:scale-95 transition ${
                 timer.isOvertime
                   ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse'
                   : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')
               }">
-                ${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}
-              </span>
+                <span class="w-1.5 h-1.5 rounded-full shrink-0 ${
+                  timer.isOvertime ? 'bg-emerald-500' : (timer.running ? 'bg-blue-500' : 'bg-zinc-400')
+                }"></span>
+                <span>${timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY')}</span>
+              </button>
               <button type="button" id="pipToggleQuickAddBtn" title="Dodaj szybkie zadanie"
                 class="px-2 py-0.5 rounded-full text-[11px] font-medium ${pipState.quickAddOpen ? 'bg-emerald-500 text-white' : 'bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/20'} transition">
                 ${pipState.quickAddOpen ? '✕ Anuluj' : '＋ Zadanie'}
@@ -3270,6 +3294,30 @@
         pipStartBtn.onclick = () => {
           togglePomodoro(activeTask.id);
           renderPiPContent();
+        };
+      }
+
+      const pipStateBadge = doc.getElementById('pipStateBadge');
+      if (pipStateBadge) {
+        pipStateBadge.onclick = () => {
+          if (timer.isOvertime) {
+            const elapsedSec = (timer.plannedMinutes * 60) - timer.remainingSeconds;
+            const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+            const otMin = Math.round(timer.overtimeSeconds / 60);
+            const totalMin = timer.isOvertime ? (timer.plannedMinutes + otMin) : elapsedMin;
+            pipState.adjustInfo = {
+              plannedMinutes: timer.plannedMinutes,
+              overtimeMinutes: otMin,
+              totalMinutes: totalMin,
+              currentMinutes: totalMin,
+              startedAtIso: timer.sessionStartedAt || new Date().toISOString()
+            };
+            pipState.view = 'ADJUST';
+            renderPiPContent();
+          } else if (activeTask) {
+            togglePomodoro(activeTask.id);
+            renderPiPContent();
+          }
         };
       }
 
@@ -3486,12 +3534,17 @@
           clock.className = `font-mono text-3xl font-bold tracking-tight ${timer.isOvertime ? 'text-emerald-500 animate-pulse' : ''}`;
           btn.textContent = timer.running ? 'Pauza' : 'Start';
           if (badge) {
-            badge.textContent = timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY');
-            badge.className = `text-[10px] font-mono px-2 py-0.5 rounded-full ${
+            const badgeLabel = timer.isOvertime ? 'OVERTIME' : (timer.running ? 'W SKUPIENIU' : 'GOTOWY');
+            const dotColor = timer.isOvertime ? 'bg-emerald-500' : (timer.running ? 'bg-blue-500' : 'bg-zinc-400');
+            badge.title = timer.isOvertime
+              ? 'Status: Overtime (kliknij, aby skorygować i zapisać)'
+              : (timer.running ? 'Status: W skupieniu (kliknij, aby wstrzymać)' : 'Status: Gotowy do startu (kliknij, aby rozpocząć)');
+            badge.className = `flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 active:scale-95 transition ${
               timer.isOvertime
                 ? 'bg-emerald-500/10 text-emerald-500 font-semibold animate-pulse'
                 : (timer.running ? 'bg-blue-500/10 text-blue-500' : 'bg-black/5 dark:bg-white/10 text-zinc-400')
             }`;
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}"></span><span>${badgeLabel}</span>`;
           }
           const hasProgress = timer.running || timer.isOvertime || timer.remainingSeconds < timer.plannedMinutes * 60;
           if (finishBtn) finishBtn.classList.toggle('hidden', !hasProgress);

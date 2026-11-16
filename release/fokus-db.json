@@ -5,8 +5,12 @@
   "pageThemeColor": "INDIGO",
   "customPageThemeColor": "#3B82F6",
   "chimeVolume": 80,
+  "notificationsEnabled": true,
+  "titleTimerEnabled": true,
+  "pipEnabled": true,
+  "pipAutoOpen": true,
   "activeView": "DAY",
-  "selectedTaskId": "tsk_b1b1c8ebf719",
+  "selectedTaskId": "tsk_9b93c2d3b77e",
   "card1Tab": "STEPS",
   "reportPeriod": "MONTH",
   "lastBackupDate": null,
@@ -109,6 +113,12 @@
       "createdAt": "2026-11-15T18:52:58.050Z",
       "createdAtISO": "2026-11-15T18:52:58.050Z",
       "auditLog": [
+        {
+          "id": "log_06a85397d109",
+          "timestamp": "2026-11-16T16:51:43.536Z",
+          "changeType": "STATUS_CHANGED",
+          "reasonComment": "Zapisano sesję skupienia: 1 min"
+        },
         {
           "id": "log_9300ac4ab530",
           "timestamp": "2026-11-15T18:52:58.050Z",
@@ -377,6 +387,21 @@
   ],
   "timeLogs": [
     {
+      "id": "ses_432618068d17",
+      "taskId": "tsk_9b93c2d3b77e",
+      "date": "2026-11-16",
+      "dateISO": "2026-11-16",
+      "startedAt": "2026-11-16T16:51:06.169Z",
+      "startedAtISO": "2026-11-16T16:51:06.169Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
+    {
       "id": "ses_325aa5b6be08",
       "taskId": "tsk_3ef481da2e48",
       "date": "2026-11-14",
@@ -532,6 +557,21 @@
   ],
   "timeSessions": [
     {
+      "id": "ses_432618068d17",
+      "taskId": "tsk_9b93c2d3b77e",
+      "date": "2026-11-16",
+      "dateISO": "2026-11-16",
+      "startedAt": "2026-11-16T16:51:06.169Z",
+      "startedAtISO": "2026-11-16T16:51:06.169Z",
+      "plannedMinutes": 25,
+      "targetMinutes": 25,
+      "overtimeMinutes": 0,
+      "totalMinutes": 1,
+      "durationMinutes": 1,
+      "entryType": "POMODORO",
+      "note": "Sesja Pomodoro (1m)"
+    },
+    {
       "id": "ses_325aa5b6be08",
       "taskId": "tsk_3ef481da2e48",
       "date": "2026-11-14",
@@ -651,8 +691,5 @@
       "entryType": "POMODORO",
       "note": "Sesja Pomodoro (1m)"
     }
-  ],
-  "notificationsEnabled": true,
-  "titleTimerEnabled": true,
-  "pipEnabled": true
+  ]
 }
